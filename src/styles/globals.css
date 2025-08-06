@@ -2,27 +2,48 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+        .rings-container {
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          pointer-events: none;
+          z-index: 0;
+          opacity: 0.3;
+          user-select: none;
+        }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+        .glow-ring {
+          position: absolute;
+          border-radius: 50%;
+          border: 2.5px solid;
+          background-repeat: no-repeat;
+          animation-name: floatUpDown, rotateRing;
+          animation-timing-function: ease-in-out, linear;
+          animation-iteration-count: infinite, infinite;
+          will-change: transform, opacity, box-shadow;
+          filter: drop-shadow(0 0 3px rgba(0, 255, 180, 0.6));
+        }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
+        @keyframes floatUpDown {
+          0% {
+            transform: translate(0, 0) scale(1);
+            opacity: 1;
+          }
+          50% {
+            transform: translate(0, -22px) scale(1.08);
+            opacity: 0.7;
+          }
+          100% {
+            transform: translate(0, 0) scale(1);
+            opacity: 1;
+          }
+        }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
-}
+        @keyframes rotateRing {
+          from {
+            transform: rotate(0deg);
+          }
+          to {
+            transform: rotate(360deg);
+          }
+        }

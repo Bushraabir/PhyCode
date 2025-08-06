@@ -15,7 +15,7 @@ const AuthModal: React.FC = () => {
   if (!authModal.isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center font-sans">
       {/* Glassmorphism background */}
       <div
         className="absolute inset-0 bg-black/30 backdrop-blur-sm"
@@ -24,13 +24,14 @@ const AuthModal: React.FC = () => {
 
       {/* Modal */}
       <div className="z-50 w-full sm:w-[450px] mx-4">
-        <div className="bg-gradient-to-b from-brand-orange to-slate-900 rounded-lg shadow-xl relative text-white">
+        <div className="bg-gradient-to-b from-goldenAmber to-slateBlack rounded-lg shadow-xl relative text-softSilver">
           {/* Close Button */}
           <div className="flex justify-end p-2">
             <button
               type="button"
-              className="bg-transparent rounded-lg text-sm p-1.5 ml-auto inline-flex items-center hover:bg-gray-800 hover:text-white text-white"
+              className="bg-transparent rounded-lg text-sm p-1.5 ml-auto inline-flex items-center hover:bg-charcoalBlack hover:text-goldenAmber text-softSilver transition-colors duration-200"
               onClick={closeModal}
+              aria-label="Close modal"
             >
               <IoClose className="h-5 w-5" />
             </button>
