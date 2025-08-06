@@ -182,127 +182,125 @@ const ProblemDescription: React.FC<ProblemDescriptionProps> = ({
     }
     if (updating) return;
     setUpdating(true);
-
-    if (!starred) {
-      const userRef = doc(firestore, "users", user.uid);
-      await updateDoc(userRef, {
-        starredProblems: arrayUnion(problem.id),
-      });
-      setData((prev) => ({ ...prev, starred: true }));
-    } else {
-      const userRef = doc(firestore, "users", user.uid);
-      await updateDoc(userRef, {
-        starredProblems: arrayRemove(problem.id),
-      });
-      setData((prev) => ({ ...prev, starred: false }));
-    }
+    await runTransaction(firestore, async (transaction) => {
+      const { userDoc, problemDoc, userRef, problemRef } =
+        await returnUserDataAndProblemData(transaction);
+      if (userDoc.exists() && problemDoc.exists()) {
+        if (starred) {
+          transaction.update(userRef, {
+            starredProblems: userDoc
+              .data()
+              .starredProblems.filter((id: string) => id !== problem.id),
+          });
+          setData((prev) => ({ ...prev, starred: false }));
+        } else {
+          transaction.update(userRef, {
+            starredProblems: [...userDoc.data().starredProblems, problem.id],
+          });
+          setData((prev) => ({ ...prev, starred: true }));
+        }
+      }
+    });
     setUpdating(false);
   };
 
   return (
-    <div className="bg-dark-layer-1">
-      <div className="flex h-11 w-full items-center pt-2 bg-dark-layer-2 text-white overflow-x-hidden">
-        <div className="bg-dark-layer-1 rounded-t-[5px] px-5 py-[10px] text-xs cursor-pointer">
-          Description
+    <div className="bg-slateBlack text-softSilver">
+      <div className="flex h-11 w-full items-center justify-between bg-charcoalBlack px-5">
+        <div className="text-softSilver">{problem.title}</div>
+        <div className="flex items-center space-x-4">
+          <div
+            className={`inline-block rounded-[21px] bg-${problemDifficultyClass} px-2.5 py-1 text-xs font-medium capitalize text-softSilver`}
+          >
+            {loading ? (
+              <div className="h-2 w-2 rounded-full bg-dark-fill-3" />
+            ) : (
+              problem.difficulty
+            )}
+          </div>
+          {_solved && (
+            <div className="flex items-center space-x-1 rounded bg-emeraldGreen px-1 py-[2px] text-xs font-medium text-softSilver">
+              <BsCheck2Circle />
+              <span>Solved</span>
+            </div>
+          )}
+          {!loading && user && (
+            <div className="flex items-center space-x-4">
+              <div
+                className="flex items-center cursor-pointer hover:bg-deepPlum space-x-1 rounded p-[3px] ml-4 text-lg transition-colors duration-200 text-softSilver"
+                onClick={handleLike}
+              >
+                {liked && !updating && <AiFillLike className="text-tealBlue" />}
+                {!liked && !updating && <AiFillLike />}
+                {updating && <AiOutlineLoading3Quarters className="animate-spin" />}
+                <span className="text-xs">{currentProblem?.likes}</span>
+              </div>
+              <div
+                className="flex items-center cursor-pointer hover:bg-deepPlum space-x-1 rounded p-[3px] ml-4 text-lg transition-colors duration-200 text-softSilver"
+                onClick={handleDislike}
+              >
+                {disliked && !updating && <AiFillDislike className="text-tealBlue" />}
+                {!disliked && !updating && <AiFillDislike />}
+                {updating && <AiOutlineLoading3Quarters className="animate-spin" />}
+                <span className="text-xs">{currentProblem?.dislikes}</span>
+              </div>
+              <div
+                className="cursor-pointer hover:bg-deepPlum rounded p-[3px] ml-4 text-xl transition-colors duration-200 text-softSilver"
+                onClick={handleStar}
+              >
+                {starred && !updating && <AiFillStar className="text-goldenAmber" />}
+                {!starred && !updating && <TiStarOutline />}
+                {updating && <AiOutlineLoading3Quarters className="animate-spin" />}
+              </div>
+            </div>
+          )}
+
+          {loading && (
+            <div className="mt-3 flex space-x-2">
+              <RectangleSkeleton />
+              <CircleSkeleton />
+              <RectangleSkeleton />
+              <RectangleSkeleton />
+              <CircleSkeleton />
+            </div>
+          )}
         </div>
       </div>
-      <div className="flex px-0 py-4 h-[calc(100vh-94px)] overflow-y-auto">
+      <div className="px-0 pt-4">
         <div className="px-5">
-          <div className="w-full">
-            <div className="flex space-x-4">
-              <div className="flex-1 mr-2 text-lg text-white font-medium">
-                {problem?.title}
-              </div>
-            </div>
-            {!loading && currentProblem && (
-              <div className="flex items-center mt-3">
-                <div
-                  className={`${problemDifficultyClass} inline-block rounded-[21px] bg-opacity-[.15] px-2.5 py-1 text-xs font-medium capitalize `}
-                >
-                  {currentProblem.difficulty}
-                </div>
-                {(solved || _solved) && (
-                  <div className="rounded p-[3px] ml-4 text-lg transition-colors duration-200 text-green-s text-dark-green-s">
-                    <BsCheck2Circle />
+          <div className="text-white text-sm">
+            <div dangerouslySetInnerHTML={{ __html: problem.problemStatement }} />
+          </div>
+          <div className="mt-4">
+            {Array.isArray(problem.examples) && problem.examples.length > 0 ? (
+              problem.examples.map((example, index) => (
+                <div key={example.id}>
+                  <p className="font-medium text-softSilver">Example {index + 1}: </p>
+                  {example.img && <img src={example.img} alt="" className="mt-3" />}
+                  <div className="example-card bg-charcoalBlack mt-2 p-4 rounded-lg">
+                    <pre>
+                      <strong className="text-softSilver">Input: </strong> {example.inputText}
+                      <br />
+                      <strong>Output:</strong>
+                      {example.outputText} <br />
+                      {example.explanation && (
+                        <>
+                          <strong>Explanation:</strong> {example.explanation}
+                        </>
+                      )}
+                    </pre>
                   </div>
-                )}
-                <div
-                  className="flex items-center cursor-pointer hover:bg-dark-fill-3 space-x-1 rounded p-[3px]  ml-4 text-lg transition-colors duration-200 text-dark-gray-6"
-                  onClick={handleLike}
-                >
-                  {liked && !updating && <AiFillLike className="text-dark-blue-s" />}
-                  {!liked && !updating && <AiFillLike />}
-                  {updating && <AiOutlineLoading3Quarters className="animate-spin" />}
-                  <span className="text-xs">{currentProblem.likes}</span>
                 </div>
-                <div
-                  className="flex items-center cursor-pointer hover:bg-dark-fill-3 space-x-1 rounded p-[3px]  ml-4 text-lg transition-colors duration-200 text-green-s text-dark-gray-6"
-                  onClick={handleDislike}
-                >
-                  {disliked && !updating && (
-                    <AiFillDislike className="text-dark-blue-s" />
-                  )}
-                  {!disliked && !updating && <AiFillDislike />}
-                  {updating && <AiOutlineLoading3Quarters className="animate-spin" />}
-                  <span className="text-xs">{currentProblem.dislikes}</span>
-                </div>
-                <div
-                  className="cursor-pointer hover:bg-dark-fill-3  rounded p-[3px]  ml-4 text-xl transition-colors duration-200 text-green-s text-dark-gray-6 "
-                  onClick={handleStar}
-                >
-                  {starred && !updating && <AiFillStar className="text-dark-yellow" />}
-                  {!starred && !updating && <TiStarOutline />}
-                  {updating && <AiOutlineLoading3Quarters className="animate-spin" />}
-                </div>
-              </div>
+              ))
+            ) : (
+              <p className="text-softSilver text-sm">No examples available.</p>
             )}
-
-            {loading && (
-              <div className="mt-3 flex space-x-2">
-                <RectangleSkeleton />
-                <CircleSkeleton />
-                <RectangleSkeleton />
-                <RectangleSkeleton />
-                <CircleSkeleton />
-              </div>
-            )}
-
-            <div className="text-white text-sm">
-              <div dangerouslySetInnerHTML={{ __html: problem.problemStatement }} />
-            </div>
-
-            <div className="mt-4">
-              {Array.isArray(problem.examples) && problem.examples.length > 0 ? (
-                problem.examples.map((example, index) => (
-                  <div key={example.id}>
-                    <p className="font-medium text-white ">Example {index + 1}: </p>
-                    {example.img && <img src={example.img} alt="" className="mt-3" />}
-                    <div className="example-card">
-                      <pre>
-                        <strong className="text-white">Input: </strong> {example.inputText}
-                        <br />
-                        <strong>Output:</strong>
-                        {example.outputText} <br />
-                        {example.explanation && (
-                          <>
-                            <strong>Explanation:</strong> {example.explanation}
-                          </>
-                        )}
-                      </pre>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <p className="text-white text-sm">No examples available.</p>
-              )}
-            </div>
-
-            <div className="my-8 pb-4">
-              <div className="text-white text-sm font-medium">Constraints:</div>
-              <ul className="text-white ml-5 list-disc ">
-                <div dangerouslySetInnerHTML={{ __html: problem.constraints }} />
-              </ul>
-            </div>
+          </div>
+          <div className="my-8 pb-4">
+            <div className="text-softSilver text-sm font-medium">Constraints:</div>
+            <ul className="text-softSilver ml-5 list-disc">
+              <div dangerouslySetInnerHTML={{ __html: problem.constraints }} />
+            </ul>
           </div>
         </div>
       </div>
@@ -327,10 +325,10 @@ function useGetCurrentProblem(problemId: string) {
         setCurrentProblem({ id: docSnap.id, ...problem } as DBProblem);
         setProblemDifficultyClass(
           problem.difficulty === "Easy"
-            ? "bg-olive text-olive"
+            ? "bg-emeraldGreen"
             : problem.difficulty === "Medium"
-            ? "bg-dark-yellow text-dark-yellow"
-            : "bg-dark-pink text-dark-pink"
+            ? "bg-goldenAmber"
+            : "bg-crimsonRed"
         );
       }
       setLoading(false);
