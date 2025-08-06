@@ -1,4 +1,4 @@
-import { auth } from "@/firebase/firebase";
+import { auth } from "../../firebase/firebase";
 import React from "react";
 import { useSignOut } from "react-firebase-hooks/auth";
 import { useRouter } from "next/navigation";
