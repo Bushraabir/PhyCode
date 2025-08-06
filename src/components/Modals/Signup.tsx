@@ -30,17 +30,46 @@ const Signup: React.FC<SignupProps> = () => {
 			toast.error("Please fill all fields", { position: "top-center", autoClose: 3000, theme: "dark" });
 			return;
 		}
+
+		const toastId = toast.loading("Creating your account", { position: "top-center" });
+
 		try {
-			toast.loading("Creating your account", { position: "top-center", toastId: "loadingToast" });
+			// Create user with email and password
 			const newUser = await createUserWithEmailAndPassword(inputs.email, inputs.password);
-			if (!newUser) return;
+			if (!newUser) {
+				toast.update(toastId, {
+					render: "Failed to create account. Please try again.",
+					type: "error",
+					isLoading: false,
+					autoClose: 3000,
+					theme: "dark",
+				});
+				return;
+			}
 
 			// Send verification email
 			const actionCodeSettings = {
 				url: `${window.location.origin}/`,
 				handleCodeInApp: true,
 			};
-			await sendEmailVerification(newUser.user, actionCodeSettings);
+			try {
+				await sendEmailVerification(newUser.user, actionCodeSettings);
+				toast.update(toastId, {
+					render: "Account created! Verification email sent. Please check your inbox.",
+					type: "success",
+					isLoading: false,
+					autoClose: 3000,
+					theme: "dark",
+				});
+			} catch (emailError: any) {
+				toast.update(toastId, {
+					render: `Account created, but failed to send verification email: ${emailError.message}`,
+					type: "warning",
+					isLoading: false,
+					autoClose: 5000,
+					theme: "dark",
+				});
+			}
 
 			// Store user data in Firestore
 			const userData = {
@@ -56,16 +85,15 @@ const Signup: React.FC<SignupProps> = () => {
 			};
 			await setDoc(doc(firestore, "users", newUser.user.uid), userData);
 
-			toast.success("Account created! A verification email has been sent.", {
-				position: "top-center",
+			router.push("/");
+		} catch (error: any) {
+			toast.update(toastId, {
+				render: error.message || "An error occurred during signup",
+				type: "error",
+				isLoading: false,
 				autoClose: 3000,
 				theme: "dark",
 			});
-			router.push("/");
-		} catch (error: any) {
-			toast.error(error.message, { position: "top-center", autoClose: 3000, theme: "dark" });
-		} finally {
-			toast.dismiss("loadingToast");
 		}
 	};
 
@@ -88,10 +116,10 @@ const Signup: React.FC<SignupProps> = () => {
 					name='email'
 					id='email'
 					className='
-        border-2 outline-none sm:text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5
-        bg-gray-600 border-gray-500 placeholder-gray-400 text-white
-    '
-					placeholder='name@company.com'
+						border-2 outline-none sm:text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5
+						bg-gray-600 border-gray-500 placeholder-gray-400 text-white
+					'
+					placeholder='name@gmail.com'
 				/>
 			</div>
 			<div>
@@ -104,10 +132,10 @@ const Signup: React.FC<SignupProps> = () => {
 					name='displayName'
 					id='displayName'
 					className='
-        border-2 outline-none sm:text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5
-        bg-gray-600 border-gray-500 placeholder-gray-400 text-white
-    '
-					placeholder='John Doe'
+						border-2 outline-none sm:text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5
+						bg-gray-600 border-gray-500 placeholder-gray-400 text-white
+					'
+					placeholder='Username'
 				/>
 			</div>
 			<div>
@@ -120,17 +148,18 @@ const Signup: React.FC<SignupProps> = () => {
 					name='password'
 					id='password'
 					className='
-        border-2 outline-none sm:text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5
-        bg-gray-600 border-gray-500 placeholder-gray-400 text-white
-    '
+						border-2 outline-none sm:text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5
+						bg-gray-600 border-gray-500 placeholder-gray-400 text-white
+					'
 					placeholder='*******'
 				/>
 			</div>
 			<button
 				type='submit'
 				className='w-full text-white focus:ring-blue-300 font-medium rounded-lg
-            text-sm px-5 py-2.5 text-center bg-brand-orange hover:bg-brand-orange-s
-        '
+					text-sm px-5 py-2.5 text-center bg-brand-orange hover:bg-brand-orange-s
+				'
+				disabled={loading}
 			>
 				{loading ? "Registering..." : "Register"}
 			</button>
