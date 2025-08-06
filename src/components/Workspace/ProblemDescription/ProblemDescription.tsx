@@ -1,7 +1,6 @@
 import CircleSkeleton from "@/components/Skeletons/CircleSkeleton";
 import RectangleSkeleton from "@/components/Skeletons/RectangleSkeleton";
 import { auth, firestore } from "@/firebase/firebase";
-import { DBProblem, Problem } from "@/utils/types/problem";
 import {
   arrayRemove,
   arrayUnion,
@@ -21,6 +20,30 @@ import {
 import { BsCheck2Circle } from "react-icons/bs";
 import { TiStarOutline } from "react-icons/ti";
 import { toast } from "react-toastify";
+
+// Define the Problem type based on Firestore data structure
+type Problem = {
+  id: string;
+  title: string;
+  difficulty: string;
+  category: string;
+  constraints: string;
+  dislikes: number;
+  examples: Array<{
+    id: string;
+    inputText: string;
+    outputText: string;
+    explanation?: string;
+    img?: string;
+  }>;
+  handlerFunction: string;
+  likes: number;
+  link: string;
+  order: number;
+  problemStatement: string;
+  starterCode: string;
+  starterFunctionName: string;
+};
 
 type ProblemDescriptionProps = {
   problem: Problem;
@@ -218,7 +241,11 @@ const ProblemDescription: React.FC<ProblemDescriptionProps> = ({
                 : "bg-crimsonRed"
             }`}
           >
-            {loading ? <div className="w-2 h-2 bg-deepPlum rounded-full animate-pulse" /> : problem.difficulty}
+            {loading ? (
+              <div className="w-2 h-2 bg-deepPlum rounded-full animate-pulse" />
+            ) : (
+              problem.difficulty
+            )}
           </span>
           {_solved && (
             <span className="inline-flex items-center px-2 py-1 bg-emeraldGreen rounded-full text-xs font-medium">
@@ -231,27 +258,39 @@ const ProblemDescription: React.FC<ProblemDescriptionProps> = ({
                 className="flex items-center space-x-1 p-1 hover:bg-deepPlum rounded transition"
                 onClick={handleLike}
               >
-                {liked && !updating && <AiFillLike className="text-tealBlue" />}
+                {liked && !updating && (
+                  <AiFillLike className="text-tealBlue" />
+                )}
                 {!liked && !updating && <AiFillLike />}
-                {updating && <AiOutlineLoading3Quarters className="animate-spin" />}
+                {updating && (
+                  <AiOutlineLoading3Quarters className="animate-spin" />
+                )}
                 <span className="text-xs">{currentProblem?.likes}</span>
               </button>
               <button
                 className="flex items-center space-x-1 p-1 hover:bg-deepPlum rounded transition"
                 onClick={handleDislike}
               >
-                {disliked && !updating && <AiFillDislike className="text-tealBlue" />}
+                {disliked && !updating && (
+                  <AiFillDislike className="text-tealBlue" />
+                )}
                 {!disliked && !updating && <AiFillDislike />}
-                {updating && <AiOutlineLoading3Quarters className="animate-spin" />}
+                {updating && (
+                  <AiOutlineLoading3Quarters className="animate-spin" />
+                )}
                 <span className="text-xs">{currentProblem?.dislikes}</span>
               </button>
               <button
                 className="p-1 hover:bg-deepPlum rounded transition"
                 onClick={handleStar}
               >
-                {starred && !updating && <AiFillStar className="text-goldenAmber" />}
+                {starred && !updating && (
+                  <AiFillStar className="text-goldenAmber" />
+                )}
                 {!starred && !updating && <TiStarOutline />}
-                {updating && <AiOutlineLoading3Quarters className="animate-spin" />}
+                {updating && (
+                  <AiOutlineLoading3Quarters className="animate-spin" />
+                )}
               </button>
             </div>
           )}
@@ -271,8 +310,12 @@ const ProblemDescription: React.FC<ProblemDescriptionProps> = ({
             <div className="mt-4">
               {problem.examples.map((example, index) => (
                 <div key={example.id} className="mb-4">
-                  <h3 className="text-softSilver font-medium">Example {index + 1}</h3>
-                  {example.img && <img src={example.img} alt="" className="mt-2" />}
+                  <h3 className="text-softSilver font-medium">
+                    Example {index + 1}
+                  </h3>
+                  {example.img && (
+                    <img src={example.img} alt="" className="mt-2" />
+                  )}
                   <div className="bg-deepPlum p-3 rounded-lg mt-2">
                     <pre className="text-softSilver">
                       <strong>Input:</strong> {example.inputText}
@@ -305,9 +348,10 @@ const ProblemDescription: React.FC<ProblemDescriptionProps> = ({
 export default ProblemDescription;
 
 function useGetCurrentProblem(problemId: string) {
-  const [currentProblem, setCurrentProblem] = useState<DBProblem | null>(null);
+  const [currentProblem, setCurrentProblem] = useState<Problem | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
-  const [problemDifficultyClass, setProblemDifficultyClass] = useState<string>("");
+  const [problemDifficultyClass, setProblemDifficultyClass] =
+    useState<string>("");
 
   useEffect(() => {
     const getCurrentProblem = async () => {
@@ -316,7 +360,7 @@ function useGetCurrentProblem(problemId: string) {
       const docSnap = await getDoc(docRef);
       if (docSnap.exists()) {
         const problem = docSnap.data();
-        setCurrentProblem({ id: docSnap.id, ...problem } as DBProblem);
+        setCurrentProblem({ id: docSnap.id, ...problem } as Problem);
         setProblemDifficultyClass(
           problem.difficulty === "Easy"
             ? "bg-emeraldGreen"
@@ -360,7 +404,8 @@ function useGetUsersDataOnProblem(problemId: string) {
     };
 
     if (user) getUsersDataOnProblem();
-    return () => setData({ liked: false, disliked: false, starred: false, solved: false });
+    return () =>
+      setData({ liked: false, disliked: false, starred: false, solved: false });
   }, [problemId, user]);
 
   return { ...data, setData };

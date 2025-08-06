@@ -1,10 +1,33 @@
 import Topbar from "@/components/Topbar/Topbar";
 import Workspace from "@/components/Workspace/Workspace";
 import useHasMounted from "@/hooks/useHasMounted";
-import { Problem } from "@/utils/types/problem";
 import React from "react";
 import { collection, getDocs, doc, getDoc } from "firebase/firestore";
 import { firestore } from "@/firebase/firebase";
+
+// Define the Problem type based on Firestore data structure, aligned with Workspace.tsx
+type Problem = {
+  id: string;
+  title: string;
+  difficulty: string;
+  category: string;
+  constraints: string;
+  dislikes: number;
+  examples: Array<{
+    id: string; // Transformed to number to match Workspace.tsx
+    inputText: string;
+    outputText: string;
+    explanation?: string;
+    img?: string; // Optional, as not present in Firestore data
+  }>;
+  handlerFunction: string;
+  likes: number;
+  link: string;
+  order: number;
+  problemStatement: string;
+  starterCode: string;
+  starterFunctionName: string;
+};
 
 type ProblemPageProps = {
   problem: Problem;
@@ -50,16 +73,28 @@ export async function getStaticProps({ params }: { params: { pid: string } }) {
   }
 
   const problemData = problemSnap.data();
-  const examples = Array.isArray(problemData.examples) ? problemData.examples : [];
+  // Transform examples.id from string to number
+  const examples = Array.isArray(problemData.examples)
+    ? problemData.examples.map((example: any, index: number) => ({
+        ...example,
+        id: parseInt(example.id.replace("ex-", ""), 10) || index, // e.g., "ex-1" -> 1
+      }))
+    : [];
 
   const problem: Problem = {
     id: problemSnap.id,
     title: problemData.title || "Untitled Problem",
-    problemStatement: problemData.problemStatement || "",
-    examples,
+    difficulty: problemData.difficulty || "Unknown",
+    category: problemData.category || "Unknown",
     constraints: problemData.constraints || "",
-    starterCode: problemData.starterCode || "",
+    dislikes: problemData.dislikes || 0,
+    examples,
     handlerFunction: problemData.handlerFunction || "",
+    likes: problemData.likes || 0,
+    link: problemData.link || "",
+    order: problemData.order || 0,
+    problemStatement: problemData.problemStatement || "",
+    starterCode: problemData.starterCode || "",
     starterFunctionName: problemData.starterFunctionName || "",
   };
 
