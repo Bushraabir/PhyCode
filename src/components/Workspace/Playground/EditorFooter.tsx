@@ -7,26 +7,27 @@ type EditorFooterProps = {
 
 const EditorFooter: React.FC<EditorFooterProps> = ({ handleSubmit }) => {
   return (
-    <div className="flex bg-slateBlack absolute bottom-0 z-10 w-full">
-      <div className="mx-5 my-[10px] flex justify-between w-full">
-        <div className="mr-2 flex flex-1 flex-nowrap items-center space-x-4">
-          <button className="px-3 py-1.5 font-medium items-center transition-all inline-flex bg-deepPlum text-sm hover:bg-tealBlue text-softSilver rounded-lg pl-3 pr-2">
-            Console
-            <div className="ml-1 transform transition flex items-center">
-              <BsChevronUp className="fill-softSilver mx-1" />
-            </div>
-          </button>
-        </div>
-        <div className="ml-auto flex items-center space-x-4">
+    <div className="fixed bottom-0 left-0 w-full z-20 bg-slateBlack border-t border-slate700">
+      <div className="mx-5 my-[10px] flex justify-between items-center">
+        {/* Left group: Console toggle */}
+        <button
+          className="flex items-center space-x-2 px-3 py-1.5 bg-deepPlum text-softSilver text-sm font-medium rounded-lg hover:bg-tealBlue transition"
+        >
+          <span>Console</span>
+          <BsChevronUp className="fill-softSilver transition-transform" />
+        </button>
+
+        {/* Right group: Run & Submit */}
+        <div className="flex items-center space-x-4">
           <button
-            className="px-3 py-1.5 text-sm font-medium items-center whitespace-nowrap transition-all focus:outline-none inline-flex bg-deepPlum hover:bg-tealBlue text-softSilver rounded-lg"
             onClick={handleSubmit}
+            className="px-3 py-1.5 bg-deepPlum text-softSilver text-sm font-medium rounded-lg hover:bg-tealBlue transition focus:outline-none"
           >
             Run
           </button>
           <button
-            className="px-3 py-1.5 font-medium items-center transition-all focus:outline-none inline-flex text-sm text-softSilver bg-emeraldGreen hover:bg-tealBlue rounded-lg"
             onClick={handleSubmit}
+            className="px-3 py-1.5 bg-emeraldGreen text-softSilver text-sm font-medium rounded-lg hover:bg-tealBlue transition focus:outline-none"
           >
             Submit
           </button>
