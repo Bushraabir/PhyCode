@@ -124,7 +124,7 @@ const Signup: React.FC<SignupProps> = () => {
 			</div>
 			<div>
 				<label htmlFor='displayName' className='text-sm font-medium block mb-2 text-gray-300'>
-					Display Name
+					Username
 				</label>
 				<input
 					onChange={handleChangeInput}
