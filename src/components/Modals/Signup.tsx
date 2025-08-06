@@ -6,6 +6,7 @@ import { useCreateUserWithEmailAndPassword } from "react-firebase-hooks/auth";
 import { useRouter } from "next/navigation";
 import { doc, setDoc } from "firebase/firestore";
 import { toast } from "react-toastify";
+import { sendEmailVerification } from "firebase/auth";
 import React from "react";
 
 type SignupProps = {};
@@ -18,17 +19,30 @@ const Signup: React.FC<SignupProps> = () => {
 	const [inputs, setInputs] = useState({ email: "", displayName: "", password: "" });
 	const router = useRouter();
 	const [createUserWithEmailAndPassword, user, loading, error] = useCreateUserWithEmailAndPassword(auth);
+
 	const handleChangeInput = (e: React.ChangeEvent<HTMLInputElement>) => {
 		setInputs((prev) => ({ ...prev, [e.target.name]: e.target.value }));
 	};
 
 	const handleRegister = async (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault();
-		if (!inputs.email || !inputs.password || !inputs.displayName) return alert("Please fill all fields");
+		if (!inputs.email || !inputs.password || !inputs.displayName) {
+			toast.error("Please fill all fields", { position: "top-center", autoClose: 3000, theme: "dark" });
+			return;
+		}
 		try {
 			toast.loading("Creating your account", { position: "top-center", toastId: "loadingToast" });
 			const newUser = await createUserWithEmailAndPassword(inputs.email, inputs.password);
 			if (!newUser) return;
+
+			// Send verification email
+			const actionCodeSettings = {
+				url: `${window.location.origin}/`,
+				handleCodeInApp: true,
+			};
+			await sendEmailVerification(newUser.user, actionCodeSettings);
+
+			// Store user data in Firestore
 			const userData = {
 				uid: newUser.user.uid,
 				email: newUser.user.email,
@@ -41,16 +55,24 @@ const Signup: React.FC<SignupProps> = () => {
 				starredProblems: [],
 			};
 			await setDoc(doc(firestore, "users", newUser.user.uid), userData);
+
+			toast.success("Account created! A verification email has been sent.", {
+				position: "top-center",
+				autoClose: 3000,
+				theme: "dark",
+			});
 			router.push("/");
 		} catch (error: any) {
-			toast.error(error.message, { position: "top-center" });
+			toast.error(error.message, { position: "top-center", autoClose: 3000, theme: "dark" });
 		} finally {
 			toast.dismiss("loadingToast");
 		}
 	};
 
 	useEffect(() => {
-		if (error) alert(error.message);
+		if (error) {
+			toast.error(error.message, { position: "top-center", autoClose: 3000, theme: "dark" });
+		}
 	}, [error]);
 
 	return (
@@ -78,7 +100,7 @@ const Signup: React.FC<SignupProps> = () => {
 				</label>
 				<input
 					onChange={handleChangeInput}
-					type='displayName'
+					type='text'
 					name='displayName'
 					id='displayName'
 					className='
@@ -104,7 +126,6 @@ const Signup: React.FC<SignupProps> = () => {
 					placeholder='*******'
 				/>
 			</div>
-
 			<button
 				type='submit'
 				className='w-full text-white focus:ring-blue-300 font-medium rounded-lg
@@ -113,7 +134,6 @@ const Signup: React.FC<SignupProps> = () => {
 			>
 				{loading ? "Registering..." : "Register"}
 			</button>
-
 			<div className='text-sm font-medium text-gray-300'>
 				Already have an account?{" "}
 				<a href='#' className='text-blue-700 hover:underline' onClick={handleClick}>

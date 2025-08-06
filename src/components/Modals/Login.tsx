@@ -5,6 +5,8 @@ import React, { useEffect, useState } from "react";
 import { useSignInWithEmailAndPassword } from "react-firebase-hooks/auth";
 import { useSetRecoilState } from "recoil";
 import { toast } from "react-toastify";
+import { sendEmailVerification } from "firebase/auth";
+
 type LoginProps = {};
 
 const Login: React.FC<LoginProps> = () => {
@@ -15,16 +17,34 @@ const Login: React.FC<LoginProps> = () => {
 	const [inputs, setInputs] = useState({ email: "", password: "" });
 	const [signInWithEmailAndPassword, user, loading, error] = useSignInWithEmailAndPassword(auth);
 	const router = useRouter();
+
 	const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		setInputs((prev) => ({ ...prev, [e.target.name]: e.target.value }));
 	};
 
 	const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault();
-		if (!inputs.email || !inputs.password) return alert("Please fill all fields");
+		if (!inputs.email || !inputs.password) {
+			toast.error("Please fill all fields", { position: "top-center", autoClose: 3000, theme: "dark" });
+			return;
+		}
 		try {
 			const newUser = await signInWithEmailAndPassword(inputs.email, inputs.password);
 			if (!newUser) return;
+
+			// Send login notification email
+			if (newUser.user) {
+				const actionCodeSettings = {
+					url: `${window.location.origin}/`,
+					handleCodeInApp: true,
+				};
+				await sendEmailVerification(newUser.user, actionCodeSettings);
+				toast.success("Login successful! A confirmation email has been sent.", {
+					position: "top-center",
+					autoClose: 3000,
+					theme: "dark",
+				});
+			}
 			router.push("/");
 		} catch (error: any) {
 			toast.error(error.message, { position: "top-center", autoClose: 3000, theme: "dark" });
@@ -32,8 +52,11 @@ const Login: React.FC<LoginProps> = () => {
 	};
 
 	useEffect(() => {
-		if (error) toast.error(error.message, { position: "top-center", autoClose: 3000, theme: "dark" });
+		if (error) {
+			toast.error(error.message, { position: "top-center", autoClose: 3000, theme: "dark" });
+		}
 	}, [error]);
+
 	return (
 		<form className='space-y-6 px-6 pb-4' onSubmit={handleLogin}>
 			<h3 className='text-xl font-medium text-white'>Sign in to LeetClone</h3>
@@ -69,7 +92,6 @@ const Login: React.FC<LoginProps> = () => {
 					placeholder='*******'
 				/>
 			</div>
-
 			<button
 				type='submit'
 				className='w-full text-white focus:ring-blue-300 font-medium rounded-lg
