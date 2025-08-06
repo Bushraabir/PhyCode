@@ -66,9 +66,7 @@ const Playground: React.FC<PlaygroundProps> = ({ problem, setSuccess, setSolved 
             theme: "dark",
           });
           setSuccess(true);
-          setTimeout(() => {
-            setSuccess(false);
-          }, 4000);
+          setTimeout(() => setSuccess(false), 4000);
 
           const userRef = doc(firestore, "users", user.uid);
           await updateDoc(userRef, {
@@ -119,67 +117,52 @@ const Playground: React.FC<PlaygroundProps> = ({ problem, setSuccess, setSolved 
   }, [problem.examples, activeTestCaseId]);
 
   return (
-    <div className="flex flex-col bg-slateBlack relative overflow-x-hidden">
+    <div className="w-full h-[calc(100vh-100px)]">
       <PreferenceNav settings={settings} setSettings={setSettings} />
-
-      <Split className="h-[calc(100vh-94px)]" direction="vertical" sizes={[60, 40]} minSize={60}>
-        <div className="w-full overflow-auto">
-          <CodeMirror
-            value={userCode}
-            theme={vscodeDark}
-            onChange={onChange}
-            extensions={[javascript()]}
-            style={{ fontSize: settings.fontSize }}
-          />
-        </div>
-        <div className="w-full px-5 overflow-auto bg-charcoalBlack">
-          <div className="flex h-10 items-center space-x-6">
-            <div className="relative flex h-full flex-col justify-center cursor-pointer">
-              <div className="text-sm font-medium leading-5 text-softSilver">Testcases</div>
-              <hr className="absolute bottom-0 h-0.5 w-full rounded-full border-none bg-softSilver" />
-            </div>
-          </div>
-
-          <div className="flex">
-            {Array.isArray(problem.examples) && problem.examples.length > 0 ? (
+      <div className="h-[calc(100%-40px)] flex flex-col">
+        <CodeMirror
+          value={userCode}
+          theme={vscodeDark}
+          onChange={onChange}
+          extensions={[javascript()]}
+          style={{ fontSize: settings.fontSize, height: "70%" }}
+          className="w-full bg-deepPlum text-softSilver rounded-lg shadow-lg mb-2"
+        />
+        <div className="flex-1 overflow-y-auto">
+          <h3 className="text-sm font-medium text-softSilver mb-2">Test Cases</h3>
+          <div className="flex flex-wrap gap-2 mb-2">
+            {problem.examples.length > 0 ? (
               problem.examples.map((example, index) => (
-                <div className="mr-2 items-start mt-2" key={example.id} onClick={() => setActiveTestCaseId(index)}>
-                  <div className="flex flex-wrap items-center gap-y-4">
-                    <div
-                      className={`font-medium items-center transition-all focus:outline-none inline-flex bg-deepPlum hover:bg-tealBlue relative rounded-lg px-4 py-1 cursor-pointer whitespace-nowrap ${
-                        activeTestCaseId === index ? "text-softSilver" : "text-softSilver"
-                      }`}
-                    >
-                      Case {index + 1}
-                    </div>
-                  </div>
-                </div>
+                <button
+                  key={example.id}
+                  onClick={() => setActiveTestCaseId(index)}
+                  className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
+                    activeTestCaseId === index
+                      ? "bg-tealBlue text-softSilver"
+                      : "bg-deepPlum text-softSilver hover:bg-tealBlue"
+                  }`}
+                >
+                  Case {index + 1}
+                </button>
               ))
             ) : (
-              <div className="text-softSilver text-sm">No test cases available.</div>
+              <p className="text-softSilver text-sm">No test cases available.</p>
             )}
           </div>
-
-          <div className="font-semibold my-4">
-            {Array.isArray(problem.examples) &&
-            problem.examples.length > 0 &&
-            problem.examples[activeTestCaseId] ? (
-              <>
-                <p className="text-sm font-medium mt-4 text-softSilver">Input:</p>
-                <div className="w-full cursor-text rounded-lg border px-3 py-[10px] bg-deepPlum border-transparent text-softSilver mt-2">
-                  {problem.examples[activeTestCaseId].inputText}
-                </div>
-                <p className="text-sm font-medium mt-4 text-softSilver">Output:</p>
-                <div className="w-full cursor-text rounded-lg border px-3 py-[10px] bg-deepPlum border-transparent text-softSilver mt-2">
-                  {problem.examples[activeTestCaseId].outputText}
-                </div>
-              </>
-            ) : (
-              <p className="text-softSilver text-sm">No test case selected.</p>
-            )}
-          </div>
+          {problem.examples[activeTestCaseId] && (
+            <div className="space-y-2">
+              <p className="text-sm font-medium text-softSilver">Input:</p>
+              <div className="bg-deepPlum p-2 rounded-lg text-softSilver">
+                {problem.examples[activeTestCaseId].inputText}
+              </div>
+              <p className="text-sm font-medium text-softSilver mt-2">Output:</p>
+              <div className="bg-deepPlum p-2 rounded-lg text-softSilver">
+                {problem.examples[activeTestCaseId].outputText}
+              </div>
+            </div>
+          )}
         </div>
-      </Split>
+      </div>
       <EditorFooter handleSubmit={handleSubmit} />
     </div>
   );

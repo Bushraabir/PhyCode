@@ -205,84 +205,80 @@ const ProblemDescription: React.FC<ProblemDescriptionProps> = ({
   };
 
   return (
-    <div className="bg-slateBlack text-softSilver">
-      <div className="flex h-11 w-full items-center justify-between bg-charcoalBlack px-5">
-        <div className="text-softSilver">{problem.title}</div>
-        <div className="flex items-center space-x-4">
-          <div
-            className={`inline-block rounded-[21px] bg-${problemDifficultyClass} px-2.5 py-1 text-xs font-medium capitalize text-softSilver`}
+    <div className="w-full">
+      <div className="flex items-center justify-between p-2 bg-charcoalBlack text-softSilver">
+        <h2 className="text-lg font-heading">{problem.title}</h2>
+        <div className="flex space-x-4">
+          <span
+            className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+              problem.difficulty === "Easy"
+                ? "bg-emeraldGreen"
+                : problem.difficulty === "Medium"
+                ? "bg-goldenAmber"
+                : "bg-crimsonRed"
+            }`}
           >
-            {loading ? (
-              <div className="h-2 w-2 rounded-full bg-dark-fill-3" />
-            ) : (
-              problem.difficulty
-            )}
-          </div>
+            {loading ? <div className="w-2 h-2 bg-deepPlum rounded-full animate-pulse" /> : problem.difficulty}
+          </span>
           {_solved && (
-            <div className="flex items-center space-x-1 rounded bg-emeraldGreen px-1 py-[2px] text-xs font-medium text-softSilver">
-              <BsCheck2Circle />
-              <span>Solved</span>
-            </div>
+            <span className="inline-flex items-center px-2 py-1 bg-emeraldGreen rounded-full text-xs font-medium">
+              <BsCheck2Circle className="mr-1" /> Solved
+            </span>
           )}
           {!loading && user && (
-            <div className="flex items-center space-x-4">
-              <div
-                className="flex items-center cursor-pointer hover:bg-deepPlum space-x-1 rounded p-[3px] ml-4 text-lg transition-colors duration-200 text-softSilver"
+            <div className="flex space-x-3">
+              <button
+                className="flex items-center space-x-1 p-1 hover:bg-deepPlum rounded transition"
                 onClick={handleLike}
               >
                 {liked && !updating && <AiFillLike className="text-tealBlue" />}
                 {!liked && !updating && <AiFillLike />}
                 {updating && <AiOutlineLoading3Quarters className="animate-spin" />}
                 <span className="text-xs">{currentProblem?.likes}</span>
-              </div>
-              <div
-                className="flex items-center cursor-pointer hover:bg-deepPlum space-x-1 rounded p-[3px] ml-4 text-lg transition-colors duration-200 text-softSilver"
+              </button>
+              <button
+                className="flex items-center space-x-1 p-1 hover:bg-deepPlum rounded transition"
                 onClick={handleDislike}
               >
                 {disliked && !updating && <AiFillDislike className="text-tealBlue" />}
                 {!disliked && !updating && <AiFillDislike />}
                 {updating && <AiOutlineLoading3Quarters className="animate-spin" />}
                 <span className="text-xs">{currentProblem?.dislikes}</span>
-              </div>
-              <div
-                className="cursor-pointer hover:bg-deepPlum rounded p-[3px] ml-4 text-xl transition-colors duration-200 text-softSilver"
+              </button>
+              <button
+                className="p-1 hover:bg-deepPlum rounded transition"
                 onClick={handleStar}
               >
                 {starred && !updating && <AiFillStar className="text-goldenAmber" />}
                 {!starred && !updating && <TiStarOutline />}
                 {updating && <AiOutlineLoading3Quarters className="animate-spin" />}
-              </div>
+              </button>
             </div>
           )}
-
           {loading && (
-            <div className="mt-3 flex space-x-2">
+            <div className="flex space-x-2">
               <RectangleSkeleton />
               <CircleSkeleton />
               <RectangleSkeleton />
-              <RectangleSkeleton />
-              <CircleSkeleton />
             </div>
           )}
         </div>
       </div>
-      <div className="px-0 pt-4">
-        <div className="px-5">
-          <div className="text-white text-sm">
-            <div dangerouslySetInnerHTML={{ __html: problem.problemStatement }} />
-          </div>
-          <div className="mt-4">
-            {Array.isArray(problem.examples) && problem.examples.length > 0 ? (
-              problem.examples.map((example, index) => (
-                <div key={example.id}>
-                  <p className="font-medium text-softSilver">Example {index + 1}: </p>
-                  {example.img && <img src={example.img} alt="" className="mt-3" />}
-                  <div className="example-card bg-charcoalBlack mt-2 p-4 rounded-lg">
-                    <pre>
-                      <strong className="text-softSilver">Input: </strong> {example.inputText}
+      <div className="p-4 overflow-y-auto h-[calc(100vh-100px)]">
+        <div className="prose prose-invert max-w-none">
+          <div dangerouslySetInnerHTML={{ __html: problem.problemStatement }} />
+          {problem.examples.length > 0 && (
+            <div className="mt-4">
+              {problem.examples.map((example, index) => (
+                <div key={example.id} className="mb-4">
+                  <h3 className="text-softSilver font-medium">Example {index + 1}</h3>
+                  {example.img && <img src={example.img} alt="" className="mt-2" />}
+                  <div className="bg-deepPlum p-3 rounded-lg mt-2">
+                    <pre className="text-softSilver">
+                      <strong>Input:</strong> {example.inputText}
                       <br />
-                      <strong>Output:</strong>
-                      {example.outputText} <br />
+                      <strong>Output:</strong> {example.outputText}
+                      <br />
                       {example.explanation && (
                         <>
                           <strong>Explanation:</strong> {example.explanation}
@@ -291,14 +287,12 @@ const ProblemDescription: React.FC<ProblemDescriptionProps> = ({
                     </pre>
                   </div>
                 </div>
-              ))
-            ) : (
-              <p className="text-softSilver text-sm">No examples available.</p>
-            )}
-          </div>
-          <div className="my-8 pb-4">
-            <div className="text-softSilver text-sm font-medium">Constraints:</div>
-            <ul className="text-softSilver ml-5 list-disc">
+              ))}
+            </div>
+          )}
+          <div className="mt-4">
+            <h3 className="text-softSilver font-medium">Constraints:</h3>
+            <ul className="list-disc list-inside text-softSilver">
               <div dangerouslySetInnerHTML={{ __html: problem.constraints }} />
             </ul>
           </div>

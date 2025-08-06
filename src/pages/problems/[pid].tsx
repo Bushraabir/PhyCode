@@ -16,7 +16,7 @@ const ProblemPage: React.FC<ProblemPageProps> = ({ problem }) => {
   if (!hasMounted) return null;
 
   return (
-    <div>
+    <div className="flex flex-col h-screen bg-slateBlack text-softSilver">
       <Topbar problemPage />
       <Workspace problem={problem} />
     </div>

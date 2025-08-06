@@ -42,31 +42,28 @@ const PreferenceNav: React.FC<PreferenceNavProps> = ({ setSettings, settings }) 
   }, [isFullScreen]);
 
   return (
-    <div className="flex items-center justify-between bg-slateBlack h-11 w-full">
-      <div className="flex items-center text-softSilver">
-        <button className="flex cursor-pointer items-center rounded focus:outline-none bg-deepPlum text-softSilver hover:bg-tealBlue px-2 py-1.5 font-medium">
-          <div className="flex items-center px-1">
-            <div className="text-xs text-softSilver">JavaScript</div>
-          </div>
+    <div className="flex justify-between items-center p-2 bg-charcoalBlack">
+      <div className="flex items-center">
+        <button className="flex items-center px-2 py-1 bg-deepPlum text-softSilver rounded-lg hover:bg-tealBlue transition">
+          <span className="text-sm">JavaScript</span>
         </button>
       </div>
-
-      <div className="flex items-center m-2">
+      <div className="flex space-x-2">
         <button
-          className="preferenceBtn group"
+          className="p-1 hover:bg-deepPlum rounded transition"
           onClick={() => setSettings({ ...settings, settingsModalIsOpen: true })}
         >
-          <div className="h-4 w-4 text-softSilver font-bold text-lg">
-            <AiOutlineSetting />
-          </div>
-          <div className="preferenceBtn-tooltip">Settings</div>
+          <AiOutlineSetting className="text-softSilver text-lg" />
         </button>
-
-        <button className="preferenceBtn group" onClick={handleFullScreen}>
-          <div className="h-4 w-4 text-softSilver font-bold text-lg">
-            {!isFullScreen ? <AiOutlineFullscreen /> : <AiOutlineFullscreenExit />}
-          </div>
-          <div className="preferenceBtn-tooltip">Full Screen</div>
+        <button
+          className="p-1 hover:bg-deepPlum rounded transition"
+          onClick={handleFullScreen}
+        >
+          {isFullScreen ? (
+            <AiOutlineFullscreenExit className="text-softSilver text-lg" />
+          ) : (
+            <AiOutlineFullscreen className="text-softSilver text-lg" />
+          )}
         </button>
       </div>
       {settings.settingsModalIsOpen && (
@@ -75,4 +72,5 @@ const PreferenceNav: React.FC<PreferenceNavProps> = ({ setSettings, settings }) 
     </div>
   );
 };
+
 export default PreferenceNav;
