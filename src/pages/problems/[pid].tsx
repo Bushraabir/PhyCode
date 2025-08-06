@@ -14,11 +14,11 @@ type Problem = {
   constraints: string;
   dislikes: number;
   examples: Array<{
-    id: string; // Transformed to number to match Workspace.tsx
+    id: string; 
     inputText: string;
     outputText: string;
     explanation?: string;
-    img?: string; // Optional, as not present in Firestore data
+    img?: string; 
   }>;
   handlerFunction: string;
   likes: number;
