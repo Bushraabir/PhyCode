@@ -1,18 +1,40 @@
 import { useState, useEffect } from "react";
 import PreferenceNav from "./PreferenceNav/PreferenceNav";
-import Split from "react-split";
 import CodeMirror from "@uiw/react-codemirror";
 import { vscodeDark } from "@uiw/codemirror-theme-vscode";
-import { javascript } from "@codemirror/lang-javascript";
+import { cpp } from "@codemirror/lang-cpp";
 import EditorFooter from "./EditorFooter";
-import { Problem } from "@/utils/types/problem";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth, firestore } from "@/firebase/firebase";
 import { toast } from "react-toastify";
-import { problems } from "@/utils/problems";
 import { useRouter } from "next/router";
 import { arrayUnion, doc, updateDoc } from "firebase/firestore";
 import useLocalStorage from "@/hooks/useLocalStorage";
+import { submitCode, getSubmissionResult, validateCode, InputProcessor, normalizeOutput, waitForResult } from "@/lib/judge0";
+
+type TestCase = {
+  id: string;
+  inputText: string;
+  outputText: string;
+  explanation?: string;
+};
+
+type Problem = {
+  id: string;
+  title: string;
+  difficulty: string;
+  category: string;
+  constraints: string;
+  dislikes: number;
+  examples: TestCase[];
+  handlerFunction: string;
+  likes: number;
+  link: string;
+  order: number;
+  problemStatement: string;
+  starterCode: string;
+  starterFunctionName: string;
+};
 
 type PlaygroundProps = {
   problem: Problem;
@@ -24,23 +46,21 @@ export interface ISettings {
   fontSize: string;
   settingsModalIsOpen: boolean;
   dropdownIsOpen: boolean;
-  languageId: number; // Added to store the selected language ID
+  languageId: number;
 }
 
 const Playground: React.FC<PlaygroundProps> = ({ problem, setSuccess, setSolved }) => {
   const [activeTestCaseId, setActiveTestCaseId] = useState<number>(0);
-  let [userCode, setUserCode] = useState<string>(problem.starterCode);
+  const [userCode, setUserCode] = useState<string>(problem.starterCode);
   const [fontSize, setFontSize] = useLocalStorage("lcc-fontSize", "16px");
   const [settings, setSettings] = useState<ISettings>({
     fontSize: fontSize,
     settingsModalIsOpen: false,
     dropdownIsOpen: false,
-    languageId: 71, // Default to Python
+    languageId: 54, // Fixed to C++ only
   });
   const [user] = useAuthState(auth);
-  const {
-    query: { pid },
-  } = useRouter();
+  const { query: { pid } } = useRouter();
 
   const handleSubmit = async () => {
     if (!user) {
@@ -51,98 +71,213 @@ const Playground: React.FC<PlaygroundProps> = ({ problem, setSuccess, setSolved 
       });
       return;
     }
-    try {
-      userCode = userCode.slice(userCode.indexOf(problem.starterFunctionName));
-      const cb = new Function(`return ${userCode}`)();
-      const handler = problems[pid as string]?.handlerFunction;
 
-      if (typeof handler === "function") {
-        const success = handler(cb);
-        if (success) {
-          toast.success("Congrats! All tests passed!", {
+    // Validate code first
+    const validationErrors = validateCode(userCode, settings.languageId);
+    if (validationErrors.length > 0) {
+      toast.error(validationErrors.join('; '), {
+        position: "top-center",
+        autoClose: 3000,
+        theme: "dark",
+      });
+      return;
+    }
+
+    try {
+      toast.info("Running all test cases...", {
+        position: "top-center",
+        autoClose: 2000,
+        theme: "dark",
+      });
+
+      let allTestsPassed = true;
+      const results = [];
+
+      // Run all test cases
+      for (let i = 0; i < problem.examples.length; i++) {
+        const example = problem.examples[i];
+        
+        try {
+          // Process input for the test case
+          const processed = InputProcessor.processInput(example, settings.languageId);
+          
+          console.log(`Running test case ${i + 1}:`, {
+            input: processed.stdin,
+            expected: processed.expectedOutput
+          });
+
+          // Submit code
+          const submission = await submitCode(userCode, settings.languageId, processed.stdin, processed.expectedOutput);
+          
+          if (!submission.token) {
+            throw new Error('No token received from Judge0');
+          }
+
+          // Wait for result
+          const result = await waitForResult(submission.token);
+          results.push({ testCase: i + 1, result });
+
+          // Check if execution was successful
+          if (result.status?.id !== 3) {
+            allTestsPassed = false;
+            toast.error(`Test case ${i + 1} failed: ${result.status?.description || 'Execution error'}`, {
+              position: "top-center",
+              autoClose: 3000,
+              theme: "dark",
+            });
+            continue;
+          }
+
+          // Check output match
+          if (result.stdout) {
+            const normalizedOutput = normalizeOutput(result.stdout);
+            const normalizedExpected = normalizeOutput(processed.expectedOutput);
+            
+            if (normalizedOutput !== normalizedExpected) {
+              allTestsPassed = false;
+              console.log(`Test case ${i + 1} output mismatch:`, {
+                expected: normalizedExpected,
+                actual: normalizedOutput
+              });
+            }
+          } else if (processed.expectedOutput.trim()) {
+            // Expected output but got none
+            allTestsPassed = false;
+          }
+
+        } catch (error) {
+          console.error(`Error in test case ${i + 1}:`, error);
+          allTestsPassed = false;
+          toast.error(`Test case ${i + 1} execution failed: ${error instanceof Error ? error.message : 'Unknown error'}`, {
             position: "top-center",
             autoClose: 3000,
             theme: "dark",
           });
-          setSuccess(true);
-          setTimeout(() => setSuccess(false), 4000);
+        }
+      }
 
+      // Handle final result
+      if (allTestsPassed) {
+        toast.success("🎉 Congratulations! All tests passed!", {
+          position: "top-center",
+          autoClose: 4000,
+          theme: "dark",
+        });
+        
+        setSuccess(true);
+        setTimeout(() => setSuccess(false), 4000);
+
+        // Update user's solved problems in Firestore
+        try {
           const userRef = doc(firestore, "users", user.uid);
           await updateDoc(userRef, {
             solvedProblems: arrayUnion(pid),
           });
           setSolved(true);
+        } catch (firestoreError) {
+          console.error("Error updating solved problems:", firestoreError);
+          // Don't show error to user as the solution is still valid
         }
       } else {
-        throw new Error("Handler function not found");
+        toast.error("❌ Some test cases failed. Please check your solution.", {
+          position: "top-center",
+          autoClose: 4000,
+          theme: "dark",
+        });
       }
+
     } catch (error: any) {
-      if (
-        error.message.startsWith(
-          "AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:"
-        )
-      ) {
-        toast.error("Oops! One or more test cases failed", {
-          position: "top-center",
-          autoClose: 3000,
-          theme: "dark",
-        });
-      } else {
-        toast.error(error.message, {
-          position: "top-center",
-          autoClose: 3000,
-          theme: "dark",
-        });
-      }
+      console.error("Submission error:", error);
+      toast.error(error.message || "An error occurred during submission", {
+        position: "top-center",
+        autoClose: 4000,
+        theme: "dark",
+      });
     }
   };
 
+  // Load saved code from localStorage
   useEffect(() => {
     const code = localStorage.getItem(`code-${pid}`);
-    if (user) {
-      setUserCode(code ? JSON.parse(code) : problem.starterCode);
+    if (code) {
+      try {
+        const parsedCode = JSON.parse(code);
+        setUserCode(parsedCode);
+      } catch (error) {
+        console.error("Error parsing saved code:", error);
+        setUserCode(problem.starterCode);
+      }
     } else {
       setUserCode(problem.starterCode);
     }
-  }, [pid, user, problem.starterCode]);
+  }, [pid, problem.starterCode]);
 
+  // Save code to localStorage on change
   const onChange = (value: string) => {
     setUserCode(value);
-    localStorage.setItem(`code-${pid}`, JSON.stringify(value));
+    try {
+      localStorage.setItem(`code-${pid}`, JSON.stringify(value));
+    } catch (error) {
+      console.error("Error saving code to localStorage:", error);
+    }
   };
 
+  // Validate active test case ID
   useEffect(() => {
     if (!Array.isArray(problem.examples) || problem.examples.length === 0) {
       setActiveTestCaseId(0);
     } else if (activeTestCaseId >= problem.examples.length) {
-      setActiveTestCaseId(problem.examples.length - 1);
+      setActiveTestCaseId(Math.max(0, problem.examples.length - 1));
     }
   }, [problem.examples, activeTestCaseId]);
 
+  // Update settings when fontSize changes
+  useEffect(() => {
+    setSettings(prev => ({ ...prev, fontSize }));
+  }, [fontSize]);
+
+  const activeTestCase = problem.examples && problem.examples.length > 0 
+    ? problem.examples[activeTestCaseId] 
+    : null;
+
   return (
-    <div className="w-full h-[calc(100vh-100px)]">
+    <div className="w-full h-[calc(100vh-100px)] flex flex-col">
       <PreferenceNav settings={settings} setSettings={setSettings} />
-      <div className="h-[calc(100%-40px)] flex flex-col">
-        <CodeMirror
-          value={userCode}
-          theme={vscodeDark}
-          onChange={onChange}
-          extensions={[javascript()]}
-          style={{ fontSize: settings.fontSize, height: "70%" }}
-          className="w-full bg-deepPlum text-softSilver rounded-lg shadow-lg mb-2"
-        />
-        <div className="flex-1 overflow-y-auto">
-          <h3 className="text-sm font-medium text-softSilver mb-2">Test Cases</h3>
-          <div className="flex flex-wrap gap-2 mb-2">
-            {problem.examples.length > 0 ? (
+      
+      <div className="flex-1 flex flex-col">
+        {/* Code Editor */}
+        <div className="flex-1" style={{ minHeight: '60%' }}>
+          <CodeMirror
+            value={userCode}
+            theme={vscodeDark}
+            onChange={onChange}
+            extensions={[cpp()]}
+            style={{ fontSize: settings.fontSize }}
+            className="w-full h-full bg-deepPlum text-softSilver rounded-lg shadow-lg"
+            basicSetup={{
+              lineNumbers: true,
+              foldGutter: true,
+              dropCursor: false,
+              allowMultipleSelections: false,
+            }}
+          />
+        </div>
+
+        {/* Test Cases Section */}
+        <div className="flex-shrink-0 bg-slateBlack p-4 border-t border-slate700" style={{ maxHeight: '35%', minHeight: '200px' }}>
+          <h3 className="text-sm font-medium text-softSilver mb-3">Test Cases</h3>
+          
+          {/* Test Case Tabs */}
+          <div className="flex flex-wrap gap-2 mb-3">
+            {problem.examples && problem.examples.length > 0 ? (
               problem.examples.map((example, index) => (
                 <button
-                  key={example.id}
+                  key={example.id || index}
                   onClick={() => setActiveTestCaseId(index)}
-                  className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
+                  className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors duration-200 ${
                     activeTestCaseId === index
-                      ? "bg-tealBlue text-softSilver"
-                      : "bg-deepPlum text-softSilver hover:bg-tealBlue"
+                      ? "bg-tealBlue text-white"
+                      : "bg-deepPlum text-softSilver hover:bg-tealBlue hover:text-white"
                   }`}
                 >
                   Case {index + 1}
@@ -152,21 +287,45 @@ const Playground: React.FC<PlaygroundProps> = ({ problem, setSuccess, setSolved 
               <p className="text-softSilver text-sm">No test cases available.</p>
             )}
           </div>
-          {problem.examples[activeTestCaseId] && (
-            <div className="space-y-2">
-              <p className="text-sm font-medium text-softSilver">Input:</p>
-              <div className="bg-deepPlum p-2 rounded-lg text-softSilver">
-                {problem.examples[activeTestCaseId].inputText}
+
+          {/* Active Test Case Display */}
+          {activeTestCase && (
+            <div className="space-y-3 overflow-y-auto" style={{ maxHeight: '150px' }}>
+              <div>
+                <p className="text-sm font-medium text-softSilver mb-1">Input:</p>
+                <div className="bg-deepPlum p-2 rounded-lg text-softSilver text-sm font-mono">
+                  <pre className="whitespace-pre-wrap">{activeTestCase.inputText}</pre>
+                </div>
               </div>
-              <p className="text-sm font-medium text-softSilver mt-2">Output:</p>
-              <div className="bg-deepPlum p-2 rounded-lg text-softSilver">
-                {problem.examples[activeTestCaseId].outputText}
+              
+              <div>
+                <p className="text-sm font-medium text-softSilver mb-1">Expected Output:</p>
+                <div className="bg-deepPlum p-2 rounded-lg text-softSilver text-sm font-mono">
+                  <pre className="whitespace-pre-wrap">{activeTestCase.outputText}</pre>
+                </div>
               </div>
+
+              {activeTestCase.explanation && (
+                <div>
+                  <p className="text-sm font-medium text-softSilver mb-1">Explanation:</p>
+                  <div className="bg-deepPlum p-2 rounded-lg text-softSilver text-sm">
+                    {activeTestCase.explanation}
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
       </div>
 
+      {/* Editor Footer */}
+      <EditorFooter
+        handleSubmit={handleSubmit}
+        userCode={userCode}
+        languageId={settings.languageId}
+        activeTestCase={activeTestCase}
+        problem={problem}
+      />
     </div>
   );
 };

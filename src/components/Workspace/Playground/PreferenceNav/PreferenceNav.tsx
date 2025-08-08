@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import {
-  AiOutlineFullscreen,
-  AiOutlineFullscreenExit,
-  AiOutlineSetting,
-} from 'react-icons/ai';
-import { ISettings } from '../Playground';
+import { AiOutlineFullscreen, AiOutlineFullscreenExit, AiOutlineSetting } from 'react-icons/ai';
 import SettingsModal from '@/components/Modals/SettingsModal';
+
+export interface ISettings {
+  fontSize: string;
+  settingsModalIsOpen: boolean;
+  dropdownIsOpen: boolean;
+  languageId: number;
+}
 
 type PreferenceNavProps = {
   settings: ISettings;
@@ -17,15 +19,19 @@ const PreferenceNav: React.FC<PreferenceNavProps> = ({ settings, setSettings }) 
 
   const handleFullScreen = () => {
     if (isFullScreen) {
-      document.exitFullscreen();
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      }
     } else {
-      document.documentElement.requestFullscreen();
+      if (document.documentElement.requestFullscreen) {
+        document.documentElement.requestFullscreen();
+      }
     }
     setIsFullScreen(!isFullScreen);
   };
 
   useEffect(() => {
-    function exitHandler(e: any) {
+    function exitHandler() {
       if (!document.fullscreenElement) {
         setIsFullScreen(false);
         return;
@@ -33,6 +39,7 @@ const PreferenceNav: React.FC<PreferenceNavProps> = ({ settings, setSettings }) 
       setIsFullScreen(true);
     }
 
+    // Add event listeners for fullscreen changes
     if (document.addEventListener) {
       document.addEventListener('fullscreenchange', exitHandler);
       document.addEventListener('webkitfullscreenchange', exitHandler);
@@ -41,6 +48,7 @@ const PreferenceNav: React.FC<PreferenceNavProps> = ({ settings, setSettings }) 
     }
 
     return () => {
+      // Cleanup event listeners
       if (document.removeEventListener) {
         document.removeEventListener('fullscreenchange', exitHandler);
         document.removeEventListener('webkitfullscreenchange', exitHandler);
@@ -48,48 +56,52 @@ const PreferenceNav: React.FC<PreferenceNavProps> = ({ settings, setSettings }) 
         document.removeEventListener('MSFullscreenChange', exitHandler);
       }
     };
-  }, [isFullScreen]);
+  }, []);
 
-  const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const newLanguageId = Number(e.target.value);
-    setSettings((prev) => ({ ...prev, languageId: newLanguageId }));
+  const getLanguageName = (langId: number) => {
+    switch (langId) {
+      case 54: return 'C++';
+      case 71: return 'Python';
+      case 62: return 'Java';
+      case 63: return 'JavaScript';
+      case 50: return 'C';
+      default: return `Language ${langId}`;
+    }
   };
 
   return (
-    <div className="flex justify-between items-center p-2 bg-charcoalBlack">
-      <div className="flex items-center">
-        <select
-          value={settings.languageId || 71}
-          onChange={handleLanguageChange}
-          className="px-2 py-1 bg-deepPlum text-softSilver rounded-lg hover:bg-tealBlue transition text-sm"
-        >
-          <option value={54}>C++</option>
-          <option value={71}>Python</option>
-        </select>
-      </div>
-      <div className="flex space-x-2">
-        <button
-          className="p-1 hover:bg-deepPlum rounded transition"
-          onClick={() => setSettings({ ...settings, settingsModalIsOpen: true })}
-        >
-          <AiOutlineSetting className="text-softSilver text-lg" />
-        </button>
-        <button
-          className="p-1 hover:bg-deepPlum rounded transition"
-          onClick={handleFullScreen}
-        >
-          {isFullScreen ? (
-            <AiOutlineFullscreenExit className="text-softSilver text-lg" />
-          ) : (
-            <AiOutlineFullscreen className="text-softSilver text-lg" />
-          )}
-        </button>
+    <>
+      <div className="flex justify-between items-center p-2 bg-charcoalBlack border-b border-slate700">
+        <div className="text-softSilver text-sm font-medium">
+          Language: {getLanguageName(settings.languageId)}
+        </div>
+        <div className="flex items-center space-x-2">
+          <button
+            className="p-1.5 hover:bg-deepPlum rounded transition-colors duration-200"
+            onClick={() => setSettings({ ...settings, settingsModalIsOpen: true })}
+            title="Settings"
+          >
+            <AiOutlineSetting className="text-softSilver text-lg" />
+          </button>
+          <button
+            className="p-1.5 hover:bg-deepPlum rounded transition-colors duration-200"
+            onClick={handleFullScreen}
+            title={isFullScreen ? "Exit Fullscreen" : "Enter Fullscreen"}
+          >
+            {isFullScreen ? (
+              <AiOutlineFullscreenExit className="text-softSilver text-lg" />
+            ) : (
+              <AiOutlineFullscreen className="text-softSilver text-lg" />
+            )}
+          </button>
+        </div>
       </div>
       {settings.settingsModalIsOpen && (
         <SettingsModal settings={settings} setSettings={setSettings} />
       )}
-    </div>
+    </>
   );
 };
 
 export default PreferenceNav;
+            

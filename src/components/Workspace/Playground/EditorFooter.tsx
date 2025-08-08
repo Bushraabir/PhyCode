@@ -1,24 +1,47 @@
 import React, { useState, useEffect } from 'react';
 import { BsChevronUp, BsChevronDown } from 'react-icons/bs';
-import { submitCode, getSubmissionResult, SubmissionResult, validateCode, normalizeOutput, InputProcessor, LANGUAGE_IDS } from '@/lib/judge0';
+import { submitCode, getSubmissionResult, SubmissionResult, validateCode, normalizeOutput, InputProcessor, LANGUAGE_IDS, waitForResult } from '@/lib/judge0';
+
+type TestCase = {
+  id: string;
+  inputText: string;
+  outputText: string;
+  explanation?: string;
+};
+
+type Problem = {
+  id: string;
+  title: string;
+  examples: TestCase[];
+  starterCode: string;
+};
 
 type EditorFooterProps = {
   handleSubmit?: () => void;
   code?: string;
+  userCode?: string;
   languageId: number;
-  activeTestCase?: { inputText: string; outputText: string } | null;
+  activeTestCase?: TestCase | null;
+  problem?: Problem;
 };
 
-const EditorFooter: React.FC<EditorFooterProps> = ({ handleSubmit, code = '', languageId, activeTestCase }) => {
+const EditorFooter: React.FC<EditorFooterProps> = ({ 
+  handleSubmit, 
+  code = '', 
+  userCode = '',
+  languageId, 
+  activeTestCase,
+  problem 
+}) => {
   const [consoleOpen, setConsoleOpen] = useState(false);
   const [result, setResult] = useState<SubmissionResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [testResult, setTestResult] = useState<'passed' | 'failed' | null>(null);
 
+  const effectiveCode = userCode || code || '';
+
   const executeCode = async (isSubmission: boolean = false) => {
-    const effectiveCode = code || '';
-    
     // Validate code first
     const validationErrors = validateCode(effectiveCode, languageId);
     if (validationErrors.length > 0) {
@@ -40,52 +63,47 @@ const EditorFooter: React.FC<EditorFooterProps> = ({ handleSubmit, code = '', la
         hasTestCase: !!activeTestCase
       });
 
-      // Process test case based on language
-      let fullCode = effectiveCode;
       let stdin = '';
       let expectedOutput = '';
 
+      // Process test case if available
       if (activeTestCase) {
         const processed = InputProcessor.processInput(activeTestCase, languageId);
-        if (languageId === LANGUAGE_IDS.PYTHON) {
-          // For Python, prepend variable assignments to the code
-          fullCode = processed.stdin + '\n' + effectiveCode;
-          expectedOutput = processed.expectedOutput;
-        } else {
-          // For other languages, use processed stdin as input
-          stdin = processed.stdin;
-          expectedOutput = processed.expectedOutput;
-        }
+        stdin = processed.stdin;
+        expectedOutput = processed.expectedOutput;
+        
+        console.log('Processed test case:', {
+          originalInput: activeTestCase.inputText,
+          processedStdin: stdin,
+          expectedOutput: expectedOutput
+        });
       }
 
       // Submit code with processed inputs
-      const submission = await submitCode(fullCode, languageId, stdin, expectedOutput);
+      const submission = await submitCode(effectiveCode, languageId, stdin, expectedOutput);
       
       if (!submission.token) {
         throw new Error('No token received from Judge0');
       }
 
-      // Poll for results
-      let resultData: SubmissionResult;
-      let attempts = 0;
-      const maxAttempts = 30; // 60 seconds max wait time
+      console.log('Submission token received:', submission.token);
 
-      do {
-        await new Promise((resolve) => setTimeout(resolve, 2000));
-        resultData = await getSubmissionResult(submission.token);
-        attempts++;
-        
-        if (attempts >= maxAttempts) {
-          throw new Error('Execution timed out. Please try again.');
-        }
-      } while (resultData.status?.id === 1 || resultData.status?.id === 2); // In Queue or Processing
-
+      // Wait for results using the helper function
+      const resultData = await waitForResult(submission.token);
+      
+      console.log('Execution result:', resultData);
       setResult(resultData);
 
       // Check if test case passed (if we have expected output)
       if (activeTestCase && activeTestCase.outputText && resultData.stdout) {
         const normalizedOutput = normalizeOutput(resultData.stdout);
         const normalizedExpected = normalizeOutput(activeTestCase.outputText);
+        
+        console.log('Comparing outputs:', {
+          actual: normalizedOutput,
+          expected: normalizedExpected,
+          match: normalizedOutput === normalizedExpected
+        });
         
         if (normalizedOutput === normalizedExpected) {
           setTestResult('passed');
@@ -134,8 +152,8 @@ const EditorFooter: React.FC<EditorFooterProps> = ({ handleSubmit, code = '', la
 
   const getLanguageName = (langId: number) => {
     switch (langId) {
-      case 71: return 'Python';
       case 54: return 'C++';
+      case 71: return 'Python';
       case 62: return 'Java';
       case 63: return 'JavaScript';
       case 50: return 'C';
@@ -164,13 +182,15 @@ const EditorFooter: React.FC<EditorFooterProps> = ({ handleSubmit, code = '', la
           >
             {loading ? 'Running...' : 'Run'}
           </button>
-          <button
-            onClick={handleSubmitCode}
-            disabled={loading}
-            className="px-3 py-1.5 bg-emeraldGreen text-softSilver text-sm font-medium rounded-lg hover:bg-tealBlue transition focus:outline-none disabled:bg-gray-400 disabled:cursor-not-allowed"
-          >
-            {loading ? 'Submitting...' : 'Submit'}
-          </button>
+          {handleSubmit && (
+            <button
+              onClick={handleSubmitCode}
+              disabled={loading}
+              className="px-3 py-1.5 bg-emeraldGreen text-softSilver text-sm font-medium rounded-lg hover:bg-tealBlue transition focus:outline-none disabled:bg-gray-400 disabled:cursor-not-allowed"
+            >
+              {loading ? 'Submitting...' : 'Submit'}
+            </button>
+          )}
         </div>
       </div>
       {consoleOpen && (
@@ -215,6 +235,11 @@ const EditorFooter: React.FC<EditorFooterProps> = ({ handleSubmit, code = '', la
                   <pre className="text-gray-300 whitespace-pre-wrap">
                     Original: {activeTestCase.inputText}
                   </pre>
+                  {activeTestCase.inputText !== InputProcessor.processInput(activeTestCase, languageId).stdin && (
+                    <pre className="text-yellow-300 whitespace-pre-wrap mt-1">
+                      Processed: {InputProcessor.processInput(activeTestCase, languageId).stdin}
+                    </pre>
+                  )}
                 </div>
               )}
               

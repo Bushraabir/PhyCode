@@ -1,42 +1,31 @@
-export interface ISettings {
-  settingsModalIsOpen: boolean;
-  languageId: number;
-}
-
 import React, { useState, useEffect } from "react";
 import Split from "react-split";
 import Confetti from "react-confetti";
 import useWindowSize from "@/hooks/useWindowSize";
-import CircleSkeleton from "@/components/Skeletons/CircleSkeleton";
-import RectangleSkeleton from "@/components/Skeletons/RectangleSkeleton";
 import { auth, firestore } from "@/firebase/firebase";
-import {
-  arrayRemove,
-  arrayUnion,
-  doc,
-  getDoc,
-  runTransaction,
-  updateDoc,
-} from "firebase/firestore";
+import { arrayRemove, arrayUnion, doc, getDoc, runTransaction, updateDoc } from "firebase/firestore";
 import { useAuthState } from "react-firebase-hooks/auth";
-import {
-  AiFillLike,
-  AiFillDislike,
-  AiOutlineLoading3Quarters,
-  AiFillStar,
-} from "react-icons/ai";
+import { AiFillLike, AiFillDislike, AiOutlineLoading3Quarters, AiFillStar } from "react-icons/ai";
 import { BsCheck2Circle } from "react-icons/bs";
 import { TiStarOutline } from "react-icons/ti";
 import { toast } from "react-toastify";
-import PreferenceNav from "./PreferenceNav/PreferenceNav";
-import CodeMirror from "@uiw/react-codemirror";
-import { vscodeDark } from "@uiw/codemirror-theme-vscode";
-import { javascript } from "@codemirror/lang-javascript";
-import EditorFooter from "./EditorFooter";
-import { useRouter } from "next/router";
-import useLocalStorage from "@/hooks/useLocalStorage";
+import Playground from "./Playground";
 
-// Define the Problem type based on Firestore data structure, adjusted for Playground
+export interface ISettings {
+  fontSize: string;
+  settingsModalIsOpen: boolean;
+  dropdownIsOpen: boolean;
+  languageId: number;
+}
+
+type TestCase = {
+  id: string;
+  inputText: string;
+  outputText: string;
+  explanation?: string;
+  img?: string;
+};
+
 type Problem = {
   id: string;
   title: string;
@@ -44,13 +33,7 @@ type Problem = {
   category: string;
   constraints: string;
   dislikes: number;
-  examples: Array<{
-    id: string; 
-    inputText: string;
-    outputText: string;
-    explanation?: string;
-    img?: string; 
-  }>;
+  examples: TestCase[];
   handlerFunction: string;
   likes: number;
   link: string;
@@ -64,656 +47,380 @@ type WorkspaceProps = {
   problem: Problem;
 };
 
-/**
- * Workspace component
- * Renders problem description on the left and code playground on the right
- * with a split-pane layout and optional confetti celebration.
- */
 const Workspace: React.FC<WorkspaceProps> = ({ problem }) => {
-  // Get viewport dimensions for confetti canvas sizing
   const { width, height } = useWindowSize();
-
-  // Local success state for triggering confetti
   const [success, setSuccess] = useState(false);
-  // Whether the problem has been solved (passed to description)
   const [solved, setSolved] = useState(false);
-
-  const [settings, setSettings] = useState<ISettings>({
-    settingsModalIsOpen: false,
-    languageId: 71, // Default to Python
-  });
-  const [code, setCode] = useState<string>('print("Hello, PhyCode!")');
-
-  const handleSubmit = () => {
-    console.log('Submission saved with languageId:', settings.languageId);
-  };
-
-  return (
-    <div className="flex-1 flex flex-col bg-charcoalBlack overflow-hidden">
-      <Split
-        className="split h-full flex"
-        sizes={[50, 50]} // initial split ratios: 50% / 50%
-        minSize={300} // minimum pane width in px
-        gutterSize={30} // width of draggable gutter
-        gutterAlign="center"
-        snapOffset={30}
-        gutter={(index, direction) => {
-          const gutterEl = document.createElement("div");
-          gutterEl.className = `gutter gutter-${direction}`;
-          gutterEl.innerHTML =
-            "<div class='gutter-dots'><span></span><span></span><span></span></div>";
-          return gutterEl;
-        }}
-      >
-        {/* Left pane: Problem Description */}
-        <div className="pane-left bg-slateBlack p-6 overflow-y-auto">
-          <ProblemDescription problem={problem} _solved={solved} />
-        </div>
-
-        {/* Right pane: Code Playground */}
-        <div className="pane-right bg-slateBlack p-6 overflow-y-auto relative">
-          <Playground
-            problem={problem}
-            setSuccess={setSuccess}
-            setSolved={setSolved}
-          />
-
-          {/* Confetti celebration on success */}
-          {success && (
-            <Confetti
-              gravity={0.3}
-              tweenDuration={4000}
-              width={width / 2 - 20} // half viewport minus padding
-              height={height - 94} // account for header/navbar
-            />
-          )}
-        </div>
-      </Split>
-
-      {/* Custom styles for gutter dots */}
-      <style jsx>{`
-        .gutter {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          background-color: #1f2937;
-          cursor: col-resize;
-          /* match gutterSize width */
-          width: 30px;
-        }
-        .gutter-dots {
-          display: flex;
-          flex-direction: column;
-          gap: 4px;
-        }
-        .gutter-dots span {
-          width: 6px;
-          height: 6px;
-          background-color: #94a3b8;
-          border-radius: 50%;
-        }
-      `}</style>
-    </div>
-  );
-};
-
-// ProblemDescription component
-type ProblemDescriptionProps = {
-  problem: Problem;
-  _solved: boolean;
-};
-
-const ProblemDescription: React.FC<ProblemDescriptionProps> = ({
-  problem,
-  _solved,
-}) => {
-  const [user] = useAuthState(auth);
-  const { currentProblem, loading, problemDifficultyClass, setCurrentProblem } =
-    useGetCurrentProblem(problem.id);
-  const { liked, disliked, solved, setData, starred } = useGetUsersDataOnProblem(
-    problem.id
-  );
+  const [liked, setLiked] = useState(false);
+  const [disliked, setDisliked] = useState(false);
+  const [starred, setStarred] = useState(false);
   const [updating, setUpdating] = useState(false);
+  const [user] = useAuthState(auth);
 
-  const returnUserDataAndProblemData = async (transaction: any) => {
-    const userRef = doc(firestore, "users", user!.uid);
-    const problemRef = doc(firestore, "problems", problem.id);
-    const userDoc = await transaction.get(userRef);
-    const problemDoc = await transaction.get(problemRef);
-    return { userDoc, problemDoc, userRef, problemRef };
-  };
+  // Check user's interaction status with this problem
+  useEffect(() => {
+    const checkUserStatus = async () => {
+      if (!user) {
+        setLiked(false);
+        setDisliked(false);
+        setStarred(false);
+        setSolved(false);
+        return;
+      }
+
+      try {
+        const userRef = doc(firestore, "users", user.uid);
+        const userDoc = await getDoc(userRef);
+        
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
+          setLiked(userData.likedProblems?.includes(problem.id) || false);
+          setDisliked(userData.dislikedProblems?.includes(problem.id) || false);
+          setStarred(userData.starredProblems?.includes(problem.id) || false);
+          setSolved(userData.solvedProblems?.includes(problem.id) || false);
+        }
+      } catch (error) {
+        console.error("Error checking user status:", error);
+      }
+    };
+
+    checkUserStatus();
+  }, [user, problem.id]);
 
   const handleLike = async () => {
     if (!user) {
       toast.error("You must be logged in to like a problem", {
-        position: "top-left",
-        theme: "dark",
-      });
-      return;
-    }
-    if (updating) return;
-    setUpdating(true);
-    await runTransaction(firestore, async (transaction) => {
-      const { problemDoc, userDoc, problemRef, userRef } =
-        await returnUserDataAndProblemData(transaction);
-
-      if (userDoc.exists() && problemDoc.exists()) {
-        if (liked) {
-          transaction.update(userRef, {
-            likedProblems: userDoc
-              .data()
-              .likedProblems.filter((id: string) => id !== problem.id),
-          });
-          transaction.update(problemRef, {
-            likes: problemDoc.data().likes - 1,
-          });
-
-          setCurrentProblem((prev) =>
-            prev ? { ...prev, likes: prev.likes - 1 } : null
-          );
-          setData((prev) => ({ ...prev, liked: false }));
-        } else if (disliked) {
-          transaction.update(userRef, {
-            likedProblems: [...userDoc.data().likedProblems, problem.id],
-            dislikedProblems: userDoc
-              .data()
-              .dislikedProblems.filter((id: string) => id !== problem.id),
-          });
-          transaction.update(problemRef, {
-            likes: problemDoc.data().likes + 1,
-            dislikes: problemDoc.data().dislikes - 1,
-          });
-
-          setCurrentProblem((prev) =>
-            prev
-              ? { ...prev, likes: prev.likes + 1, dislikes: prev.dislikes - 1 }
-              : null
-          );
-          setData((prev) => ({ ...prev, liked: true, disliked: false }));
-        } else {
-          transaction.update(userRef, {
-            likedProblems: [...userDoc.data().likedProblems, problem.id],
-          });
-          transaction.update(problemRef, {
-            likes: problemDoc.data().likes + 1,
-          });
-          setCurrentProblem((prev) =>
-            prev ? { ...prev, likes: prev.likes + 1 } : null
-          );
-          setData((prev) => ({ ...prev, liked: true }));
-        }
-      }
-    });
-    setUpdating(false);
-  };
-
-  const handleDislike = async () => {
-    if (!user) {
-      toast.error("You must be logged in to dislike a problem", {
-        position: "top-left",
-        theme: "dark",
-      });
-      return;
-    }
-    if (updating) return;
-    setUpdating(true);
-    await runTransaction(firestore, async (transaction) => {
-      const { problemDoc, userDoc, problemRef, userRef } =
-        await returnUserDataAndProblemData(transaction);
-      if (userDoc.exists() && problemDoc.exists()) {
-        if (disliked) {
-          transaction.update(userRef, {
-            dislikedProblems: userDoc
-              .data()
-              .dislikedProblems.filter((id: string) => id !== problem.id),
-          });
-          transaction.update(problemRef, {
-            dislikes: problemDoc.data().dislikes - 1,
-          });
-          setCurrentProblem((prev) =>
-            prev ? { ...prev, dislikes: prev.dislikes - 1 } : null
-          );
-          setData((prev) => ({ ...prev, disliked: false }));
-        } else if (liked) {
-          transaction.update(userRef, {
-            dislikedProblems: [...userDoc.data().dislikedProblems, problem.id],
-            likedProblems: userDoc
-              .data()
-              .likedProblems.filter((id: string) => id !== problem.id),
-          });
-          transaction.update(problemRef, {
-            dislikes: problemDoc.data().dislikes + 1,
-            likes: problemDoc.data().likes - 1,
-          });
-          setCurrentProblem((prev) =>
-            prev
-              ? { ...prev, dislikes: prev.dislikes + 1, likes: prev.likes - 1 }
-              : null
-          );
-          setData((prev) => ({ ...prev, disliked: true, liked: false }));
-        } else {
-          transaction.update(userRef, {
-            dislikedProblems: [...userDoc.data().dislikedProblems, problem.id],
-          });
-          transaction.update(problemRef, {
-            dislikes: problemDoc.data().dislikes + 1,
-          });
-          setCurrentProblem((prev) =>
-            prev ? { ...prev, dislikes: prev.dislikes + 1 } : null
-          );
-          setData((prev) => ({ ...prev, disliked: true }));
-        }
-      }
-    });
-    setUpdating(false);
-  };
-
-  const handleStar = async () => {
-    if (!user) {
-      toast.error("You must be logged in to star a problem", {
-        position: "top-left",
-        theme: "dark",
-      });
-      return;
-    }
-    if (updating) return;
-    setUpdating(true);
-    await runTransaction(firestore, async (transaction) => {
-      const { userDoc, problemDoc, userRef, problemRef } =
-        await returnUserDataAndProblemData(transaction);
-      if (userDoc.exists() && problemDoc.exists()) {
-        if (starred) {
-          transaction.update(userRef, {
-            starredProblems: userDoc
-              .data()
-              .starredProblems.filter((id: string) => id !== problem.id),
-          });
-          setData((prev) => ({ ...prev, starred: false }));
-        } else {
-          transaction.update(userRef, {
-            starredProblems: [...userDoc.data().starredProblems, problem.id],
-          });
-          setData((prev) => ({ ...prev, starred: true }));
-        }
-      }
-    });
-    setUpdating(false);
-  };
-
-  return (
-    <div className="w-full">
-      <div className="flex items-center justify-between p-2 bg-charcoalBlack text-softSilver">
-        <h2 className="text-lg font-heading">{problem.title}</h2>
-        <div className="flex space-x-4">
-          <span
-            className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-              problem.difficulty === "Easy"
-                ? "bg-emeraldGreen"
-                : problem.difficulty === "Medium"
-                ? "bg-goldenAmber"
-                : "bg-crimsonRed"
-            }`}
-          >
-            {loading ? (
-              <div className="w-2 h-2 bg-deepPlum rounded-full animate-pulse" />
-            ) : (
-              problem.difficulty
-            )}
-          </span>
-          {_solved && (
-            <span className="inline-flex items-center px-2 py-1 bg-emeraldGreen rounded-full text-xs font-medium">
-              <BsCheck2Circle className="mr-1" /> Solved
-            </span>
-          )}
-          {!loading && user && (
-            <div className="flex space-x-3">
-              <button
-                className="flex items-center space-x-1 p-1 hover:bg-deepPlum rounded transition"
-                onClick={handleLike}
-              >
-                {liked && !updating && (
-                  <AiFillLike className="text-tealBlue" />
-                )}
-                {!liked && !updating && <AiFillLike />}
-                {updating && (
-                  <AiOutlineLoading3Quarters className="animate-spin" />
-                )}
-                <span className="text-xs">{currentProblem?.likes}</span>
-              </button>
-              <button
-                className="flex items-center space-x-1 p-1 hover:bg-deepPlum rounded transition"
-                onClick={handleDislike}
-              >
-                {disliked && !updating && (
-                  <AiFillDislike className="text-tealBlue" />
-                )}
-                {!disliked && !updating && <AiFillDislike />}
-                {updating && (
-                  <AiOutlineLoading3Quarters className="animate-spin" />
-                )}
-                <span className="text-xs">{currentProblem?.dislikes}</span>
-              </button>
-              <button
-                className="p-1 hover:bg-deepPlum rounded transition"
-                onClick={handleStar}
-              >
-                {starred && !updating && (
-                  <AiFillStar className="text-goldenAmber" />
-                )}
-                {!starred && !updating && <TiStarOutline />}
-                {updating && (
-                  <AiOutlineLoading3Quarters className="animate-spin" />
-                )}
-              </button>
-            </div>
-          )}
-          {loading && (
-            <div className="flex space-x-2">
-              <RectangleSkeleton />
-              <CircleSkeleton />
-              <RectangleSkeleton />
-            </div>
-          )}
-        </div>
-      </div>
-      <div className="p-4 overflow-y-auto h-[calc(100vh-100px)]">
-        <div className="prose prose-invert max-w-none">
-          <div dangerouslySetInnerHTML={{ __html: problem.problemStatement }} />
-          {problem.examples.length > 0 && (
-            <div className="mt-4">
-              {problem.examples.map((example, index) => (
-                <div key={example.id} className="mb-4">
-                  <h3 className="text-softSilver font-medium">
-                    Example {index + 1}
-                  </h3>
-                  {example.img && (
-                    <img src={example.img} alt="" className="mt-2" />
-                  )}
-                  <div className="bg-deepPlum p-3 rounded-lg mt-2">
-                    <pre className="text-softSilver">
-                      <strong>Input:</strong> {example.inputText}
-                      <br />
-                      <strong>Output:</strong> {example.outputText}
-                      <br />
-                      {example.explanation && (
-                        <>
-                          <strong>Explanation:</strong> {example.explanation}
-                        </>
-                      )}
-                    </pre>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-          <div className="mt-4">
-            <h3 className="text-softSilver font-medium">Constraints:</h3>
-            <ul className="list-disc list-inside text-softSilver">
-              <div dangerouslySetInnerHTML={{ __html: problem.constraints }} />
-            </ul>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// Playground component
-interface ISettings {
-  fontSize: string;
-  settingsModalIsOpen: boolean;
-  dropdownIsOpen: boolean;
-}
-
-type PlaygroundProps = {
-  problem: Problem;
-  setSuccess: React.Dispatch<React.SetStateAction<boolean>>;
-  setSolved: React.Dispatch<React.SetStateAction<boolean>>;
-};
-
-const Playground: React.FC<PlaygroundProps> = ({
-  problem,
-  setSuccess,
-  setSolved,
-}) => {
-  const [activeTestCaseId, setActiveTestCaseId] = useState<number>(0);
-  let [userCode, setUserCode] = useState<string>(problem.starterCode);
-
-  const [fontSize, setFontSize] = useLocalStorage("lcc-fontSize", "16px");
-
-  const [settings, setSettings] = useState<ISettings>({
-    fontSize: fontSize,
-    settingsModalIsOpen: false,
-    dropdownIsOpen: false,
-  });
-
-  const [user] = useAuthState(auth);
-  const {
-    query: { pid },
-  } = useRouter();
-
-  const handleSubmit = async () => {
-    if (!user) {
-      toast.error("Please login to submit your code", {
         position: "top-center",
         autoClose: 3000,
         theme: "dark",
       });
       return;
     }
+
+    if (updating) return;
+    setUpdating(true);
+
     try {
-      userCode = userCode.slice(userCode.indexOf(problem.starterFunctionName));
-      const cb = new Function(`return ${userCode}`)();
-      // Use the handlerFunction from the problem prop
-      const handler = (window as any)[problem.handlerFunction];
-
-      if (typeof handler === "function") {
-        const success = handler(cb);
-        if (success) {
-          toast.success("Congrats! All tests passed!", {
-            position: "top-center",
-            autoClose: 3000,
-            theme: "dark",
+      const userRef = doc(firestore, "users", user.uid);
+      await runTransaction(firestore, async (transaction) => {
+        const userDoc = await transaction.get(userRef);
+        const problemDocRef = doc(firestore, "problems", problem.id);
+        const problemDoc = await transaction.get(problemDocRef);
+        
+        const userData = userDoc.data();
+        const problemData = problemDoc.data();
+        
+        if (userData?.likedProblems?.includes(problem.id)) {
+          // Unlike
+          transaction.update(userRef, {
+            likedProblems: arrayRemove(problem.id),
           });
-          setSuccess(true);
-          setTimeout(() => setSuccess(false), 4000);
-
-          const userRef = doc(firestore, "users", user.uid);
-          await updateDoc(userRef, {
-            solvedProblems: arrayUnion(pid),
+          transaction.update(problemDocRef, {
+            likes: Math.max(0, (problemData?.likes || 0) - 1),
           });
-          setSolved(true);
+          setLiked(false);
+        } else {
+          // Like
+          transaction.update(userRef, {
+            likedProblems: arrayUnion(problem.id),
+            // Remove dislike if exists
+            ...(userData?.dislikedProblems?.includes(problem.id) && {
+              dislikedProblems: arrayRemove(problem.id)
+            })
+          });
+          transaction.update(problemDocRef, {
+            likes: (problemData?.likes || 0) + 1,
+            // Decrease dislikes if user had disliked
+            ...(userData?.dislikedProblems?.includes(problem.id) && {
+              dislikes: Math.max(0, (problemData?.dislikes || 0) - 1)
+            })
+          });
+          setLiked(true);
+          if (disliked) setDisliked(false);
         }
-      } else {
-        throw new Error("Handler function not found");
-      }
-    } catch (error: any) {
-      if (
-        error.message.startsWith(
-          "AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:"
-        )
-      ) {
-        toast.error("Oops! One or more test cases failed", {
-          position: "top-center",
-          autoClose: 3000,
-          theme: "dark",
-        });
-      } else {
-        toast.error(error.message, {
-          position: "top-center",
-          autoClose: 3000,
-          theme: "dark",
-        });
-      }
+      });
+    } catch (error) {
+      console.error("Error handling like:", error);
+      toast.error("Failed to update like status", {
+        position: "top-center",
+        autoClose: 3000,
+        theme: "dark",
+      });
+    } finally {
+      setUpdating(false);
     }
   };
 
-  useEffect(() => {
-    const code = localStorage.getItem(`code-${pid}`);
-    if (user) {
-      setUserCode(code ? JSON.parse(code) : problem.starterCode);
-    } else {
-      setUserCode(problem.starterCode);
+  const handleDislike = async () => {
+    if (!user) {
+      toast.error("You must be logged in to dislike a problem", {
+        position: "top-center",
+        autoClose: 3000,
+        theme: "dark",
+      });
+      return;
     }
-  }, [pid, user, problem.starterCode]);
 
-  const onChange = (value: string) => {
-    setUserCode(value);
-    localStorage.setItem(`code-${pid}`, JSON.stringify(value));
+    if (updating) return;
+    setUpdating(true);
+
+    try {
+      const userRef = doc(firestore, "users", user.uid);
+      await runTransaction(firestore, async (transaction) => {
+        const userDoc = await transaction.get(userRef);
+        const problemDocRef = doc(firestore, "problems", problem.id);
+        const problemDoc = await transaction.get(problemDocRef);
+        
+        const userData = userDoc.data();
+        const problemData = problemDoc.data();
+        
+        if (userData?.dislikedProblems?.includes(problem.id)) {
+          // Remove dislike
+          transaction.update(userRef, {
+            dislikedProblems: arrayRemove(problem.id),
+          });
+          transaction.update(problemDocRef, {
+            dislikes: Math.max(0, (problemData?.dislikes || 0) - 1),
+          });
+          setDisliked(false);
+        } else {
+          // Dislike
+          transaction.update(userRef, {
+            dislikedProblems: arrayUnion(problem.id),
+            // Remove like if exists
+            ...(userData?.likedProblems?.includes(problem.id) && {
+              likedProblems: arrayRemove(problem.id)
+            })
+          });
+          transaction.update(problemDocRef, {
+            dislikes: (problemData?.dislikes || 0) + 1,
+            // Decrease likes if user had liked
+            ...(userData?.likedProblems?.includes(problem.id) && {
+              likes: Math.max(0, (problemData?.likes || 0) - 1)
+            })
+          });
+          setDisliked(true);
+          if (liked) setLiked(false);
+        }
+      });
+    } catch (error) {
+      console.error("Error handling dislike:", error);
+      toast.error("Failed to update dislike status", {
+        position: "top-center",
+        autoClose: 3000,
+        theme: "dark",
+      });
+    } finally {
+      setUpdating(false);
+    }
   };
 
-  useEffect(() => {
-    if (!Array.isArray(problem.examples) || problem.examples.length === 0) {
-      setActiveTestCaseId(0);
-    } else if (activeTestCaseId >= problem.examples.length) {
-      setActiveTestCaseId(problem.examples.length - 1);
+  const handleStar = async () => {
+    if (!user) {
+      toast.error("You must be logged in to star a problem", {
+        position: "top-center",
+        autoClose: 3000,
+        theme: "dark",
+      });
+      return;
     }
-  }, [problem.examples, activeTestCaseId]);
+
+    if (updating) return;
+    setUpdating(true);
+
+    try {
+      const userRef = doc(firestore, "users", user.uid);
+      await runTransaction(firestore, async (transaction) => {
+        const userDoc = await transaction.get(userRef);
+        const userData = userDoc.data();
+        
+        if (userData?.starredProblems?.includes(problem.id)) {
+          transaction.update(userRef, {
+            starredProblems: arrayRemove(problem.id),
+          });
+          setStarred(false);
+        } else {
+          transaction.update(userRef, {
+            starredProblems: arrayUnion(problem.id),
+          });
+          setStarred(true);
+        }
+      });
+    } catch (error) {
+      console.error("Error handling star:", error);
+      toast.error("Failed to update star status", {
+        position: "top-center",
+        autoClose: 3000,
+        theme: "dark",
+      });
+    } finally {
+      setUpdating(false);
+    }
+  };
+
+  const getDifficultyColor = (difficulty: string) => {
+    switch (difficulty.toLowerCase()) {
+      case 'easy': return 'text-green-400';
+      case 'medium': return 'text-yellow-400';
+      case 'hard': return 'text-red-400';
+      default: return 'text-gray-400';
+    }
+  };
 
   return (
-    <div className="w-full h-[calc(100vh-100px)]">
-      <PreferenceNav settings={settings} setSettings={setSettings} />
-      <div className="h-[calc(100%-40px)] flex flex-col">
-        <CodeMirror
-          value={userCode}
-          theme={vscodeDark}
-          onChange={onChange}
-          extensions={[javascript()]}
-          style={{ fontSize: settings.fontSize, height: "70%" }}
-          className="w-full bg-deepPlum text-softSilver rounded-lg shadow-lg mb-2"
+    <div className="flex-1 flex flex-col bg-charcoalBlack overflow-hidden">
+      {success && (
+        <Confetti 
+          width={width} 
+          height={height} 
+          numberOfPieces={300} 
+          recycle={false}
+          gravity={0.3}
         />
-        <div className="flex-1 overflow-y-auto">
-          <h3 className="text-sm font-medium text-softSilver mb-2">
-            Test Cases
-          </h3>
-          <div className="flex flex-wrap gap-2 mb-2">
-            {problem.examples.length > 0 ? (
-              problem.examples.map((example, index) => (
-                <button
-                  key={example.id}
-                  onClick={() => setActiveTestCaseId(index)}
-                  className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
-                    activeTestCaseId === index
-                      ? "bg-tealBlue text-softSilver"
-                      : "bg-deepPlum text-softSilver hover:bg-tealBlue"
-                  }`}
-                >
-                  Case {index + 1}
-                </button>
-              ))
-            ) : (
-              <p className="text-softSilver text-sm">No test cases available.</p>
-            )}
-          </div>
-          {problem.examples[activeTestCaseId] && (
-            <div className="space-y-2">
-              <p className="text-sm font-medium text-softSilver">Input:</p>
-              <div className="bg-deepPlum p-2 rounded-lg text-softSilver">
-                {problem.examples[activeTestCaseId].inputText}
+      )}
+      
+      <Split
+        className="split h-full flex"
+        sizes={[50, 50]}
+        minSize={300}
+        maxSize={-300}
+        gutterSize={6}
+        gutterAlign="center"
+        snapOffset={30}
+        dragInterval={1}
+        direction="horizontal"
+        cursor="col-resize"
+      >
+        {/* Problem Description Panel */}
+        <div className="pane-left bg-slateBlack overflow-hidden flex flex-col">
+          <div className="p-6 overflow-y-auto flex-1">
+            {/* Problem Header */}
+            <div className="flex justify-between items-start mb-6">
+              <div className="flex-1">
+                <div className="flex items-center gap-3 mb-2">
+                  <h2 className="text-2xl font-bold text-softSilver">{problem.title}</h2>
+                  {solved && (
+                    <BsCheck2Circle className="text-green-400 text-xl" title="Solved" />
+                  )}
+                </div>
+                <div className="flex items-center gap-4 text-sm">
+                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${getDifficultyColor(problem.difficulty)} bg-opacity-20`}>
+                    {problem.difficulty}
+                  </span>
+                  <span className="text-gray-400">{problem.category}</span>
+                </div>
               </div>
-              <p className="text-sm font-medium text-softSilver mt-2">Output:</p>
-              <div className="bg-deepPlum p-2 rounded-lg text-softSilver">
-                {problem.examples[activeTestCaseId].outputText}
+              
+              {/* Action Buttons */}
+              <div className="flex items-center space-x-3">
+                <button 
+                  onClick={handleLike}
+                  disabled={updating}
+                  className={`flex items-center space-x-1 px-2 py-1 rounded transition-colors ${
+                    liked ? 'text-blue-400' : 'text-softSilver hover:text-blue-400'
+                  } ${updating ? 'opacity-50 cursor-not-allowed' : ''}`}
+                >
+                  <AiFillLike className="text-lg" />
+                  <span className="text-sm">{problem.likes}</span>
+                </button>
+                
+                <button 
+                  onClick={handleDislike}
+                  disabled={updating}
+                  className={`flex items-center space-x-1 px-2 py-1 rounded transition-colors ${
+                    disliked ? 'text-red-400' : 'text-softSilver hover:text-red-400'
+                  } ${updating ? 'opacity-50 cursor-not-allowed' : ''}`}
+                >
+                  <AiFillDislike className="text-lg" />
+                  <span className="text-sm">{problem.dislikes}</span>
+                </button>
+                
+                <button 
+                  onClick={handleStar}
+                  disabled={updating}
+                  className={`p-2 rounded transition-colors ${
+                    starred ? 'text-yellow-400' : 'text-softSilver hover:text-yellow-400'
+                  } ${updating ? 'opacity-50 cursor-not-allowed' : ''}`}
+                >
+                  {starred ? <AiFillStar className="text-lg" /> : <TiStarOutline className="text-lg" />}
+                </button>
+                
+                {updating && (
+                  <AiOutlineLoading3Quarters className="text-softSilver animate-spin text-lg" />
+                )}
               </div>
             </div>
-          )}
+
+            {/* Problem Statement */}
+            <div className="text-softSilver space-y-4">
+              <div>
+                <h3 className="text-lg font-medium mb-3">Problem Statement</h3>
+                <div className="text-gray-300 leading-relaxed whitespace-pre-wrap">
+                  {problem.problemStatement}
+                </div>
+              </div>
+
+              {/* Constraints */}
+              {problem.constraints && (
+                <div>
+                  <h3 className="text-lg font-medium mb-3">Constraints</h3>
+                  <div className="bg-deepPlum p-3 rounded-lg text-gray-300 font-mono text-sm whitespace-pre-wrap">
+                    {problem.constraints}
+                  </div>
+                </div>
+              )}
+
+              {/* Examples */}
+              {problem.examples && problem.examples.length > 0 && (
+                <div>
+                  <h3 className="text-lg font-medium mb-3">Examples</h3>
+                  <div className="space-y-4">
+                    {problem.examples.map((example: TestCase, index: number) => (
+                      <div key={example.id || index} className="bg-deepPlum p-4 rounded-lg">
+                        <p className="font-medium text-tealBlue mb-2">Example {index + 1}:</p>
+                        
+                        <div className="space-y-2">
+                          <div>
+                            <p className="text-sm font-medium text-gray-400 mb-1">Input:</p>
+                            <pre className="bg-charcoalBlack p-2 rounded text-green-300 text-sm font-mono whitespace-pre-wrap">
+                              {example.inputText}
+                            </pre>
+                          </div>
+                          
+                          <div>
+                            <p className="text-sm font-medium text-gray-400 mb-1">Output:</p>
+                            <pre className="bg-charcoalBlack p-2 rounded text-blue-300 text-sm font-mono whitespace-pre-wrap">
+                              {example.outputText}
+                            </pre>
+                          </div>
+                          
+                          {example.explanation && (
+                            <div>
+                              <p className="text-sm font-medium text-gray-400 mb-1">Explanation:</p>
+                              <div className="bg-charcoalBlack p-2 rounded text-gray-300 text-sm">
+                                {example.explanation}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
-      </div>
 
-
-      <EditorFooter
-        code={userCode}
-        languageId={settings.languageId}
-        handleSubmit={handleSubmit}
-        activeTestCase={problem.examples[activeTestCaseId] || null}
-      />
-
-
+        {/* Code Editor Panel */}
+        <Playground 
+          problem={problem} 
+          setSuccess={setSuccess} 
+          setSolved={setSolved} 
+        />
+      </Split>
     </div>
   );
 };
-
-function useGetCurrentProblem(problemId: string) {
-  const [currentProblem, setCurrentProblem] = useState<Problem | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [problemDifficultyClass, setProblemDifficultyClass] =
-    useState<string>("");
-
-  useEffect(() => {
-    const getCurrentProblem = async () => {
-      setLoading(true);
-      const docRef = doc(firestore, "problems", problemId);
-      const docSnap = await getDoc(docRef);
-      if (docSnap.exists()) {
-        const problem = docSnap.data();
-        // Transform examples.id from string to number
-        const transformedExamples = problem.examples.map(
-          (example: any, index: number) => {
-            // Extract numeric part from id (e.g., "ex-1" -> 1)
-            const numericId = parseInt(example.id.replace("ex-", ""), 10) || index;
-            return {
-              ...example,
-              id: numericId,
-            };
-          }
-        );
-        setCurrentProblem({
-          id: docSnap.id,
-          ...problem,
-          examples: transformedExamples,
-        } as Problem);
-        setProblemDifficultyClass(
-          problem.difficulty === "Easy"
-            ? "bg-emeraldGreen"
-            : problem.difficulty === "Medium"
-            ? "bg-goldenAmber"
-            : "bg-crimsonRed"
-        );
-      }
-      setLoading(false);
-    };
-    getCurrentProblem();
-  }, [problemId]);
-
-  return { currentProblem, loading, problemDifficultyClass, setCurrentProblem };
-}
-
-function useGetUsersDataOnProblem(problemId: string) {
-  const [data, setData] = useState({
-    liked: false,
-    disliked: false,
-    starred: false,
-    solved: false,
-  });
-  const [user] = useAuthState(auth);
-
-  useEffect(() => {
-    const getUsersDataOnProblem = async () => {
-      const userRef = doc(firestore, "users", user!.uid);
-      const userSnap = await getDoc(userRef);
-      if (userSnap.exists()) {
-        const data = userSnap.data();
-        const {
-          solvedProblems,
-          likedProblems,
-          dislikedProblems,
-          starredProblems,
-        } = data;
-        setData({
-          liked: likedProblems.includes(problemId),
-          disliked: dislikedProblems.includes(problemId),
-          starred: starredProblems.includes(problemId),
-          solved: solvedProblems.includes(problemId),
-        });
-      }
-    };
-
-    if (user) getUsersDataOnProblem();
-    return () =>
-      setData({ liked: false, disliked: false, starred: false, solved: false });
-  }, [problemId, user]);
-
-  return { ...data, setData };
-}
 
 export default Workspace;
