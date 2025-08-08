@@ -24,20 +24,19 @@ export interface ISettings {
   fontSize: string;
   settingsModalIsOpen: boolean;
   dropdownIsOpen: boolean;
+  languageId: number; // Added to store the selected language ID
 }
 
 const Playground: React.FC<PlaygroundProps> = ({ problem, setSuccess, setSolved }) => {
   const [activeTestCaseId, setActiveTestCaseId] = useState<number>(0);
   let [userCode, setUserCode] = useState<string>(problem.starterCode);
-
   const [fontSize, setFontSize] = useLocalStorage("lcc-fontSize", "16px");
-
   const [settings, setSettings] = useState<ISettings>({
     fontSize: fontSize,
     settingsModalIsOpen: false,
     dropdownIsOpen: false,
+    languageId: 71, // Default to Python
   });
-
   const [user] = useAuthState(auth);
   const {
     query: { pid },
@@ -74,10 +73,14 @@ const Playground: React.FC<PlaygroundProps> = ({ problem, setSuccess, setSolved 
           });
           setSolved(true);
         }
+      } else {
+        throw new Error("Handler function not found");
       }
     } catch (error: any) {
       if (
-        error.message.startsWith("AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:")
+        error.message.startsWith(
+          "AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:"
+        )
       ) {
         toast.error("Oops! One or more test cases failed", {
           position: "top-center",
@@ -163,7 +166,7 @@ const Playground: React.FC<PlaygroundProps> = ({ problem, setSuccess, setSolved 
           )}
         </div>
       </div>
-      <EditorFooter handleSubmit={handleSubmit} />
+
     </div>
   );
 };

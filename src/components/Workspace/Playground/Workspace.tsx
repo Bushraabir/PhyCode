@@ -1,3 +1,8 @@
+export interface ISettings {
+  settingsModalIsOpen: boolean;
+  languageId: number;
+}
+
 import React, { useState, useEffect } from "react";
 import Split from "react-split";
 import Confetti from "react-confetti";
@@ -23,11 +28,11 @@ import {
 import { BsCheck2Circle } from "react-icons/bs";
 import { TiStarOutline } from "react-icons/ti";
 import { toast } from "react-toastify";
-import PreferenceNav from "./Playground/PreferenceNav/PreferenceNav";
+import PreferenceNav from "./PreferenceNav/PreferenceNav";
 import CodeMirror from "@uiw/react-codemirror";
 import { vscodeDark } from "@uiw/codemirror-theme-vscode";
 import { javascript } from "@codemirror/lang-javascript";
-import EditorFooter from "./Playground/EditorFooter";
+import EditorFooter from "./EditorFooter";
 import { useRouter } from "next/router";
 import useLocalStorage from "@/hooks/useLocalStorage";
 
@@ -40,11 +45,11 @@ type Problem = {
   constraints: string;
   dislikes: number;
   examples: Array<{
-    id: string; // Changed to number to match Playground expectations
+    id: string; 
     inputText: string;
     outputText: string;
     explanation?: string;
-    img?: string; // Optional, as not present in Firestore data
+    img?: string; 
   }>;
   handlerFunction: string;
   likes: number;
@@ -72,6 +77,16 @@ const Workspace: React.FC<WorkspaceProps> = ({ problem }) => {
   const [success, setSuccess] = useState(false);
   // Whether the problem has been solved (passed to description)
   const [solved, setSolved] = useState(false);
+
+  const [settings, setSettings] = useState<ISettings>({
+    settingsModalIsOpen: false,
+    languageId: 71, // Default to Python
+  });
+  const [code, setCode] = useState<string>('print("Hello, PhyCode!")');
+
+  const handleSubmit = () => {
+    console.log('Submission saved with languageId:', settings.languageId);
+  };
 
   return (
     <div className="flex-1 flex flex-col bg-charcoalBlack overflow-hidden">
@@ -604,7 +619,16 @@ const Playground: React.FC<PlaygroundProps> = ({
           )}
         </div>
       </div>
-      <EditorFooter handleSubmit={handleSubmit} />
+
+
+      <EditorFooter
+        code={userCode}
+        languageId={settings.languageId}
+        handleSubmit={handleSubmit}
+        activeTestCase={problem.examples[activeTestCaseId] || null}
+      />
+
+
     </div>
   );
 };

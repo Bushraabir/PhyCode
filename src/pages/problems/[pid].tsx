@@ -1,5 +1,5 @@
 import Topbar from "@/components/Topbar/Topbar";
-import Workspace from "@/components/Workspace/Workspace";
+import Workspace from "@/components/Workspace/Playground/Workspace";
 import useHasMounted from "@/hooks/useHasMounted";
 import React from "react";
 import { collection, getDocs, doc, getDoc } from "firebase/firestore";
