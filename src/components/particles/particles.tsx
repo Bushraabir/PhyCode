@@ -198,9 +198,7 @@ const Particles: React.FC = () => {
         className="w-full h-full transition-opacity duration-500"
         style={{ opacity: 0.3 }}
       />
-      <div className="absolute bottom-4 left-4 text-white text-sm opacity-70 font-sans">
-        Click to create bursts | Move mouse to interact
-      </div>
+
     </div>
   );
 };

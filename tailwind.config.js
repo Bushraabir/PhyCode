@@ -23,6 +23,7 @@ module.exports = {
         sans: ['Inter', 'sans-serif'],
         heading: ['Poppins', 'sans-serif'],
       },
+      
     },
   },
   plugins: [],
