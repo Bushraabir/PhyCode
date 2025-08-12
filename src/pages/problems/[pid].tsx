@@ -27,6 +27,8 @@ type Problem = {
   problemStatement: string;
   starterCode: string;
   starterFunctionName: string;
+  dsaTag?: string[];
+  phyTag?: string[];
 };
 
 type ProblemPageProps = {
@@ -105,11 +107,11 @@ export async function getStaticProps({ params }: { params: { pid: string } }) {
       .trim();
   };
   
-  // Transform examples.id from string to number
+  // Transform examples.id from string to number if needed
   const examples = Array.isArray(problemData.examples)
     ? problemData.examples.map((example: any, index: number) => ({
         ...example,
-        id: parseInt(example.id.replace("ex-", ""), 10) || index, // e.g., "ex-1" -> 1
+        id: example.id || `ex-${index + 1}`, // Keep string format for consistency
       }))
     : [];
   
@@ -128,6 +130,8 @@ export async function getStaticProps({ params }: { params: { pid: string } }) {
     problemStatement: formatProblemStatement(problemData.problemStatement || ""),
     starterCode: formatProblemStatement(problemData.starterCode || ""),
     starterFunctionName: problemData.starterFunctionName || "",
+    dsaTag: problemData.dsaTag || [],
+    phyTag: problemData.phyTag || [],
   };
   
   return {

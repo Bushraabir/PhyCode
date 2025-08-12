@@ -41,6 +41,8 @@ type Problem = {
   problemStatement: string;
   starterCode: string;
   starterFunctionName: string;
+  dsaTag?: string[];
+  phyTag?: string[];
 };
 
 type WorkspaceProps = {
@@ -55,6 +57,8 @@ const Workspace: React.FC<WorkspaceProps> = ({ problem }) => {
   const [disliked, setDisliked] = useState(false);
   const [starred, setStarred] = useState(false);
   const [updating, setUpdating] = useState(false);
+  const [currentLikes, setCurrentLikes] = useState(problem.likes);
+  const [currentDislikes, setCurrentDislikes] = useState(problem.dislikes);
   const [user] = useAuthState(auth);
 
   // Check user's interaction status with this problem
@@ -74,18 +78,60 @@ const Workspace: React.FC<WorkspaceProps> = ({ problem }) => {
         
         if (userDoc.exists()) {
           const userData = userDoc.data();
-          setLiked(userData.likedProblems?.includes(problem.id) || false);
-          setDisliked(userData.dislikedProblems?.includes(problem.id) || false);
-          setStarred(userData.starredProblems?.includes(problem.id) || false);
-          setSolved(userData.solvedProblems?.includes(problem.id) || false);
+          const likedProblems = userData.likedProblems || [];
+          const dislikedProblems = userData.dislikedProblems || [];
+          const starredProblems = userData.starredProblems || [];
+          const solvedProblems = userData.solvedProblems || [];
+          
+          setLiked(likedProblems.includes(problem.id));
+          setDisliked(dislikedProblems.includes(problem.id));
+          setStarred(starredProblems.includes(problem.id));
+          setSolved(solvedProblems.includes(problem.id));
         }
       } catch (error) {
         console.error("Error checking user status:", error);
+        toast.error("Failed to load user preferences", {
+          position: "top-center",
+          autoClose: 2000,
+          theme: "dark",
+        });
       }
     };
 
     checkUserStatus();
   }, [user, problem.id]);
+
+  // Update local counts when problem prop changes
+  useEffect(() => {
+    setCurrentLikes(problem.likes);
+    setCurrentDislikes(problem.dislikes);
+  }, [problem.likes, problem.dislikes]);
+
+  // Create user document if it doesn't exist
+  const ensureUserDocument = async (transaction: any, userRef: any) => {
+    const userDoc = await transaction.get(userRef);
+    
+    if (!userDoc.exists()) {
+      transaction.set(userRef, {
+        uid: user!.uid,
+        email: user!.email || "",
+        displayName: user!.displayName || "",
+        likedProblems: [],
+        dislikedProblems: [],
+        starredProblems: [],
+        solvedProblems: [],
+        createdAt: new Date().toISOString(),
+      });
+      return {
+        likedProblems: [],
+        dislikedProblems: [],
+        starredProblems: [],
+        solvedProblems: [],
+      };
+    }
+    
+    return userDoc.data();
+  };
 
   const handleLike = async () => {
     if (!user) {
@@ -102,46 +148,78 @@ const Workspace: React.FC<WorkspaceProps> = ({ problem }) => {
 
     try {
       const userRef = doc(firestore, "users", user.uid);
+      const problemRef = doc(firestore, "problems", problem.id);
+
       await runTransaction(firestore, async (transaction) => {
-        const userDoc = await transaction.get(userRef);
-        const problemDocRef = doc(firestore, "problems", problem.id);
-        const problemDoc = await transaction.get(problemDocRef);
+        const userData = await ensureUserDocument(transaction, userRef);
+        const problemDoc = await transaction.get(problemRef);
         
-        const userData = userDoc.data();
-        const problemData = problemDoc.data();
+        const problemData = problemDoc.exists() ? problemDoc.data() : {};
         
-        if (userData?.likedProblems?.includes(problem.id)) {
-          // Unlike
-          transaction.update(userRef, {
-            likedProblems: arrayRemove(problem.id),
-          });
-          transaction.update(problemDocRef, {
-            likes: Math.max(0, (problemData?.likes || 0) - 1),
-          });
-          setLiked(false);
+        const userLikedProblems = userData.likedProblems || [];
+        const userDislikedProblems = userData.dislikedProblems || [];
+        const currentProblemLikes = problemData.likes || 0;
+        const currentProblemDislikes = problemData.dislikes || 0;
+
+        const updateData: any = {};
+        let likesChange = 0;
+        let dislikesChange = 0;
+
+        if (userLikedProblems.includes(problem.id)) {
+          // User is unliking the problem
+          updateData.likedProblems = arrayRemove(problem.id);
+          likesChange = -1;
         } else {
-          // Like
-          transaction.update(userRef, {
-            likedProblems: arrayUnion(problem.id),
-            // Remove dislike if exists
-            ...(userData?.dislikedProblems?.includes(problem.id) && {
-              dislikedProblems: arrayRemove(problem.id)
-            })
-          });
-          transaction.update(problemDocRef, {
-            likes: (problemData?.likes || 0) + 1,
-            // Decrease dislikes if user had disliked
-            ...(userData?.dislikedProblems?.includes(problem.id) && {
-              dislikes: Math.max(0, (problemData?.dislikes || 0) - 1)
-            })
-          });
-          setLiked(true);
-          if (disliked) setDisliked(false);
+          // User is liking the problem
+          updateData.likedProblems = arrayUnion(problem.id);
+          likesChange = 1;
+          
+          // If user had disliked, remove dislike
+          if (userDislikedProblems.includes(problem.id)) {
+            updateData.dislikedProblems = arrayRemove(problem.id);
+            dislikesChange = -1;
+          }
         }
+
+        // Update user document
+        transaction.update(userRef, updateData);
+        
+        // Update problem document
+        transaction.update(problemRef, {
+          likes: Math.max(0, currentProblemLikes + likesChange),
+          dislikes: Math.max(0, currentProblemDislikes + dislikesChange),
+        });
       });
+
+      // Update local state after successful transaction
+      if (liked) {
+        setLiked(false);
+        setCurrentLikes(prev => Math.max(0, prev - 1));
+        toast.success("Like removed", {
+          position: "top-center",
+          autoClose: 2000,
+          theme: "dark",
+        });
+      } else {
+        setLiked(true);
+        setCurrentLikes(prev => prev + 1);
+        
+        // If user was disliking, remove dislike
+        if (disliked) {
+          setDisliked(false);
+          setCurrentDislikes(prev => Math.max(0, prev - 1));
+        }
+        
+        toast.success("Problem liked!", {
+          position: "top-center",
+          autoClose: 2000,
+          theme: "dark",
+        });
+      }
+
     } catch (error) {
       console.error("Error handling like:", error);
-      toast.error("Failed to update like status", {
+      toast.error("Failed to update like status. Please try again.", {
         position: "top-center",
         autoClose: 3000,
         theme: "dark",
@@ -166,46 +244,78 @@ const Workspace: React.FC<WorkspaceProps> = ({ problem }) => {
 
     try {
       const userRef = doc(firestore, "users", user.uid);
+      const problemRef = doc(firestore, "problems", problem.id);
+
       await runTransaction(firestore, async (transaction) => {
-        const userDoc = await transaction.get(userRef);
-        const problemDocRef = doc(firestore, "problems", problem.id);
-        const problemDoc = await transaction.get(problemDocRef);
+        const userData = await ensureUserDocument(transaction, userRef);
+        const problemDoc = await transaction.get(problemRef);
         
-        const userData = userDoc.data();
-        const problemData = problemDoc.data();
+        const problemData = problemDoc.exists() ? problemDoc.data() : {};
         
-        if (userData?.dislikedProblems?.includes(problem.id)) {
-          // Remove dislike
-          transaction.update(userRef, {
-            dislikedProblems: arrayRemove(problem.id),
-          });
-          transaction.update(problemDocRef, {
-            dislikes: Math.max(0, (problemData?.dislikes || 0) - 1),
-          });
-          setDisliked(false);
+        const userLikedProblems = userData.likedProblems || [];
+        const userDislikedProblems = userData.dislikedProblems || [];
+        const currentProblemLikes = problemData.likes || 0;
+        const currentProblemDislikes = problemData.dislikes || 0;
+
+        const updateData: any = {};
+        let likesChange = 0;
+        let dislikesChange = 0;
+
+        if (userDislikedProblems.includes(problem.id)) {
+          // User is removing dislike
+          updateData.dislikedProblems = arrayRemove(problem.id);
+          dislikesChange = -1;
         } else {
-          // Dislike
-          transaction.update(userRef, {
-            dislikedProblems: arrayUnion(problem.id),
-            // Remove like if exists
-            ...(userData?.likedProblems?.includes(problem.id) && {
-              likedProblems: arrayRemove(problem.id)
-            })
-          });
-          transaction.update(problemDocRef, {
-            dislikes: (problemData?.dislikes || 0) + 1,
-            // Decrease likes if user had liked
-            ...(userData?.likedProblems?.includes(problem.id) && {
-              likes: Math.max(0, (problemData?.likes || 0) - 1)
-            })
-          });
-          setDisliked(true);
-          if (liked) setLiked(false);
+          // User is disliking the problem
+          updateData.dislikedProblems = arrayUnion(problem.id);
+          dislikesChange = 1;
+          
+          // If user had liked, remove like
+          if (userLikedProblems.includes(problem.id)) {
+            updateData.likedProblems = arrayRemove(problem.id);
+            likesChange = -1;
+          }
         }
+
+        // Update user document
+        transaction.update(userRef, updateData);
+        
+        // Update problem document
+        transaction.update(problemRef, {
+          likes: Math.max(0, currentProblemLikes + likesChange),
+          dislikes: Math.max(0, currentProblemDislikes + dislikesChange),
+        });
       });
+
+      // Update local state after successful transaction
+      if (disliked) {
+        setDisliked(false);
+        setCurrentDislikes(prev => Math.max(0, prev - 1));
+        toast.success("Dislike removed", {
+          position: "top-center",
+          autoClose: 2000,
+          theme: "dark",
+        });
+      } else {
+        setDisliked(true);
+        setCurrentDislikes(prev => prev + 1);
+        
+        // If user was liking, remove like
+        if (liked) {
+          setLiked(false);
+          setCurrentLikes(prev => Math.max(0, prev - 1));
+        }
+        
+        toast.success("Problem disliked", {
+          position: "top-center",
+          autoClose: 2000,
+          theme: "dark",
+        });
+      }
+
     } catch (error) {
       console.error("Error handling dislike:", error);
-      toast.error("Failed to update dislike status", {
+      toast.error("Failed to update dislike status. Please try again.", {
         position: "top-center",
         autoClose: 3000,
         theme: "dark",
@@ -230,25 +340,45 @@ const Workspace: React.FC<WorkspaceProps> = ({ problem }) => {
 
     try {
       const userRef = doc(firestore, "users", user.uid);
+
       await runTransaction(firestore, async (transaction) => {
-        const userDoc = await transaction.get(userRef);
-        const userData = userDoc.data();
+        const userData = await ensureUserDocument(transaction, userRef);
         
-        if (userData?.starredProblems?.includes(problem.id)) {
-          transaction.update(userRef, {
-            starredProblems: arrayRemove(problem.id),
-          });
-          setStarred(false);
+        const userStarredProblems = userData.starredProblems || [];
+        const updateData: any = {};
+
+        if (userStarredProblems.includes(problem.id)) {
+          // Remove star
+          updateData.starredProblems = arrayRemove(problem.id);
         } else {
-          transaction.update(userRef, {
-            starredProblems: arrayUnion(problem.id),
-          });
-          setStarred(true);
+          // Add star
+          updateData.starredProblems = arrayUnion(problem.id);
         }
+
+        // Update user document
+        transaction.update(userRef, updateData);
       });
+
+      // Update local state after successful transaction
+      if (starred) {
+        setStarred(false);
+        toast.success("Removed from favorites", {
+          position: "top-center",
+          autoClose: 2000,
+          theme: "dark",
+        });
+      } else {
+        setStarred(true);
+        toast.success("Added to favorites!", {
+          position: "top-center",
+          autoClose: 2000,
+          theme: "dark",
+        });
+      }
+
     } catch (error) {
       console.error("Error handling star:", error);
-      toast.error("Failed to update star status", {
+      toast.error("Failed to update favorite status. Please try again.", {
         position: "top-center",
         autoClose: 3000,
         theme: "dark",
@@ -260,10 +390,10 @@ const Workspace: React.FC<WorkspaceProps> = ({ problem }) => {
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty.toLowerCase()) {
-      case 'easy': return 'text-green-400';
-      case 'medium': return 'text-yellow-400';
-      case 'hard': return 'text-red-400';
-      default: return 'text-gray-400';
+      case 'easy': return 'text-green-400 bg-green-400';
+      case 'medium': return 'text-yellow-400 bg-yellow-400';
+      case 'hard': return 'text-red-400 bg-red-400';
+      default: return 'text-gray-400 bg-gray-400';
     }
   };
 
@@ -297,65 +427,92 @@ const Workspace: React.FC<WorkspaceProps> = ({ problem }) => {
             {/* Problem Header */}
             <div className="flex justify-between items-start mb-6">
               <div className="flex-1">
-                <div className="flex items-center gap-3 mb-2">
+                <div className="flex items-center gap-3 mb-3">
                   <h2 className="text-2xl font-bold text-softSilver">{problem.title}</h2>
                   {solved && (
                     <BsCheck2Circle className="text-green-400 text-xl" title="Solved" />
                   )}
                 </div>
-                <div className="flex items-center gap-4 text-sm">
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${getDifficultyColor(problem.difficulty)} bg-opacity-20`}>
+                <div className="flex items-center gap-4 text-sm mb-2">
+                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${getDifficultyColor(problem.difficulty)} bg-opacity-20`}>
                     {problem.difficulty}
                   </span>
-                  <span className="text-gray-400">{problem.category}</span>
+                  <span className="text-gray-400 px-2 py-1 bg-gray-700 rounded-md">{problem.category}</span>
                 </div>
+                
+                {/* Tags */}
+                {(problem.dsaTag || problem.phyTag) && (
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {problem.dsaTag?.map((tag, index) => (
+                      <span key={`dsa-${index}`} className="px-2 py-1 bg-blue-600 bg-opacity-20 text-blue-300 text-xs rounded-md">
+                        {tag}
+                      </span>
+                    ))}
+                    {problem.phyTag?.map((tag, index) => (
+                      <span key={`phy-${index}`} className="px-2 py-1 bg-purple-600 bg-opacity-20 text-purple-300 text-xs rounded-md">
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                )}
               </div>
               
               {/* Action Buttons */}
-              <div className="flex items-center space-x-3">
+              <div className="flex items-center space-x-3 ml-4">
                 <button 
                   onClick={handleLike}
                   disabled={updating}
-                  className={`flex items-center space-x-1 px-2 py-1 rounded transition-colors ${
-                    liked ? 'text-blue-400' : 'text-softSilver hover:text-blue-400'
-                  } ${updating ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  className={`flex items-center space-x-1 px-3 py-2 rounded-lg transition-all duration-200 ${
+                    liked 
+                      ? 'text-blue-400 bg-blue-400 bg-opacity-10 border border-blue-400' 
+                      : 'text-softSilver hover:text-blue-400 hover:bg-blue-400 hover:bg-opacity-10 border border-transparent hover:border-blue-400'
+                  } ${updating ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                  title={liked ? 'Unlike this problem' : 'Like this problem'}
                 >
                   <AiFillLike className="text-lg" />
-                  <span className="text-sm">{problem.likes}</span>
+                  <span className="text-sm font-medium">{currentLikes}</span>
                 </button>
                 
                 <button 
                   onClick={handleDislike}
                   disabled={updating}
-                  className={`flex items-center space-x-1 px-2 py-1 rounded transition-colors ${
-                    disliked ? 'text-red-400' : 'text-softSilver hover:text-red-400'
-                  } ${updating ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  className={`flex items-center space-x-1 px-3 py-2 rounded-lg transition-all duration-200 ${
+                    disliked 
+                      ? 'text-red-400 bg-red-400 bg-opacity-10 border border-red-400' 
+                      : 'text-softSilver hover:text-red-400 hover:bg-red-400 hover:bg-opacity-10 border border-transparent hover:border-red-400'
+                  } ${updating ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                  title={disliked ? 'Remove dislike' : 'Dislike this problem'}
                 >
                   <AiFillDislike className="text-lg" />
-                  <span className="text-sm">{problem.dislikes}</span>
+                  <span className="text-sm font-medium">{currentDislikes}</span>
                 </button>
                 
                 <button 
                   onClick={handleStar}
                   disabled={updating}
-                  className={`p-2 rounded transition-colors ${
-                    starred ? 'text-yellow-400' : 'text-softSilver hover:text-yellow-400'
-                  } ${updating ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  className={`p-2 rounded-lg transition-all duration-200 ${
+                    starred 
+                      ? 'text-yellow-400 bg-yellow-400 bg-opacity-10 border border-yellow-400' 
+                      : 'text-softSilver hover:text-yellow-400 hover:bg-yellow-400 hover:bg-opacity-10 border border-transparent hover:border-yellow-400'
+                  } ${updating ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                  title={starred ? 'Remove from favorites' : 'Add to favorites'}
                 >
                   {starred ? <AiFillStar className="text-lg" /> : <TiStarOutline className="text-lg" />}
                 </button>
                 
                 {updating && (
-                  <AiOutlineLoading3Quarters className="text-softSilver animate-spin text-lg" />
+                  <div className="flex items-center">
+                    <AiOutlineLoading3Quarters className="text-softSilver animate-spin text-lg" />
+                  </div>
                 )}
               </div>
             </div>
 
             {/* Problem Statement */}
-            <div className="text-softSilver space-y-4">
+            <div className="text-softSilver space-y-6">
               <div>
-                <h3 className="text-lg font-medium mb-3">Problem Statement</h3>
-                <div className="text-gray-300 leading-relaxed whitespace-pre-wrap">
+                <h3 className="text-lg font-medium mb-3 text-tealBlue">Problem Statement</h3>
+                <div className="text-gray-300 leading-relaxed whitespace-pre-wrap bg-deepPlum bg-opacity-30 p-4 rounded-lg">
                   {problem.problemStatement}
                 </div>
               </div>
@@ -363,8 +520,8 @@ const Workspace: React.FC<WorkspaceProps> = ({ problem }) => {
               {/* Constraints */}
               {problem.constraints && (
                 <div>
-                  <h3 className="text-lg font-medium mb-3">Constraints</h3>
-                  <div className="bg-deepPlum p-3 rounded-lg text-gray-300 font-mono text-sm whitespace-pre-wrap">
+                  <h3 className="text-lg font-medium mb-3 text-tealBlue">Constraints</h3>
+                  <div className="bg-deepPlum p-4 rounded-lg text-gray-300 font-mono text-sm whitespace-pre-wrap">
                     {problem.constraints}
                   </div>
                 </div>
@@ -373,23 +530,23 @@ const Workspace: React.FC<WorkspaceProps> = ({ problem }) => {
               {/* Examples */}
               {problem.examples && problem.examples.length > 0 && (
                 <div>
-                  <h3 className="text-lg font-medium mb-3">Examples</h3>
+                  <h3 className="text-lg font-medium mb-3 text-tealBlue">Examples</h3>
                   <div className="space-y-4">
                     {problem.examples.map((example: TestCase, index: number) => (
-                      <div key={example.id || index} className="bg-deepPlum p-4 rounded-lg">
-                        <p className="font-medium text-tealBlue mb-2">Example {index + 1}:</p>
+                      <div key={example.id || index} className="bg-deepPlum bg-opacity-50 p-4 rounded-lg border border-gray-600">
+                        <p className="font-medium text-tealBlue mb-3">Example {index + 1}:</p>
                         
-                        <div className="space-y-2">
+                        <div className="space-y-3">
                           <div>
                             <p className="text-sm font-medium text-gray-400 mb-1">Input:</p>
-                            <pre className="bg-charcoalBlack p-2 rounded text-green-300 text-sm font-mono whitespace-pre-wrap">
+                            <pre className="bg-charcoalBlack p-3 rounded text-green-300 text-sm font-mono whitespace-pre-wrap border-l-4 border-green-400">
                               {example.inputText}
                             </pre>
                           </div>
                           
                           <div>
                             <p className="text-sm font-medium text-gray-400 mb-1">Output:</p>
-                            <pre className="bg-charcoalBlack p-2 rounded text-blue-300 text-sm font-mono whitespace-pre-wrap">
+                            <pre className="bg-charcoalBlack p-3 rounded text-blue-300 text-sm font-mono whitespace-pre-wrap border-l-4 border-blue-400">
                               {example.outputText}
                             </pre>
                           </div>
@@ -397,7 +554,7 @@ const Workspace: React.FC<WorkspaceProps> = ({ problem }) => {
                           {example.explanation && (
                             <div>
                               <p className="text-sm font-medium text-gray-400 mb-1">Explanation:</p>
-                              <div className="bg-charcoalBlack p-2 rounded text-gray-300 text-sm">
+                              <div className="bg-charcoalBlack p-3 rounded text-gray-300 text-sm border-l-4 border-yellow-400">
                                 {example.explanation}
                               </div>
                             </div>
