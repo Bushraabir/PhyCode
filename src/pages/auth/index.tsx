@@ -26,7 +26,7 @@ const AuthPage = () => {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  const openLoginModal = (type: 'login' | 'signup' = 'login') =>
+  const openLoginModal = (type: 'login' | 'register' | 'forgotPassword' = 'login') =>
     setAuthModalState({ isOpen: true, type });
 
   useEffect(() => {
