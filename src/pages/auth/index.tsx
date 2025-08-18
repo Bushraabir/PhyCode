@@ -40,31 +40,6 @@ const AuthPage = () => {
   const openLoginModal = (type: 'login' | 'signup' = 'login') =>
     setAuthModalState({ isOpen: true, type });
 
-  // Desktop: mouse 3D tilt
-  useEffect(() => {
-    if (isMobile || prefersReduced) return;
-    const el = heroRef.current;
-    if (!el) return;
-
-    const onMove = (e: MouseEvent) => {
-      const rect = el.getBoundingClientRect();
-      const px = (e.clientX - rect.left) / rect.width - 0.5;
-      const py = (e.clientY - rect.top) / rect.height - 0.5;
-      const rx = py * -8;
-      const ry = px * 14;
-      el.style.transform = `perspective(1400px) rotateX(${rx}deg) rotateY(${ry}deg)`;
-      el.style.transition = 'transform 120ms ease-out';
-    };
-    const reset = () => (el.style.transform = 'perspective(1400px) rotateX(0deg) rotateY(0deg)');
-
-    el.addEventListener('mousemove', onMove);
-    el.addEventListener('mouseleave', reset);
-    return () => {
-      el.removeEventListener('mousemove', onMove);
-      el.removeEventListener('mouseleave', reset);
-    };
-  }, [isMobile, prefersReduced]);
-
   // Mobile: device orientation tilt (gentle)
   useEffect(() => {
     if (!isMobile || prefersReduced) return;
@@ -194,17 +169,15 @@ const AuthPage = () => {
               {/* Layered animated text: big gradient + subtle outline SVG for extra "wow" */}
               <div className="relative flex items-center justify-center select-none">
                 <h1
-                  className="phycode-giant  tracking-tight bg-clip-text text-transparent "
+                  className="phycode-giant text-deepPlum tracking-tight font-heading font-bold"
                   style={{
-                    backgroundImage:
-                      'linear-gradient(90deg,#00f5d4,#06b6d4,#f59e0b,#ff4d94,#8b5cf6)',
+                   
                     fontSize: isMobile ? '18.5vw' : '12.8vw',
-                    textShadow: '0 10px 40px rgba(139,92,246,0.14), 0 4px 20px rgba(2,6,23,0.6)'
+                    textShadow: '0 10px 40px rgba(0, 120, 128, 0.14), 0 4px 20px rgba(26, 26, 30, 0.6)'
                   }}
                 >
                   PhyCode
                 </h1>
-
               </div>
 
               {/* Subtitle + typing animation */}
@@ -266,23 +239,10 @@ const AuthPage = () => {
                 </motion.button>
               </div>
 
-              {/* feature pills */}
-              <div className="mt-3 flex flex-wrap justify-center gap-3 px-2">
-                {[
-                  ['Live Simulations', 'bg-emerald-400/10', 'emerald'],
-                  ['Guided DSA', 'bg-amber-400/8', 'amber'],
-                  ['Visual Debugger', 'bg-cyan-400/8', 'cyan'],
-                  ['Compete & Rank', 'bg-fuchsia-400/8', 'fuchsia'],
-                ].map(([label, bg, key]) => (
-                  <div key={String(label)} className={`feature-pill ${bg} backdrop-blur-sm border border-slate-700 px-4 py-2 rounded-full flex items-center gap-2 text-sm`}>
-                    <span className={`w-2 h-2 rounded-full ${key === 'emerald' ? 'bg-emerald-400' : key === 'amber' ? 'bg-amber-400' : key === 'cyan' ? 'bg-cyan-400' : 'bg-fuchsia-400'} inline-block`} />
-                    {label}
-                  </div>
-                ))}
-              </div>
+             
 
               {/* micro-CTA row */}
-              <div className="mt-2 flex flex-col sm:flex-row items-center gap-3 text-xs text-slate-300/70">
+              <div className="mt-2 flex flex-col sm:flex-row  gap-3 text-xs text-slate-300/70">
                 <span>
                   Press <kbd className="px-2 py-1 bg-slate-900/60 rounded">L</kbd> to open login
                 </span>
@@ -291,23 +251,7 @@ const AuthPage = () => {
               </div>
             </div>
 
-            {/* Cards */}
-            <div className="mt-12 grid grid-cols-1 sm:grid-cols-3 gap-6 w-full max-w-4xl px-2">
-              <div className="bg-gradient-to-tr from-slate-900/60 to-slate-800/30 border border-slate-700 p-5 rounded-2xl backdrop-blur-sm hover:translate-y-[-6px] transition-transform">
-                <h3 className="font-semibold">Interactive Playground</h3>
-                <p className="text-sm text-slate-300/70 mt-2">Tweak physics parameters and watch algorithms adapt in real-time. Perfect for visual learners.</p>
-              </div>
-
-              <div className="bg-gradient-to-tr from-slate-900/60 to-slate-800/30 border border-slate-700 p-5 rounded-2xl backdrop-blur-sm hover:translate-y-[-6px] transition-transform">
-                <h3 className="font-semibold">Guided Tracks</h3>
-                <p className="text-sm text-slate-300/70 mt-2">Step-by-step modules combining simulations with problem solving and quizzes.</p>
-              </div>
-
-              <div className="bg-gradient-to-tr from-slate-900/60 to-slate-800/30 border border-slate-700 p-5 rounded-2xl backdrop-blur-sm hover:translate-y-[-6px] transition-transform">
-                <h3 className="font-semibold">Ace Competitions</h3>
-                <p className="text-sm text-slate-300/70 mt-2">Practice timed challenges, visualize solutions, and climb the leaderboard.</p>
-              </div>
-            </div>
+           
 
           </section>
         </main>
