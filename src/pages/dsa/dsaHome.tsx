@@ -2,10 +2,15 @@ import React, { useMemo, useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { motion } from 'framer-motion';
-import { FiSearch } from 'react-icons/fi';
+import { FiSearch, FiChevronDown, FiChevronUp } from 'react-icons/fi';
 import { FaRocket, FaClipboardList } from 'react-icons/fa';
 import Navbar from '@/components/Navbar/Navbar';
 import Particles from '@/components/particles/particles';
+
+type Subtopic = {
+  title: string;
+  slug: string;
+};
 
 type Topic = {
   title: string;
@@ -13,28 +18,257 @@ type Topic = {
   difficulty: 'Beginner' | 'Intermediate' | 'Advanced';
   estHours: number;
   blurb: string;
+  subtopics?: Subtopic[];
 };
 
 const TOPICS: Topic[] = [
-  { title: 'Introduction & Setup', slug: 'introduction', difficulty: 'Beginner', estHours: 2, blurb: 'Why DSA matters, tools, environment setup and first steps.' },
-  { title: 'Complexity Analysis', slug: 'complexity-analysis', difficulty: 'Beginner', estHours: 4, blurb: 'Big-O, amortized analysis, and common complexity patterns.' },
-  { title: 'Arrays', slug: 'arrays', difficulty: 'Beginner', estHours: 8, blurb: 'Two pointers, sliding windows, partitioning, in-place tricks.' },
-  { title: 'Strings', slug: 'strings', difficulty: 'Beginner', estHours: 8, blurb: 'Parsing, pattern search, KMP, rolling hash basics.' },
-  { title: 'Linked Lists', slug: 'linked-list', difficulty: 'Beginner', estHours: 6, blurb: 'Pointers, reversal, cycle detection and common patterns.' },
-  { title: 'Stacks & Queues', slug: 'stacks-queues', difficulty: 'Beginner', estHours: 4, blurb: 'Monotonic stacks, deque tricks and use cases.' },
-  { title: 'Recursion & Backtracking', slug: 'recursion-backtracking', difficulty: 'Intermediate', estHours: 10, blurb: 'Tree recursion, pruning, and combinatorial backtracking.' },
-  { title: 'Sorting & Searching', slug: 'sorting-searching', difficulty: 'Intermediate', estHours: 6, blurb: 'Divide & conquer sorts and binary search patterns.' },
-  { title: 'Hashing & Maps', slug: 'hashing', difficulty: 'Intermediate', estHours: 6, blurb: 'Hashmaps, collision ideas, frequency trick patterns.' },
-  { title: 'Trees (Binary Trees)', slug: 'binary-trees', difficulty: 'Intermediate', estHours: 10, blurb: 'Traversals, recursion, iterative DFS/BFS and properties.' },
-  { title: 'Binary Search Trees', slug: 'bst', difficulty: 'Intermediate', estHours: 6, blurb: 'BST operations, balancing ideas and order statistics.' },
-  { title: 'Heaps & Priority Queues', slug: 'heaps', difficulty: 'Intermediate', estHours: 5, blurb: 'K-way merge, sliding-window maxima, scheduling problems.' },
-  { title: 'Graphs', slug: 'graphs', difficulty: 'Advanced', estHours: 18, blurb: 'BFS, DFS, shortest paths, components, topological sort.' },
-  { title: 'Dynamic Programming', slug: 'dynamic-programming', difficulty: 'Advanced', estHours: 24, blurb: 'Patterns: knapsack, LIS, DP on trees and bitmask DP.' },
-  { title: 'Greedy Algorithms', slug: 'greedy-algorithms', difficulty: 'Intermediate', estHours: 6, blurb: 'Greedy-choice property, interval problems, scheduling.' },
-  { title: 'Backtracking', slug: 'backtracking', difficulty: 'Advanced', estHours: 10, blurb: 'Advanced pruning, constraint solving, and search optimization.' },
-  { title: 'Tries & Advanced Strings', slug: 'tries', difficulty: 'Advanced', estHours: 8, blurb: 'Prefix trees, Aho-Corasick and autocomplete techniques.' },
-  { title: 'Segment Trees & Fenwick', slug: 'segment-tree-fenwick', difficulty: 'Advanced', estHours: 12, blurb: 'Range queries, lazy propagation, BIT for fast updates.' },
-  { title: 'Bit Manipulation & Number Theory', slug: 'bit-number-theory', difficulty: 'Advanced', estHours: 8, blurb: 'Bit hacks, modular arithmetic, SPF, gcd, primes.' }
+  { 
+    title: 'Introduction & Setup', 
+    slug: 'introduction', 
+    difficulty: 'Beginner', 
+    estHours: 2, 
+    blurb: 'Why DSA matters, tools, environment setup and first steps.',
+    subtopics: [
+      { title: 'Why DSA Matters', slug: 'topic/introduction/whyDsa' },
+      { title: 'Problem Solving Approach', slug: 'topic/introduction/problemSolvingApproach' }
+    ]
+  },
+  { 
+    title: 'Complexity Analysis', 
+    slug: 'complexity-analysis', 
+    difficulty: 'Beginner', 
+    estHours: 4, 
+    blurb: 'Big-O, amortized analysis, and common complexity patterns.',
+    subtopics: [
+      { title: 'Big-O Notation', slug: 'complexity-analysis/big-o' },
+      { title: 'Amortized Analysis', slug: 'complexity-analysis/amortized' },
+      { title: 'Common Complexity Patterns', slug: 'complexity-analysis/patterns' },
+      { title: 'Space Complexity', slug: 'complexity-analysis/space' }
+    ]
+  },
+  { 
+    title: 'Arrays', 
+    slug: 'arrays', 
+    difficulty: 'Beginner', 
+    estHours: 8, 
+    blurb: 'Two pointers, sliding windows, partitioning, in-place tricks.',
+    subtopics: [
+      { title: 'Two Pointers Technique', slug: 'arrays/two-pointers' },
+      { title: 'Sliding Window', slug: 'arrays/sliding-window' },
+      { title: 'Array Partitioning', slug: 'arrays/partitioning' },
+      { title: 'In-place Operations', slug: 'arrays/in-place' }
+    ]
+  },
+  { 
+    title: 'Strings', 
+    slug: 'strings', 
+    difficulty: 'Beginner', 
+    estHours: 8, 
+    blurb: 'Parsing, pattern search, KMP, rolling hash basics.',
+    subtopics: [
+      { title: 'String Parsing', slug: 'strings/parsing' },
+      { title: 'Pattern Matching', slug: 'strings/pattern-matching' },
+      { title: 'KMP Algorithm', slug: 'strings/kmp' },
+      { title: 'Rolling Hash', slug: 'strings/rolling-hash' }
+    ]
+  },
+  { 
+    title: 'Linked Lists', 
+    slug: 'linked-list', 
+    difficulty: 'Beginner', 
+    estHours: 6, 
+    blurb: 'Pointers, reversal, cycle detection and common patterns.',
+    subtopics: [
+      { title: 'Pointer Manipulation', slug: 'linked-list/pointers' },
+      { title: 'List Reversal', slug: 'linked-list/reversal' },
+      { title: 'Cycle Detection', slug: 'linked-list/cycle-detection' },
+      { title: 'Merge Operations', slug: 'linked-list/merge' }
+    ]
+  },
+  { 
+    title: 'Stacks & Queues', 
+    slug: 'stacks-queues', 
+    difficulty: 'Beginner', 
+    estHours: 4, 
+    blurb: 'Monotonic stacks, deque tricks and use cases.',
+    subtopics: [
+      { title: 'Basic Stack Operations', slug: 'stacks-queues/basic-stack' },
+      { title: 'Monotonic Stack', slug: 'stacks-queues/monotonic' },
+      { title: 'Queue Implementation', slug: 'stacks-queues/queue' },
+      { title: 'Deque Applications', slug: 'stacks-queues/deque' }
+    ]
+  },
+  { 
+    title: 'Recursion & Backtracking', 
+    slug: 'recursion-backtracking', 
+    difficulty: 'Intermediate', 
+    estHours: 10, 
+    blurb: 'Tree recursion, pruning, and combinatorial backtracking.',
+    subtopics: [
+      { title: 'Recursive Thinking', slug: 'recursion-backtracking/recursive-thinking' },
+      { title: 'Tree Recursion', slug: 'recursion-backtracking/tree-recursion' },
+      { title: 'Pruning Techniques', slug: 'recursion-backtracking/pruning' },
+      { title: 'Combinatorial Problems', slug: 'recursion-backtracking/combinatorial' }
+    ]
+  },
+  { 
+    title: 'Sorting & Searching', 
+    slug: 'sorting-searching', 
+    difficulty: 'Intermediate', 
+    estHours: 6, 
+    blurb: 'Divide & conquer sorts and binary search patterns.',
+    subtopics: [
+      { title: 'Basic Sorting Algorithms', slug: 'sorting-searching/basic-sorting' },
+      { title: 'Advanced Sorting', slug: 'sorting-searching/advanced-sorting' },
+      { title: 'Binary Search', slug: 'sorting-searching/binary-search' },
+      { title: 'Search Patterns', slug: 'sorting-searching/search-patterns' }
+    ]
+  },
+  { 
+    title: 'Hashing & Maps', 
+    slug: 'hashing', 
+    difficulty: 'Intermediate', 
+    estHours: 6, 
+    blurb: 'Hashmaps, collision ideas, frequency trick patterns.',
+    subtopics: [
+      { title: 'Hash Table Basics', slug: 'hashing/basics' },
+      { title: 'Collision Resolution', slug: 'hashing/collision' },
+      { title: 'Frequency Patterns', slug: 'hashing/frequency' },
+      { title: 'Hash Functions', slug: 'hashing/functions' }
+    ]
+  },
+  { 
+    title: 'Trees (Binary Trees)', 
+    slug: 'binary-trees', 
+    difficulty: 'Intermediate', 
+    estHours: 10, 
+    blurb: 'Traversals, recursion, iterative DFS/BFS and properties.',
+    subtopics: [
+      { title: 'Tree Traversals', slug: 'binary-trees/traversals' },
+      { title: 'Tree Recursion', slug: 'binary-trees/recursion' },
+      { title: 'DFS & BFS', slug: 'binary-trees/dfs-bfs' },
+      { title: 'Tree Properties', slug: 'binary-trees/properties' }
+    ]
+  },
+  { 
+    title: 'Binary Search Trees', 
+    slug: 'bst', 
+    difficulty: 'Intermediate', 
+    estHours: 6, 
+    blurb: 'BST operations, balancing ideas and order statistics.',
+    subtopics: [
+      { title: 'BST Operations', slug: 'bst/operations' },
+      { title: 'Tree Balancing', slug: 'bst/balancing' },
+      { title: 'Order Statistics', slug: 'bst/order-statistics' },
+      { title: 'AVL Trees', slug: 'bst/avl' }
+    ]
+  },
+  { 
+    title: 'Heaps & Priority Queues', 
+    slug: 'heaps', 
+    difficulty: 'Intermediate', 
+    estHours: 5, 
+    blurb: 'K-way merge, sliding-window maxima, scheduling problems.',
+    subtopics: [
+      { title: 'Heap Implementation', slug: 'heaps/implementation' },
+      { title: 'Priority Queue Applications', slug: 'heaps/priority-queue' },
+      { title: 'K-way Merge', slug: 'heaps/k-way-merge' },
+      { title: 'Heap Sort', slug: 'heaps/heap-sort' }
+    ]
+  },
+  { 
+    title: 'Graphs', 
+    slug: 'graphs', 
+    difficulty: 'Advanced', 
+    estHours: 18, 
+    blurb: 'BFS, DFS, shortest paths, components, topological sort.',
+    subtopics: [
+      { title: 'Graph Representation', slug: 'graphs/representation' },
+      { title: 'DFS & BFS', slug: 'graphs/dfs-bfs' },
+      { title: 'Shortest Paths', slug: 'graphs/shortest-paths' },
+      { title: 'Topological Sort', slug: 'graphs/topological-sort' },
+      { title: 'Connected Components', slug: 'graphs/components' }
+    ]
+  },
+  { 
+    title: 'Dynamic Programming', 
+    slug: 'dynamic-programming', 
+    difficulty: 'Advanced', 
+    estHours: 24, 
+    blurb: 'Patterns: knapsack, LIS, DP on trees and bitmask DP.',
+    subtopics: [
+      { title: 'DP Fundamentals', slug: 'dynamic-programming/fundamentals' },
+      { title: 'Knapsack Problems', slug: 'dynamic-programming/knapsack' },
+      { title: 'LIS Variations', slug: 'dynamic-programming/lis' },
+      { title: 'DP on Trees', slug: 'dynamic-programming/trees' },
+      { title: 'Bitmask DP', slug: 'dynamic-programming/bitmask' }
+    ]
+  },
+  { 
+    title: 'Greedy Algorithms', 
+    slug: 'greedy-algorithms', 
+    difficulty: 'Intermediate', 
+    estHours: 6, 
+    blurb: 'Greedy-choice property, interval problems, scheduling.',
+    subtopics: [
+      { title: 'Greedy Strategy', slug: 'greedy-algorithms/strategy' },
+      { title: 'Interval Problems', slug: 'greedy-algorithms/intervals' },
+      { title: 'Scheduling Problems', slug: 'greedy-algorithms/scheduling' },
+      { title: 'Proof Techniques', slug: 'greedy-algorithms/proofs' }
+    ]
+  },
+  { 
+    title: 'Backtracking', 
+    slug: 'backtracking', 
+    difficulty: 'Advanced', 
+    estHours: 10, 
+    blurb: 'Advanced pruning, constraint solving, and search optimization.',
+    subtopics: [
+      { title: 'Backtracking Template', slug: 'backtracking/template' },
+      { title: 'Pruning Strategies', slug: 'backtracking/pruning' },
+      { title: 'Constraint Satisfaction', slug: 'backtracking/constraints' },
+      { title: 'Search Optimization', slug: 'backtracking/optimization' }
+    ]
+  },
+  { 
+    title: 'Tries & Advanced Strings', 
+    slug: 'tries', 
+    difficulty: 'Advanced', 
+    estHours: 8, 
+    blurb: 'Prefix trees, Aho-Corasick and autocomplete techniques.',
+    subtopics: [
+      { title: 'Trie Implementation', slug: 'tries/implementation' },
+      { title: 'Prefix Operations', slug: 'tries/prefix' },
+      { title: 'Aho-Corasick Algorithm', slug: 'tries/aho-corasick' },
+      { title: 'Autocomplete Systems', slug: 'tries/autocomplete' }
+    ]
+  },
+  { 
+    title: 'Segment Trees & Fenwick', 
+    slug: 'segment-tree-fenwick', 
+    difficulty: 'Advanced', 
+    estHours: 12, 
+    blurb: 'Range queries, lazy propagation, BIT for fast updates.',
+    subtopics: [
+      { title: 'Segment Tree Basics', slug: 'segment-tree-fenwick/segment-tree' },
+      { title: 'Lazy Propagation', slug: 'segment-tree-fenwick/lazy-propagation' },
+      { title: 'Fenwick Tree (BIT)', slug: 'segment-tree-fenwick/fenwick' },
+      { title: 'Range Update Queries', slug: 'segment-tree-fenwick/range-updates' }
+    ]
+  },
+  { 
+    title: 'Bit Manipulation & Number Theory', 
+    slug: 'bit-number-theory', 
+    difficulty: 'Advanced', 
+    estHours: 8, 
+    blurb: 'Bit hacks, modular arithmetic, SPF, gcd, primes.',
+    subtopics: [
+      { title: 'Bit Operations', slug: 'bit-number-theory/bit-operations' },
+      { title: 'Bit Manipulation Tricks', slug: 'bit-number-theory/tricks' },
+      { title: 'Modular Arithmetic', slug: 'bit-number-theory/modular' },
+      { title: 'Prime Numbers & GCD', slug: 'bit-number-theory/primes-gcd' }
+    ]
+  }
 ];
 
 const difficultyOrder = { Beginner: 0, Intermediate: 1, Advanced: 2 } as const;
@@ -46,6 +280,7 @@ export default function LearningDsa() {
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState<'All' | keyof typeof difficultyOrder>('All');
   const [sortBy, setSortBy] = useState<'recommended' | 'time' | 'difficulty'>('recommended');
+  const [expandedTopics, setExpandedTopics] = useState<Set<string>>(new Set());
   const searchRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
@@ -66,13 +301,31 @@ export default function LearningDsa() {
 
   const totalHours = useMemo(() => TOPICS.reduce((s, t) => s + t.estHours, 0), []);
 
-  const handleOpenTopic = (slug: string) => {
-    router.push(slugToPath(slug));
+  const toggleTopicExpansion = (slug: string) => {
+    const newExpanded = new Set(expandedTopics);
+    if (newExpanded.has(slug)) {
+      newExpanded.delete(slug);
+    } else {
+      newExpanded.add(slug);
+    }
+    setExpandedTopics(newExpanded);
+  };
+
+  const handleSubtopicClick = (subtopicSlug: string) => {
+    router.push(slugToPath(subtopicSlug));
+  };
+
+  const handleTopicClick = (topic: Topic) => {
+    if (topic.subtopics && topic.subtopics.length > 0) {
+      toggleTopicExpansion(topic.slug);
+    } else {
+      router.push(slugToPath(topic.slug));
+    }
   };
 
   return (
     <div className="relative min-h-screen bg-charcoalBlack text-softSilver overflow-hidden font-sans">
-      <Particles interactive={true} />
+      <Particles />
 
       <div className="relative z-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <Navbar />
@@ -158,22 +411,72 @@ export default function LearningDsa() {
                       whileInView={{ opacity: 1, x: 0 }}
                       viewport={{ once: true }}
                       transition={{ duration: 0.5, delay: index * 0.1 }}
-                      className="ml-12 p-6 rounded-xl bg-slateBlack/50 border border-deepPlum hover:bg-slateBlack/70 hover:border-tealBlue transition-all cursor-pointer shadow-lg hover:shadow-xl"
-                      onClick={() => handleOpenTopic(t.slug)}
-                      role="button"
-                      tabIndex={0}
-                      onKeyDown={(e) => { if (e.key === 'Enter') handleOpenTopic(t.slug); }}
+                      className="ml-12"
                     >
-                      <div className="flex justify-between items-start gap-4">
-                        <div>
-                          <h3 className="text-xl font-semibold text-softSilver">{t.title}</h3>
-                          <p className="mt-2 text-sm text-slate-300">{t.blurb}</p>
-                        </div>
-                        <div className="text-right shrink-0">
-                          <span className="px-3 py-1 rounded-full text-xs font-medium bg-deepPlum/50 text-goldenAmber">{t.difficulty}</span>
-                          <p className="mt-2 text-sm font-medium">{t.estHours} hrs</p>
+                      <div
+                        className="p-6 rounded-xl bg-slateBlack/50 border border-deepPlum hover:bg-slateBlack/70 hover:border-tealBlue transition-all cursor-pointer shadow-lg hover:shadow-xl"
+                        onClick={() => handleTopicClick(t)}
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={(e) => { if (e.key === 'Enter') handleTopicClick(t); }}
+                      >
+                        <div className="flex justify-between items-start gap-4">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2">
+                              <h3 className="text-xl font-semibold text-softSilver">{t.title}</h3>
+                              {t.subtopics && t.subtopics.length > 0 && (
+                                <div className="text-tealBlue">
+                                  {expandedTopics.has(t.slug) ? <FiChevronUp className="w-5 h-5" /> : <FiChevronDown className="w-5 h-5" />}
+                                </div>
+                              )}
+                            </div>
+                            <p className="mt-2 text-sm text-slate-300">{t.blurb}</p>
+                          </div>
+                          <div className="text-right shrink-0">
+                            <span className="px-3 py-1 rounded-full text-xs font-medium bg-deepPlum/50 text-goldenAmber">{t.difficulty}</span>
+                            <p className="mt-2 text-sm font-medium">{t.estHours} hrs</p>
+                          </div>
                         </div>
                       </div>
+
+                      {/* Subtopics Dropdown */}
+                      {expandedTopics.has(t.slug) && t.subtopics && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          exit={{ opacity: 0, height: 0 }}
+                          transition={{ duration: 0.3 }}
+                          className="mt-4 ml-6 space-y-2 border-l-2 border-deepPlum/30 pl-4"
+                        >
+                          {t.subtopics.map((subtopic, subIndex) => (
+                            <div
+                              key={subtopic.slug}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleSubtopicClick(subtopic.slug);
+                              }}
+                              className="p-3 rounded-lg bg-charcoalBlack/40 border border-deepPlum/30 hover:border-tealBlue/50 cursor-pointer transition-all hover:bg-charcoalBlack/60"
+                              role="button"
+                              tabIndex={0}
+                              onKeyDown={(e) => { 
+                                if (e.key === 'Enter') {
+                                  e.stopPropagation();
+                                  handleSubtopicClick(subtopic.slug);
+                                }
+                              }}
+                            >
+                              <div className="flex items-center gap-3">
+                                <div className="w-6 h-6 rounded-full bg-deepPlum/40 flex items-center justify-center text-xs font-medium text-goldenAmber">
+                                  {subIndex + 1}
+                                </div>
+                                <span className="text-sm font-medium text-softSilver hover:text-tealBlue transition-colors">
+                                  {subtopic.title}
+                                </span>
+                              </div>
+                            </div>
+                          ))}
+                        </motion.div>
+                      )}
                     </motion.div>
                   </li>
                 ))}
