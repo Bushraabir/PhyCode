@@ -3,15 +3,15 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { motion } from 'framer-motion';
 import { FiSearch } from 'react-icons/fi';
-import { FaRocket, FaClipboardList, FaStar } from 'react-icons/fa';
+import { FaRocket, FaClipboardList } from 'react-icons/fa';
 import Navbar from '@/components/Navbar/Navbar';
 import Particles from '@/components/particles/particles';
 
 type Topic = {
   title: string;
-  slug: string; // maps to D:\coding space\PhyCode\phycode\src\pages\dsa\<slug>.tsx
+  slug: string;
   difficulty: 'Beginner' | 'Intermediate' | 'Advanced';
-  estHours: number; // estimated hours
+  estHours: number;
   blurb: string;
 };
 
@@ -41,7 +41,7 @@ const difficultyOrder = { Beginner: 0, Intermediate: 1, Advanced: 2 } as const;
 
 const slugToPath = (slug: string) => `/dsa/${slug}`;
 
-export default function DsaHome() {
+export default function LearningDsa() {
   const router = useRouter();
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState<'All' | keyof typeof difficultyOrder>('All');
@@ -49,7 +49,6 @@ export default function DsaHome() {
   const searchRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
-    // autofocus search on mount on desktop
     if (typeof window !== 'undefined' && window.innerWidth > 768) searchRef.current?.focus();
   }, []);
 
@@ -60,7 +59,6 @@ export default function DsaHome() {
 
     if (sortBy === 'time') list.sort((a, b) => a.estHours - b.estHours);
     else if (sortBy === 'difficulty') list.sort((a, b) => difficultyOrder[a.difficulty] - difficultyOrder[b.difficulty]);
-    // recommended: keep original but push core fundamentals (beginner) first
     else list.sort((a, b) => difficultyOrder[a.difficulty] - difficultyOrder[b.difficulty]);
 
     return list;
@@ -69,174 +67,154 @@ export default function DsaHome() {
   const totalHours = useMemo(() => TOPICS.reduce((s, t) => s + t.estHours, 0), []);
 
   const handleOpenTopic = (slug: string) => {
-    // navigates to /dsa/<slug> — ensure file exists at
-    // D:\coding space\PhyCode\phycode\src\pages\dsa\<slug>.tsx
     router.push(slugToPath(slug));
   };
 
   return (
-    <div className="relative min-h-screen bg-[#020417] text-slate-50 overflow-hidden font-sans">
-      {/* Particles kept for theme continuity */}
+    <div className="relative min-h-screen bg-charcoalBlack text-softSilver overflow-hidden font-sans">
       <Particles interactive={true} />
 
-      <div className="relative z-20 max-w-8xl mx-auto px-6 lg:px-12 py-12">
+      <div className="relative z-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <Navbar />
 
-        <header className="mt-6 grid grid-cols-1 lg:grid-cols-3 gap-6 items-center">
-          <div className="lg:col-span-2">
-            <h1 className="font-extrabold text-transparent bg-clip-text" style={{ backgroundImage: 'linear-gradient(90deg,#00f5d4,#06b6d4,#8b5cf6)' , fontSize: 'clamp(1.8rem, 4.6vw, 3.5rem)'}}>
+        <div className="mt-8 flex flex-col lg:flex-row gap-8">
+          <main className="flex-1">
+            <h1 className="font-heading text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-emeraldGreen to-tealBlue">
               PhyCode DSA Roadmap
             </h1>
-            <p className="mt-2 text-slate-300 max-w-2xl">A curated, battle-tested path to mastering Data Structures & Algorithms. Each topic has step-by-step lessons, problems, and a visual demo page. Click any card to open its dedicated learning page</p>
+            <p className="mt-4 text-lg text-slate-300 max-w-2xl">Embark on a structured journey to master Data Structures and Algorithms. Each step includes interactive lessons, practice problems, and visual demonstrations.</p>
 
-            <div className="mt-4 flex gap-3 flex-wrap items-center">
-              <div className="relative flex items-center bg-slate-900/40 border border-slate-700 rounded-full px-3 py-2 shadow-sm">
-                <FiSearch className="w-5 h-5 text-slate-300 mr-2" />
+            <div className="mt-6 flex flex-wrap items-center gap-4">
+              <div className="relative flex items-center bg-slateBlack/40 border border-deepPlum rounded-full px-4 py-2 shadow-sm flex-1 max-w-md">
+                <FiSearch className="w-5 h-5 text-softSilver mr-3" />
                 <input
                   ref={searchRef}
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   placeholder="Search topics or concepts..."
-                  className="bg-transparent placeholder:text-slate-400 focus:outline-none text-sm"
+                  className="bg-transparent placeholder:text-slate-400 focus:outline-none text-sm w-full"
                   aria-label="Search DSA topics"
                 />
               </div>
 
-              <select value={filter} onChange={(e) => setFilter(e.target.value as any)} className="bg-slate-900/30 border border-slate-700 rounded-full px-3 py-2 text-sm">
+              <select value={filter} onChange={(e) => setFilter(e.target.value as any)} className="bg-slateBlack/30 border border-deepPlum rounded-full px-4 py-2 text-sm">
                 <option value="All">All difficulties</option>
                 <option value="Beginner">Beginner</option>
                 <option value="Intermediate">Intermediate</option>
                 <option value="Advanced">Advanced</option>
               </select>
 
-              <select value={sortBy} onChange={(e) => setSortBy(e.target.value as any)} className="bg-slate-900/30 border border-slate-700 rounded-full px-3 py-2 text-sm">
-                <option value="recommended">Recommended</option>
-                <option value="time">Shortest time</option>
-                <option value="difficulty">By difficulty</option>
+              <select value={sortBy} onChange={(e) => setSortBy(e.target.value as any)} className="bg-slateBlack/30 border border-deepPlum rounded-full px-4 py-2 text-sm">
+                <option value="recommended">Recommended Order</option>
+                <option value="time">By Time Estimate</option>
+                <option value="difficulty">By Difficulty</option>
               </select>
 
               <button
                 onClick={() => router.push('/dsa/learning-plan')}
-                className="ml-2 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-emerald-400 to-fuchsia-500 text-slate-900 font-semibold shadow-lg"
+                className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-gradient-to-r from-tealBlue to-goldenAmber text-charcoalBlack font-semibold shadow-lg hover:opacity-90 transition-opacity"
               >
-                <FaClipboardList /> Start Plan
+                <FaClipboardList className="w-4 h-4" /> Start Your Plan
               </button>
             </div>
 
-            {/* timeline summary */}
-            <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div className="p-4 rounded-2xl bg-gradient-to-tr from-slate-900/60 to-slate-800/30 border border-slate-700">
+            <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="p-6 rounded-2xl bg-gradient-to-tr from-slateBlack/60 to-charcoalBlack/30 border border-deepPlum">
                 <div className="flex items-center justify-between">
                   <div>
-                    <div className="text-xs text-slate-400">Total topics</div>
-                    <div className="text-xl font-semibold">{TOPICS.length}</div>
+                    <div className="text-sm text-slate-400">Total Topics</div>
+                    <div className="text-2xl font-bold">{TOPICS.length}</div>
                   </div>
                   <div>
-                    <div className="text-xs text-slate-400">Estimated total hours</div>
-                    <div className="text-xl font-semibold">{totalHours} hrs</div>
+                    <div className="text-sm text-slate-400">Estimated Hours</div>
+                    <div className="text-2xl font-bold">{totalHours} hrs</div>
                   </div>
                 </div>
-                <div className="mt-3 h-2 bg-slate-800/40 rounded-full overflow-hidden border border-slate-700">
-                  <div className="h-2 rounded-full" style={{ width: `${Math.min(100, Math.round((36 / totalHours) * 100))}%`, background: 'linear-gradient(90deg,#00f5d4,#8b5cf6)' }} />
-                </div>
-                <div className="mt-2 text-xs text-slate-300/75">Suggested pace: 3-8 hours / topic. Adjust to your availability.</div>
+                <div className="mt-4 text-sm text-slate-300/75">Recommended pace: 3-8 hours per topic, tailored to your schedule.</div>
               </div>
 
-              <div className="p-4 rounded-2xl bg-gradient-to-tr from-slate-900/60 to-slate-800/30 border border-slate-700 relative overflow-hidden">
-                <h4 className="text-sm font-semibold">Roadmap highlights</h4>
-                <ul className="mt-3 text-sm text-slate-300/70 grid grid-cols-1 gap-2">
-                  <li>Start with Arrays → Strings → Linked List</li>
-                  <li>Then move to Trees & Graphs while practicing DP weekly</li>
-                  <li>Always build a small visual demo for one tricky concept</li>
+              <div className="p-6 rounded-2xl bg-gradient-to-tr from-slateBlack/60 to-charcoalBlack/30 border border-deepPlum relative overflow-hidden">
+                <h4 className="text-lg font-semibold">Roadmap Essentials</h4>
+                <ul className="mt-4 text-sm text-slate-300/70 space-y-2">
+                  <li>Begin with Arrays, Strings, and Linked Lists for strong foundations.</li>
+                  <li>Progress to Trees and Graphs, integrating DP practice regularly.</li>
+                  <li>Incorporate visual demos to solidify complex concepts.</li>
                 </ul>
-                <svg className="absolute right-3 bottom-3 w-28 h-28 opacity-10" viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" stroke="#8b5cf6" strokeWidth="1" fill="none" /></svg>
+                <svg className="absolute right-4 bottom-4 w-24 h-24 opacity-10" viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" stroke="#FDC57B" strokeWidth="2" fill="none" /></svg>
               </div>
             </div>
 
-          </div>
+            <section className="mt-12">
+              <h2 className="text-2xl font-semibold mb-6 text-goldenAmber">Your Learning Path</h2>
+              <ul className="space-y-6">
+                {filtered.map((t, index) => (
+                  <li key={t.slug} className="relative">
+                    <div className="absolute left-0 top-0 w-8 h-8 rounded-full bg-gradient-to-br from-emeraldGreen to-tealBlue flex items-center justify-center text-charcoalBlack font-bold text-sm shadow-md">{index + 1}</div>
+                    {index < filtered.length - 1 && (
+                      <div className="absolute left-4 top-8 bottom-[-2.5rem] w-0.5 bg-deepPlum/50" />
+                    )}
+                    <motion.div
+                      initial={{ opacity: 0, x: -20 }}
+                      whileInView={{ opacity: 1, x: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 0.5, delay: index * 0.1 }}
+                      className="ml-12 p-6 rounded-xl bg-slateBlack/50 border border-deepPlum hover:bg-slateBlack/70 hover:border-tealBlue transition-all cursor-pointer shadow-lg hover:shadow-xl"
+                      onClick={() => handleOpenTopic(t.slug)}
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={(e) => { if (e.key === 'Enter') handleOpenTopic(t.slug); }}
+                    >
+                      <div className="flex justify-between items-start gap-4">
+                        <div>
+                          <h3 className="text-xl font-semibold text-softSilver">{t.title}</h3>
+                          <p className="mt-2 text-sm text-slate-300">{t.blurb}</p>
+                        </div>
+                        <div className="text-right shrink-0">
+                          <span className="px-3 py-1 rounded-full text-xs font-medium bg-deepPlum/50 text-goldenAmber">{t.difficulty}</span>
+                          <p className="mt-2 text-sm font-medium">{t.estHours} hrs</p>
+                        </div>
+                      </div>
+                    </motion.div>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          </main>
 
-          {/* sticky guide on the right */}
-          <aside className="hidden lg:block lg:col-span-1">
-            <div className="sticky top-28 p-4 rounded-2xl bg-gradient-to-tr from-slate-900/60 to-slate-800/30 border border-slate-700">
+          <aside className="lg:w-80 lg:shrink-0">
+            <div className="lg:sticky lg:top-24 p-6 rounded-2xl bg-gradient-to-tr from-slateBlack/60 to-charcoalBlack/30 border border-deepPlum shadow-lg">
               <div className="flex items-center gap-3">
-                <FaRocket className="w-6 h-6 text-amber-400" />
+                <FaRocket className="w-6 h-6 text-goldenAmber" />
                 <div>
-                  <div className="text-xs text-slate-400">Roadmap goal</div>
-                  <div className="font-semibold">Become contest ready in 12–20 weeks</div>
+                  <div className="text-sm text-slate-400">Ultimate Goal</div>
+                  <div className="font-semibold text-lg">Contest-Ready in 12-20 Weeks</div>
                 </div>
               </div>
 
-              <ol className="mt-4 text-sm text-slate-300/75 space-y-2">
-                <li>Week 1–3: Fundamentals (Arrays, Strings, Linked Lists)</li>
-                <li>Week 4–7: Trees, Graphs, Sorting</li>
-                <li>Week 8–12: DP + Advanced DS (SegTree, Tries)</li>
+              <ol className="mt-6 text-sm text-slate-300/75 space-y-3 list-decimal pl-5">
+                <li>Weeks 1-3: Build fundamentals with Arrays, Strings, Linked Lists.</li>
+                <li>Weeks 4-7: Dive into Trees, Graphs, and Sorting techniques.</li>
+                <li>Weeks 8-12: Master DP and advanced structures like Segment Trees.</li>
               </ol>
 
-              <div className="mt-4">
-                <button onClick={() => router.push('/dsa/roadmap-download')} className="w-full px-3 py-2 rounded-full bg-emerald-400 text-slate-900 font-semibold">Download Plan</button>
+              <div className="mt-6">
+                <button onClick={() => router.push('/dsa/roadmap-download')} className="w-full px-4 py-3 rounded-full bg-gradient-to-r from-tealBlue to-goldenAmber text-charcoalBlack font-semibold hover:opacity-90 transition-opacity">Download Full Roadmap</button>
               </div>
             </div>
           </aside>
-        </header>
-
-        {/* topics grid */}
-        <section className="mt-10">
-          <motion.div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filtered.map((t) => (
-              <motion.article
-                key={t.slug}
-                initial={{ opacity: 0, y: 12 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5 }}
-                className="relative rounded-2xl border border-slate-700 bg-gradient-to-tr from-slate-900/40 to-slate-800/20 p-4 cursor-pointer hover:shadow-[0_20px_60px_rgba(139,92,246,0.12)]"
-                onClick={() => handleOpenTopic(t.slug)}
-                role="button"
-                tabIndex={0}
-                onKeyDown={(e) => { if (e.key === 'Enter') handleOpenTopic(t.slug); }}
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <h3 className="font-semibold text-lg">{t.title}</h3>
-                    <p className="text-xs text-slate-300/70 mt-1">{t.blurb}</p>
-                  </div>
-
-                  <div className="text-right">
-                    <div className="text-xs text-slate-400">{t.difficulty}</div>
-                    <div className="text-sm font-medium mt-2">{t.estHours} hrs</div>
-                  </div>
-                </div>
-
-                {/* decorative connectors + animated badge */}
-                <div className="mt-3 flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full flex items-center justify-center bg-gradient-to-br from-emerald-400 to-cyan-400 text-slate-900 shadow-md">{t.title.split(' ').slice(0,1)[0].charAt(0)}</div>
-                  <div className="flex-1 h-2 bg-slate-800/30 rounded-full overflow-hidden">
-                    <div style={{ width: `${Math.min(100, (t.estHours / 24) * 100)}%`, height: 8, background: 'linear-gradient(90deg,#00f5d4,#8b5cf6)' }} />
-                  </div>
-                </div>
-
-                <div className="absolute -right-3 -top-3 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                  <FaStar className="w-6 h-6 text-amber-400" />
-                </div>
-              </motion.article>
-            ))}
-          </motion.div>
-        </section>
-
-        {/* footer quick-actions */}
-        <div className="mt-12 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="text-sm text-slate-300">Need a study buddy? Join the PhyCode community and pair up for problem solving.</div>
-          <div className="flex gap-3">
-            <Link href="/dsa/quiz" className="px-4 py-2 rounded-full border border-slate-700">Quick quiz</Link>
-            <button onClick={() => router.push('/dsa/projects')} className="px-4 py-2 rounded-full bg-gradient-to-r from-emerald-400 to-fuchsia-500 text-slate-900 font-semibold">Build a project</button>
-          </div>
         </div>
 
+        <div className="mt-12 flex flex-col sm:flex-row items-center justify-between gap-6 border-t border-deepPlum pt-8">
+          <div className="text-sm text-slate-300 text-center sm:text-left">Looking for motivation? Join the PhyCode community to find study partners and share progress.</div>
+          <div className="flex gap-4">
+            <Link href="/dsa/quiz" className="px-5 py-2 rounded-full border border-deepPlum hover:bg-deepPlum/30 transition-colors">Take a Quick Quiz</Link>
+            <button onClick={() => router.push('/dsa/projects')} className="px-5 py-2 rounded-full bg-gradient-to-r from-emeraldGreen to-tealBlue text-charcoalBlack font-semibold hover:opacity-90 transition-opacity">Build a Project</button>
+          </div>
+        </div>
       </div>
 
-      {/* floating helper */}
-      <button aria-label="Open learning plan" onClick={() => router.push('/dsa/learning-plan')} className="fixed right-6 bottom-6 z-40 p-3 rounded-full shadow-lg bg-gradient-to-br from-emerald-400 to-fuchsia-500">
-        <FaClipboardList className="w-5 h-5 text-slate-900" />
+      <button aria-label="Open learning plan" onClick={() => router.push('/dsa/learning-plan')} className="fixed right-6 bottom-6 z-40 p-4 rounded-full shadow-2xl bg-gradient-to-br from-goldenAmber to-softOrange hover:scale-105 transition-transform">
+        <FaClipboardList className="w-6 h-6 text-charcoalBlack" />
       </button>
     </div>
   );
