@@ -10,17 +10,6 @@ import Particles from '@/components/particles/particles';
 import { motion, useScroll, useTransform, useReducedMotion } from 'framer-motion';
 import { TypeAnimation } from 'react-type-animation';
 
-/**
- * AuthPage - cinematic, interactive, mobile-friendly
- * Highlights added:
- * - Brighter animated gradient for "PhyCode" with layered glow and svg outline
- * - Device-orientation tilt for mobile + mouse 3D tilt on desktop
- * - Magnetic CTA with ripple & haptics (navigator.vibrate)
- * - Parallax and scroll reactions using framer-motion
- * - Improved accessibility (aria, keyboard, focus states)
- * - Keeps Particles component intact (interactive prop passed)
- */
-
 const AuthPage = () => {
   const setAuthModalState = useSetRecoilState(authModalState);
   const [isMobile, setIsMobile] = useState(false);
@@ -40,14 +29,12 @@ const AuthPage = () => {
   const openLoginModal = (type: 'login' | 'signup' = 'login') =>
     setAuthModalState({ isOpen: true, type });
 
-  // Mobile: device orientation tilt (gentle)
   useEffect(() => {
     if (!isMobile || prefersReduced) return;
     const el = heroRef.current;
     if (!el || typeof window === 'undefined') return;
 
     const onOrientation = (ev: DeviceOrientationEvent) => {
-      // gamma (left-right), beta (front-back)
       const g = ev.gamma ?? 0;
       const b = ev.beta ?? 0;
       const rx = Math.max(-12, Math.min(12, (b - 45) / 6));
@@ -59,7 +46,6 @@ const AuthPage = () => {
     return () => window.removeEventListener('deviceorientation', onOrientation);
   }, [isMobile, prefersReduced]);
 
-  // Keyboard shortcut: L opens login (improves mobile by checking event target)
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const tag = (e.target && (e.target as HTMLElement).tagName) || '';
@@ -70,7 +56,6 @@ const AuthPage = () => {
     return () => window.removeEventListener('keydown', onKey);
   }, []);
 
-  // Magnetic button interaction + ripple + optional vibration
   useEffect(() => {
     const btn = magneticRef.current;
     if (!btn) return;
@@ -92,7 +77,6 @@ const AuthPage = () => {
   }, [isMobile]);
 
   const handleCTAClick = (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
-    // ripple
     const target = e.currentTarget;
     const rect = target.getBoundingClientRect();
     const span = document.createElement('span');
@@ -114,40 +98,28 @@ const AuthPage = () => {
     setTimeout(() => span.style.opacity = '0', 420);
     setTimeout(() => span.remove(), 800);
 
-    // haptic feedback when available
     if (navigator.vibrate) navigator.vibrate(12);
 
     openLoginModal('login');
   };
 
   const inlineCss = `
-    /* Cinematic styles */
-    @keyframes gradientShift { 0% { background-position: 0% 50% } 50% { background-position: 100% 50% } 100% { background-position: 0% 50% } }
-    @keyframes glowPulse { 0% { filter: drop-shadow(0 6px 18px rgba(99,102,241,0.18)); } 50% { filter: drop-shadow(0 20px 42px rgba(99,102,241,0.28)); } 100% { filter: drop-shadow(0 6px 18px rgba(99,102,241,0.18)); } }
-    .phycode-giant { background-size: 400% 400%; animation: gradientShift 8s ease-in-out infinite, glowPulse 4.5s ease-in-out infinite; }
-    .phycode-outline { mix-blend-mode: screen; opacity: 0.95; }
-    .feature-pill { transition: transform 220ms cubic-bezier(.2,.9,.2,1), box-shadow 220ms, background 220ms; }
-    .feature-pill:hover { transform: translateY(-6px) scale(1.03); box-shadow: 0 22px 60px rgba(2,6,23,0.68); }
-    .ripple-cta { position: absolute; inset: 0; border-radius: inherit; overflow: hidden; }
-    .cta-focus:focus { outline: 3px solid rgba(99,102,241,0.16); outline-offset: 3px; }
-    /* neon stroke for svg text fallback */
+
+    .cta-focus:focus { outline: 3px solid rgba(252,197,123,0.16); outline-offset: 3px; }
     .svg-stroke { filter: drop-shadow(0 6px 18px rgba(0,0,0,0.45)); }
   `;
 
   return (
-    <div className="relative min-h-screen bg-[#030417] text-slate-50 overflow-hidden font-sans antialiased">
+    <div className="relative min-h-screen bg-slateBlack text-softSilver overflow-hidden font-sans antialiased">
       <style dangerouslySetInnerHTML={{ __html: inlineCss }} />
 
-      {/* Particles (kept) */}
-      <Particles  />
+      <Particles />
 
-      {/* Decorative ambient orbs */}
       <div className="pointer-events-none absolute inset-0 -z-10">
-        <div className="absolute -left-36 -top-20 w-[46vw] h-[46vw] rounded-full bg-gradient-to-br from-[#00f5d4]/18 to-[#7c3aed]/6 blur-[140px]" />
-        <div className="absolute -right-32 -bottom-16 w-[42vw] h-[42vw] rounded-full bg-gradient-to-tr from-[#ffb86b]/12 to-[#ff63c3]/6 blur-[120px]" />
+        <div className="absolute -left-36 -top-20 w-[46vw] h-[46vw] rounded-full bg-gradient-to-br from-tealBlue/18 to-deepPlum/6 blur-[140px]" />
+        <div className="absolute -right-32 -bottom-16 w-[42vw] h-[42vw] rounded-full bg-gradient-to-tr from-goldenAmber/12 to-softOrange/6 blur-[120px]" />
       </div>
 
-      {/* faint grid overlay for subtle texture */}
       <div className="pointer-events-none absolute inset-0 bg-[url('/grid.svg')] opacity-[0.04]" />
 
       <div className="relative z-20 max-w-8xl mx-auto px-6 lg:px-12">
@@ -166,21 +138,18 @@ const AuthPage = () => {
               aria-hidden={false}
             >
 
-              {/* Layered animated text: big gradient + subtle outline SVG for extra "wow" */}
               <div className="relative flex items-center justify-center select-none">
                 <h1
-                  className="phycode-giant text-deepPlum tracking-tight font-heading font-bold"
+                  className=" text-deepPlum tracking-tight font-heading font-bold"
                   style={{
-                   
                     fontSize: isMobile ? '18.5vw' : '12.8vw',
-                    textShadow: '0 10px 40px rgba(0, 120, 128, 0.14), 0 4px 20px rgba(26, 26, 30, 0.6)'
+                   
                   }}
                 >
                   PhyCode
                 </h1>
               </div>
 
-              {/* Subtitle + typing animation */}
               <div className="mt-4 flex flex-col items-center gap-2 px-4">
                 <TypeAnimation
                   sequence={[
@@ -194,17 +163,16 @@ const AuthPage = () => {
                   wrapper="p"
                   cursor
                   repeat={Infinity}
-                  className="italic text-sm sm:text-base md:text-lg text-slate-100/90 max-w-3xl"
+                  className="italic text-sm sm:text-base md:text-lg text-softSilver/90 max-w-3xl"
                   speed={36}
                   deletionSpeed={42}
                 />
 
-                <p className="text-xs sm:text-sm text-slate-300/70 mt-1">Interactive physics simulations • Visual DSA • Timed challenges</p>
+                <p className="text-xs sm:text-sm text-softSilver/70 mt-1">Interactive physics simulations • Visual DSA • Timed challenges</p>
               </div>
 
             </motion.div>
 
-            {/* CTA cluster */}
             <div className="mt-8 flex flex-col items-center gap-4 w-full">
               <div className="flex flex-col sm:flex-row items-center gap-4">
 
@@ -212,7 +180,7 @@ const AuthPage = () => {
                   ref={magneticRef}
                   onClick={handleCTAClick}
                   whileTap={{ scale: 0.985 }}
-                  className="relative overflow-hidden rounded-full py-3 px-8 font-semibold text-slate-900 bg-gradient-to-r from-emerald-400 to-fuchsia-500 shadow-[0_18px_60px_rgba(139,92,246,0.18)] cta-focus"
+                  className="relative overflow-hidden rounded-full py-3 px-8 font-semibold text-slateBlack bg-gradient-to-r from-tealBlue to-goldenAmber shadow-[0_18px_60px_rgba(252,197,123,0.18)] cta-focus"
                   aria-label="Start practising - open login"
                 >
                   <span className="ripple-cta" aria-hidden />
@@ -223,35 +191,30 @@ const AuthPage = () => {
                   href="/dsa/dsaHome"
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  className="inline-flex items-center gap-3 border-2 border-emerald-400 text-emerald-200/95 font-semibold py-3 px-6 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
+                  className="inline-flex items-center gap-3 border-2 border-tealBlue text-tealBlue font-semibold py-3 px-6 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tealBlue"
                 >
-                  <CodeBracketIcon className="w-5 h-5 text-emerald-200/95" />
+                  <CodeBracketIcon className="w-5 h-5 text-tealBlue" />
                   Learn to Code
                 </motion.a>
 
                 <motion.button
                   onClick={() => window.scrollTo({ top: window.innerHeight, behavior: 'smooth' })}
                   whileHover={{ y: -3 }}
-                  className="hidden sm:inline-flex items-center gap-2 bg-slate-900/30 backdrop-blur-sm text-slate-100/90 font-medium py-3 px-5 rounded-full border border-slate-700"
+                  className="hidden sm:inline-flex items-center gap-2 bg-charcoalBlack/30 backdrop-blur-sm text-softSilver/90 font-medium py-3 px-5 rounded-full border border-slateBlack"
                 >
                   <BeakerIcon className="w-5 h-5" />
                   Explore Labs
                 </motion.button>
               </div>
 
-             
-
-              {/* micro-CTA row */}
-              <div className="mt-2 flex flex-col sm:flex-row  gap-3 text-xs text-slate-300/70">
+              <div className="mt-2 flex flex-col sm:flex-row  gap-3 text-xs text-softSilver/70">
                 <span>
-                  Press <kbd className="px-2 py-1 bg-slate-900/60 rounded">L</kbd> to open login
+                  Press <kbd className="px-2 py-1 bg-charcoalBlack/60 rounded">L</kbd> to open login
                 </span>
                 <span>•</span>
                 <span>Built for learners, coders & curious minds</span>
               </div>
             </div>
-
-           
 
           </section>
         </main>

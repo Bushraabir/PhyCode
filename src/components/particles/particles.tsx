@@ -1,6 +1,5 @@
 import React, { useRef, useEffect } from "react";
 
-// Refined constants for elegant, premium movement
 const NUM_PARTICLES = 8;
 const MAX_CONNECTION_DISTANCE = 180;
 const BASE_PARTICLE_SPEED = 0.03;
@@ -9,13 +8,12 @@ const DAMPING = 0.62;
 const REPULSION_FORCE = 40;
 const ATTRACTION_FORCE = 4.5;
 const MAX_VELOCITY = 1.5;
-const MAX_ENERGY = 80; // Limit energy to prevent excessive growth
-const MAX_GLOW_MULTIPLIER = 2.2; // Cap the glow size multiplier
+const MAX_ENERGY = 100;
+const MAX_GLOW_MULTIPLIER = 3.2;
 
-// Premium symbol sets with sophisticated selection
 const CODE_SYMBOLS = [
-  '{ }', '< >', '===', '++', '--', '**', '//', '&&', '||', '!==',
-  '??', '##', '%%', '=>', '~>', '${}', 'fn', 'if', 'for', 'try'
+  '{ }', '>>', '==', '++', '--', '**', '//', '&&', '||', '!=',
+  '??', '[]', '%', '->', ';', '>>', 'fn', 'if', 'for', 'try'
 ];
 
 const PHYSICS_SYMBOLS = [
@@ -59,9 +57,7 @@ const PremiumParticleSystem: React.FC = () => {
     y: number | null;
     clickTime: number;
     isPressed: boolean;
-    field: number;
-  }>({ x: null, y: null, clickTime: 0, isPressed: false, field: 0 });
-  const time = useRef(0);
+  }>({ x: null, y: null, clickTime: 0, isPressed: false });
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -78,10 +74,9 @@ const PremiumParticleSystem: React.FC = () => {
       const isPhysics = Math.random() < 0.5;
       const type = isPhysics ? 'physics' : 'code';
       
-      // Premium color palette using your custom colors
       const baseHue = type === 'physics'
-        ? 180 + Math.random() * 20  // Teal blue spectrum for physics
-        : 315 + Math.random() * 30; // Deep plum spectrum for code
+        ? 180 + Math.random() * 20
+        : 315 + Math.random() * 30;
 
       return {
         x: Math.random() * width,
@@ -95,18 +90,18 @@ const PremiumParticleSystem: React.FC = () => {
         radius: mass * 25 + 15,
         hue: baseHue,
         targetHue: baseHue,
-        brightness: 70 + Math.random() * 10, // Slightly brighter for premium shine
+        brightness: 30 + Math.random() * 10,
         symbol: type === 'physics'
           ? PHYSICS_SYMBOLS[Math.floor(Math.random() * PHYSICS_SYMBOLS.length)]
           : CODE_SYMBOLS[Math.floor(Math.random() * CODE_SYMBOLS.length)],
         rotation: Math.random() * Math.PI * 2,
-        rotationSpeed: (Math.random() - 0.5) * 0.004, // Slower rotation for elegance
+        rotationSpeed: (Math.random() - 0.5) * 0.004,
         energy: Math.random() * 15 + 8,
         trail: [],
         wavePhase: Math.random() * Math.PI * 2,
         pulsePhase: Math.random() * Math.PI * 2,
         type,
-        glowIntensity: 0.7 + Math.random() * 0.2, // Increased base intensity
+        glowIntensity: 0.5 + Math.random() * 0.2,
         hexRotation: Math.random() * Math.PI / 3,
         symbolScale: 1.0,
         symbolAlpha: 0.9,
@@ -123,7 +118,6 @@ const PremiumParticleSystem: React.FC = () => {
       const unitX = dx / distance;
       const unitY = dy / distance;
 
-      // More elegant force calculations with refined balance
       const coulombForce = (p1.charge * p2.charge * REPULSION_FORCE) / (distance * distance + 80);
       const gravForce = (p1.mass * p2.mass * ATTRACTION_FORCE) / (distance * distance + 40);
       const netForce = gravForce - coulombForce;
@@ -134,7 +128,6 @@ const PremiumParticleSystem: React.FC = () => {
       };
     };
 
-    // Premium hexagon rendering with sophisticated styling
     const drawHexagon = (ctx: CanvasRenderingContext2D, x: number, y: number, radius: number, rotation: number = 0) => {
       ctx.beginPath();
       for (let i = 0; i < 6; i++) {
@@ -157,7 +150,6 @@ const PremiumParticleSystem: React.FC = () => {
         eleganceModifier
       } = particle;
 
-      // Convert custom colors to HSL values
       const colorMap = {
         tealBlue: { h: 184, s: 100, l: 26 },
         deepPlum: { h: 325, s: 26, l: 30 },
@@ -185,11 +177,10 @@ const PremiumParticleSystem: React.FC = () => {
       const baseColor = getThemeColor(type);
       const accentColor = getThemeColor(type, 'accent');
 
-      // Subtle, elegant pulsing with smoother amplitude
       const pulse = Math.sin(pulsePhase) * 0.06 + 1;
       const currentRadius = radius * pulse * eleganceModifier;
 
-      // Premium trail system - more subtle and refined, with longer fade
+      // Trail system
       ctx.globalCompositeOperation = 'lighter';
       for (let i = 0; i < trail.length; i++) {
         const point = trail[i];
@@ -208,11 +199,11 @@ const PremiumParticleSystem: React.FC = () => {
       }
       ctx.globalCompositeOperation = 'source-over';
 
-      // Refined glow system - more sophisticated layering with size limiting
-      const glowMultiplier = Math.min(MAX_GLOW_MULTIPLIER, 1.4 + energy / 150);
+      // Glow system
+      const glowMultiplier = Math.min(MAX_GLOW_MULTIPLIER, 2.4 + energy / 150);
       const glowSize = currentRadius * glowMultiplier * glowIntensity;
 
-      // Outer glow - soft and premium, with added subtlety
+      // Outer glow
       const outerGlow = ctx.createRadialGradient(x, y, 0, x, y, glowSize);
       outerGlow.addColorStop(0, `hsla(${baseColor.h}, ${baseColor.s}%, ${brightness + 25}%, 0.06)`);
       outerGlow.addColorStop(0.3, `hsla(${baseColor.h}, ${baseColor.s - 10}%, ${brightness + 15}%, 0.12)`);
@@ -222,7 +213,7 @@ const PremiumParticleSystem: React.FC = () => {
       drawHexagon(ctx, x, y, glowSize, hexRotation * 0.3);
       ctx.fill();
 
-      // Middle glow - refined intensity
+      // Middle glow
       const middleGlow = ctx.createRadialGradient(x, y, 0, x, y, currentRadius * 1.4);
       middleGlow.addColorStop(0, `hsla(${baseColor.h}, ${baseColor.s + 5}%, ${brightness + 18}%, 0.22)`);
       middleGlow.addColorStop(0.5, `hsla(${baseColor.h}, ${baseColor.s - 5}%, ${brightness + 8}%, 0.12)`);
@@ -231,7 +222,7 @@ const PremiumParticleSystem: React.FC = () => {
       drawHexagon(ctx, x, y, currentRadius * 1.4, hexRotation * 0.6);
       ctx.fill();
 
-      // Inner glow - elegant core with premium sheen
+      // Inner glow
       const innerGlow = ctx.createRadialGradient(x, y, 0, x, y, currentRadius * 1.05);
       innerGlow.addColorStop(0, `hsla(${baseColor.h}, ${baseColor.s + 10}%, ${brightness + 22}%, 0.35)`);
       innerGlow.addColorStop(0.6, `hsla(${baseColor.h}, ${baseColor.s}%, ${brightness + 10}%, 0.18)`);
@@ -240,65 +231,64 @@ const PremiumParticleSystem: React.FC = () => {
       drawHexagon(ctx, x, y, currentRadius * 1.05, hexRotation);
       ctx.fill();
 
-      // Main hexagonal body - premium styling with custom theme colors
+      // Main hexagonal body
       ctx.fillStyle = `hsla(${baseColor.h}, ${baseColor.s + 8}%, ${brightness + 18}%, 0.82)`;
       drawHexagon(ctx, x, y, currentRadius * 0.75, hexRotation);
       ctx.fill();
 
-      // Elegant border with premium finish and golden amber accent
+      // Border
       ctx.strokeStyle = `hsla(${accentColor.h}, ${accentColor.s}%, ${accentColor.l + 15}%, 0.55)`;
       ctx.lineWidth = 1.2;
       drawHexagon(ctx, x, y, currentRadius * 0.75, hexRotation);
       ctx.stroke();
 
-      // Premium symbol rendering with excellent readability
+      // Symbol rendering
       ctx.save();
       ctx.translate(x, y);
       ctx.rotate(rotation * 0.3);
 
-      // Symbol backdrop - elegant contrast with charcoal black
-      ctx.fillStyle = 'rgba(26, 26, 30, 0.85)'; // charcoalBlack with transparency
+      // Symbol backdrop
+      ctx.fillStyle = 'rgba(26, 26, 30, 0.85)';
       drawHexagon(ctx, 0, 0, currentRadius * 0.6, 0);
       ctx.fill();
 
-      // Symbol border for definition
+      // Symbol border
       ctx.strokeStyle = `hsla(${accentColor.h}, ${accentColor.s - 20}%, ${accentColor.l}%, 0.35)`;
       ctx.lineWidth = 0.8;
       drawHexagon(ctx, 0, 0, currentRadius * 0.6, 0);
       ctx.stroke();
 
-      // Premium typography with refined font weights
+      // Typography
       const fontSize = Math.max(currentRadius * symbolScale * 0.7, 11);
       ctx.font = `${type === 'physics' ? '500' : '600'} ${fontSize}px ${type === 'physics' ? "'Inter', system-ui" : "'JetBrains Mono', monospace"}`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
 
-      // Elegant text shadow with premium depth
-      ctx.shadowColor = 'rgba(26, 26, 30, 0.8)'; // charcoalBlack shadow
+      // Text shadow
+      ctx.shadowColor = 'rgba(26, 26, 30, 0.8)';
       ctx.shadowBlur = 2.5;
       ctx.shadowOffsetX = 0.4;
       ctx.shadowOffsetY = 0.4;
 
-      // Primary symbol - soft silver with golden accent
-      ctx.fillStyle = `rgba(232, 236, 239, ${symbolAlpha})`; // softSilver
+      // Primary symbol
+      ctx.fillStyle = `rgba(232, 236, 239, ${symbolAlpha})`;
       ctx.fillText(symbol, 0, 0);
 
-      // Subtle highlight for premium feel with golden amber
+      // Highlight
       ctx.shadowColor = 'transparent';
       ctx.fillStyle = `hsla(${accentColor.h}, ${accentColor.s}%, ${accentColor.l + 20}%, ${symbolAlpha * 0.55})`;
       ctx.fillText(symbol, -0.25, -0.25);
 
       ctx.restore();
 
-      // Refined energy field for high-energy particles with size control
+      // Energy field for high-energy particles
       if (energy > 40) {
         const fieldAlpha = ((energy - 40) / (MAX_ENERGY - 40)) * 0.22;
         ctx.strokeStyle = `hsla(${baseColor.h}, ${baseColor.s + 10}%, ${brightness + 22}%, ${fieldAlpha})`;
         ctx.lineWidth = 1.2;
         ctx.setLineDash([1.5, 3.5]);
 
-        // Elegant orbital rings with smoother animation
-        for (let ring = 1; ring <= 2; ring++) {
+        for (let ring = 1; ring <= 3; ring++) {
           const ringRadius = currentRadius * (1.6 + ring * 0.35) + Math.sin(currentTime * 0.0008 + ring) * 6;
           const ringRotation = hexRotation + (ring * Math.PI / 8) + (currentTime * 0.0006);
           drawHexagon(ctx, x, y, ringRadius, ringRotation);
@@ -308,7 +298,6 @@ const PremiumParticleSystem: React.FC = () => {
       }
     };
 
-    // Premium connection rendering with sophisticated effects
     const drawConnections = (ctx: CanvasRenderingContext2D, currentTime: number) => {
       for (let i = 0; i < particles.current.length; i++) {
         const a = particles.current[i];
@@ -325,7 +314,6 @@ const PremiumParticleSystem: React.FC = () => {
             const isMixedConnection = a.type !== b.type;
 
             if (isPhysicsConnection) {
-              // Quantum connection - elegant wave with teal blue theme
               ctx.strokeStyle = `hsla(184, 100%, 50%, ${strength * 0.32})`;
               ctx.lineWidth = 0.8 + strength * 1.4;
               ctx.beginPath();
@@ -346,7 +334,6 @@ const PremiumParticleSystem: React.FC = () => {
               }
               ctx.stroke();
 
-              // Elegant quantum particles with emerald green glow
               if (strength > 0.55) {
                 const qPos = (Math.sin(flowPhase * 1.2) + 1) / 2;
                 const qX = a.x + (b.x - a.x) * qPos;
@@ -357,7 +344,6 @@ const PremiumParticleSystem: React.FC = () => {
                 ctx.fill();
               }
             } else if (isMixedConnection) {
-              // Mixed connection - sophisticated blend with deep plum
               ctx.strokeStyle = `hsla(325, 50%, 60%, ${strength * 0.28})`;
               ctx.lineWidth = 1.0 + strength * 1.0;
               ctx.setLineDash([5, 2.5, 1.5, 2.5]);
@@ -370,7 +356,6 @@ const PremiumParticleSystem: React.FC = () => {
               ctx.stroke();
               ctx.setLineDash([]);
             } else {
-              // Code connection - elegant digital flow with deep plum theme
               ctx.strokeStyle = `hsla(325, 50%, 65%, ${strength * 0.38})`;
               ctx.lineWidth = 1.2 + strength * 1.6;
               ctx.setLineDash([2.5, 5]);
@@ -384,7 +369,6 @@ const PremiumParticleSystem: React.FC = () => {
               ctx.stroke();
               ctx.setLineDash([]);
 
-              // Refined data packets with golden amber
               if (strength > 0.45) {
                 const packetPhase = flowPhase * 1.1;
                 const packetPos = (Math.sin(packetPhase) + 1) / 2;
@@ -399,7 +383,7 @@ const PremiumParticleSystem: React.FC = () => {
           }
         }
 
-        // Premium mouse interaction with enhanced elegance
+        // Mouse interaction
         const m = mouse.current;
         if (m.x !== null && m.y !== null) {
           const distance = Math.hypot(a.x - m.x, a.y - m.y);
@@ -409,7 +393,6 @@ const PremiumParticleSystem: React.FC = () => {
             const strength = 1 - distance / maxMouseDist;
             
             if (m.isPressed) {
-              // Elegant energy field with teal blue theme
               ctx.strokeStyle = `hsla(184, 100%, 60%, ${strength * 0.45})`;
               ctx.lineWidth = 1.8 + strength * 1.8;
               const branches = 5;
@@ -433,13 +416,11 @@ const PremiumParticleSystem: React.FC = () => {
                 ctx.stroke();
               }
 
-              // Elegant energy core with golden amber
               ctx.fillStyle = `hsla(35, 97%, 85%, ${strength * 0.35})`;
               ctx.beginPath();
               ctx.arc(a.x, a.y, strength * 5, 0, Math.PI * 2);
               ctx.fill();
             } else {
-              // Subtle attraction with soft silver
               ctx.strokeStyle = `hsla(200, 13%, 80%, ${strength * 0.22})`;
               ctx.lineWidth = 0.8 + strength * 0.8;
               ctx.beginPath();
@@ -454,20 +435,12 @@ const PremiumParticleSystem: React.FC = () => {
 
     const animate = (currentTime: number) => {
       if (!ctx) return;
-      time.current = currentTime;
 
-      // Premium background gradient with custom theme colors
-      const bgGradient = ctx.createRadialGradient(
-        width / 2, height / 2, 0,
-        width / 2, height / 2, Math.max(width, height) / 2
-      );
-      bgGradient.addColorStop(0, 'rgba(51, 49, 59, 0.10)'); // slateBlack with transparency
-      bgGradient.addColorStop(0.5, 'rgba(26, 26, 30, 0.12)'); // charcoalBlack
-      bgGradient.addColorStop(1, 'rgba(98, 55, 78, 0.15)'); // deepPlum with transparency
-      ctx.fillStyle = bgGradient;
+      // Clean solid background
+      ctx.fillStyle = '#1A1A1E';
       ctx.fillRect(0, 0, width, height);
 
-      // Enhanced physics simulation with energy limits
+      // Physics simulation
       for (let i = 0; i < particles.current.length; i++) {
         const particle = particles.current[i];
         particle.ax = 0;
@@ -482,7 +455,7 @@ const PremiumParticleSystem: React.FC = () => {
           particle.ay += forces.fy / particle.mass;
         }
 
-        // Premium mouse interaction with controlled energy increase
+        // Mouse interaction
         const m = mouse.current;
         if (m.x !== null && m.y !== null) {
           const dx = m.x - particle.x;
@@ -507,14 +480,14 @@ const PremiumParticleSystem: React.FC = () => {
           }
         }
 
-        // Elegant wave behavior with refined oscillation
+        // Wave behavior
         particle.wavePhase += 0.007;
         const oscillation = Math.sin(particle.wavePhase) * 0.7;
         particle.ay += oscillation * 0.0004;
         particle.hexRotation += particle.rotationSpeed * 0.35;
         particle.ay += GRAVITY_STRENGTH;
 
-        // Update velocity with elegant limiting
+        // Update velocity
         particle.vx += particle.ax;
         particle.vy += particle.ay;
         const currentSpeed = Math.hypot(particle.vx, particle.vy);
@@ -528,7 +501,7 @@ const PremiumParticleSystem: React.FC = () => {
         particle.x += particle.vx;
         particle.y += particle.vy;
 
-        // Refined trail system with increased length
+        // Trail system
         const trailChance = 0.35;
         if (Math.random() < trailChance) {
           particle.trail.push({
@@ -551,7 +524,7 @@ const PremiumParticleSystem: React.FC = () => {
         const hueDistance = particle.targetHue - particle.hue;
         particle.hue += hueDistance * 0.03;
 
-        // Elegant boundary handling with softer bounce
+        // Boundary handling
         const margin = particle.radius * 1.5;
         const bounceDamping = 0.45;
         
@@ -581,7 +554,7 @@ const PremiumParticleSystem: React.FC = () => {
         drawParticle(ctx, particle, currentTime);
       }
 
-      // Premium mouse field visualization with enhanced rings using teal blue theme
+      // Mouse field visualization
       if (mouse.current.isPressed && mouse.current.x !== null && mouse.current.y !== null) {
         const mouseEnergy = (Date.now() - mouse.current.clickTime) / 80;
         const basePulse = 35 + Math.sin(currentTime * 0.005) * 12;
@@ -599,15 +572,14 @@ const PremiumParticleSystem: React.FC = () => {
         }
         ctx.setLineDash([]);
 
-        // Elegant central core with premium gradient using golden amber
         const coreSize = 7 + Math.sin(currentTime * 0.007) * 2.5;
         const coreGradient = ctx.createRadialGradient(
           mouse.current.x, mouse.current.y, 0,
           mouse.current.x, mouse.current.y, coreSize
         );
-        coreGradient.addColorStop(0, 'hsla(35, 97%, 85%, 0.55)'); // goldenAmber
-        coreGradient.addColorStop(0.5, 'hsla(184, 100%, 70%, 0.28)'); // tealBlue
-        coreGradient.addColorStop(1, 'hsla(325, 50%, 65%, 0)'); // deepPlum fade
+        coreGradient.addColorStop(0, 'hsla(35, 97%, 85%, 0.55)');
+        coreGradient.addColorStop(0.5, 'hsla(184, 100%, 70%, 0.28)');
+        coreGradient.addColorStop(1, 'hsla(325, 50%, 65%, 0)');
         ctx.fillStyle = coreGradient;
         drawHexagon(ctx, mouse.current.x, mouse.current.y, coreSize, currentTime * 0.0015);
         ctx.fill();
@@ -709,39 +681,12 @@ const PremiumParticleSystem: React.FC = () => {
     <div className="fixed inset-0 z-0 pointer-events-auto overflow-hidden">
       <canvas
         ref={canvasRef}
-        className="w-full h-full transition-opacity duration-1000 cursor-crosshair"
+        className="w-full h-full cursor-crosshair"
         style={{
-          opacity: 0.88,
-          background: `
-            radial-gradient(ellipse at top left, rgba(98, 55, 78, 0.15) 0%, transparent 50%), 
-            radial-gradient(ellipse at top right, rgba(0, 120, 128, 0.12) 0%, transparent 50%), 
-            radial-gradient(ellipse at bottom center, rgba(51, 49, 59, 0.18) 0%, transparent 50%), 
-            linear-gradient(135deg, rgba(26, 26, 30, 0.96) 0%, rgba(51, 49, 59, 0.94) 100%)
-          `,
-          backdropFilter: 'blur(0.6px)',
+          opacity: 0.9,
         }}
       />
       
-      {/* Premium overlay for enhanced depth with custom theme colors */}
-      <div className="absolute inset-0 bg-gradient-to-br from-slate-950/4 via-transparent to-purple-950/6 pointer-events-none" />
-      
-      {/* Subtle geometric pattern overlay with premium finesse using soft silver */}
-      <div
-        className="absolute inset-0 pointer-events-none opacity-[0.015]"
-        style={{
-          backgroundImage: `
-            repeating-conic-gradient(
-              from 30deg at 50% 50%, 
-              transparent 0deg, 
-              rgba(232, 236, 239, 0.25) 60deg, 
-              transparent 120deg 
-            )
-          `,
-          backgroundSize: '180px 180px'
-        }}
-      />
-      
-      {/* Accessibility and SEO content */}
       <div className="sr-only">
         <h1>Premium Physics & Coding Particle System</h1>
         <p>
