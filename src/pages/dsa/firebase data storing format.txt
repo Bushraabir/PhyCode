@@ -1,0 +1,891 @@
+type Topic = {
+  title: string;
+  slug: string;
+  difficulty: 'Beginner' | 'Intermediate' | 'Advanced';
+  estHours: number;
+  blurb: string;
+  subtopics?: Subtopic[];
+  githubPath?: string;
+  youtubePath?: string;
+};
+
+type Subtopic = {
+  title: string;
+  slug: string;
+  githubPath?: string;
+  youtubePath?: string;
+  subsubtopics?: SubSubtopic[];
+  files?: FileItem[];
+};
+
+type SubSubtopic = {
+  title: string;
+  slug: string;
+  githubPath?: string;
+  youtubePath?: string;
+  files?: FileItem[];
+};
+
+type FileItem = {
+  title: string;
+  slug: string;
+  githubPath?: string;
+  youtubePath?: string;
+};
+
+// GitHub repository configuration
+const GITHUB_CONFIG = {
+  baseUrl: 'https://github.com/Bushraabir/Data-Structure-And-Algorithm',
+  owner: 'Bushra Khandoker',
+  repo: 'Data-Structure-And-Algorithm',
+  branch: 'main'
+};
+
+// YouTube channel configuration
+const YOUTUBE_CONFIG = {
+  baseUrl: 'https://www.youtube.com/channel/YOUR_CHANNEL_ID',
+  playlistUrl: 'https://www.youtube.com/playlist?list=YOUR_PLAYLIST_ID'
+};
+
+const TOPICS: Topic[] = [
+  { 
+    title: 'Introduction & Setup', 
+    slug: 'introduction', 
+    difficulty: 'Beginner', 
+    estHours: 2, 
+    blurb: 'Why DSA matters, tools, environment setup and first steps.',
+    githubPath: '',
+    youtubePath: 'intro-dsa-playlist',
+    subtopics: [
+      { 
+        title: 'Why DSA Matters', 
+        slug: 'topic/introduction/whyDsa', 
+        githubPath: '', 
+        youtubePath: 'why-dsa-matters'
+      },
+      { 
+        title: 'Problem Solving Approach', 
+        slug: 'topic/introduction/problemSolvingApproach', 
+        githubPath: '', 
+        youtubePath: 'problem-solving-approach'
+      }
+    ]
+  },
+  { 
+    title: 'Basic Programming Syntax', 
+    slug: 'basic-syntax', 
+    difficulty: 'Beginner', 
+    estHours: 2, 
+    blurb: 'User Input, Conditions and basic programming constructs',
+    githubPath: '00.basics',
+    youtubePath: 'basic-programming-playlist',
+    subtopics: [
+      { 
+        title: 'Input and Output', 
+        slug: 'topic/basic-syntax/input-output', 
+        githubPath: '00.basics/input-output', 
+        youtubePath: 'input-output-tutorial',
+        files: [
+          { title: 'Basic Input', slug: 'basic-input', githubPath: '00.basics/01.user input.cpp', youtubePath: 'basic-input-video' },
+          { title: 'Advanced Input', slug: 'advanced-input', githubPath: '00.basics/01.advanced input.cpp', youtubePath: 'advanced-input-video' }
+        ]
+      },
+      { 
+        title: 'Conditional Statements', 
+        slug: 'topic/basic-syntax/conditionals', 
+        githubPath: '00.basics/conditionals', 
+        youtubePath: 'conditionals-tutorial',
+        files: [
+          { title: 'If Else Basics', slug: 'if-else-basic', githubPath: '00.basics/02. if elself.cpp', youtubePath: 'if-else-video' },
+          { title: 'Switch Statements', slug: 'switch-statements', githubPath: '00.basics/03. switch.cpp', youtubePath: 'switch-video' }
+        ]
+      }
+    ]
+  },
+  { 
+    title: 'Patterns and Nested Loops', 
+    slug: 'patterns', 
+    difficulty: 'Beginner', 
+    estHours: 4, 
+    blurb: 'Practice patterns with nested loops',
+    githubPath: '01.Patterns',
+    youtubePath: 'patterns-playlist',
+    subtopics: [
+      { 
+        title: 'Square Patterns', 
+        slug: 'patterns/square', 
+        githubPath: '01.Patterns/Square', 
+        youtubePath: 'square-patterns',
+        subsubtopics: [
+          {
+            title: 'Basic Square',
+            slug: 'patterns/square/basic',
+            githubPath: '01.Patterns/Square/Basic',
+            youtubePath: 'basic-square-pattern',
+            files: [
+              { title: 'Square Pattern I', slug: 'square-1', githubPath: '01.Patterns/Square/Basic/01.square1.cpp', youtubePath: 'square-pattern-1' },
+              { title: 'Square Pattern II', slug: 'square-2', githubPath: '01.Patterns/Square/Basic/02.square2.cpp', youtubePath: 'square-pattern-2' }
+            ]
+          },
+          {
+            title: 'Hollow Square',
+            slug: 'patterns/square/hollow',
+            githubPath: '01.Patterns/Square/Hollow',
+            youtubePath: 'hollow-square-pattern',
+            files: [
+              { title: 'Hollow Square Pattern', slug: 'hollow-square', githubPath: '01.Patterns/Square/Hollow/hollow_square.cpp', youtubePath: 'hollow-square-video' }
+            ]
+          }
+        ]
+      },
+      { 
+        title: 'Triangle Patterns', 
+        slug: 'patterns/triangle', 
+        githubPath: '01.Patterns/Triangle', 
+        youtubePath: 'triangle-patterns',
+        subsubtopics: [
+          {
+            title: 'Right Triangle',
+            slug: 'patterns/triangle/right',
+            githubPath: '01.Patterns/Triangle/Right',
+            youtubePath: 'right-triangle-pattern',
+            files: [
+              { title: 'Triangle Pattern I', slug: 'triangle-1', githubPath: '01.Patterns/Triangle/Right/01.triangle1.cpp', youtubePath: 'triangle-pattern-1' },
+              { title: 'Triangle Pattern II', slug: 'triangle-2', githubPath: '01.Patterns/Triangle/Right/02.triangle2.cpp', youtubePath: 'triangle-pattern-2' },
+              { title: 'Triangle Pattern III', slug: 'triangle-3', githubPath: '01.Patterns/Triangle/Right/03.triangle3.cpp', youtubePath: 'triangle-pattern-3' }
+            ]
+          },
+          {
+            title: 'Reverse Triangle',
+            slug: 'patterns/triangle/reverse',
+            githubPath: '01.Patterns/Triangle/Reverse',
+            youtubePath: 'reverse-triangle-pattern',
+            files: [
+              { title: 'Reverse Triangle', slug: 'reverse-triangle', githubPath: '01.Patterns/Triangle/Reverse/reverse_triangle.cpp', youtubePath: 'reverse-triangle-video' }
+            ]
+          }
+        ]
+      },
+      { 
+        title: 'Advanced Patterns', 
+        slug: 'patterns/advanced', 
+        githubPath: '01.Patterns/Advanced', 
+        youtubePath: 'advanced-patterns',
+        files: [
+          { title: 'Floyd\'s Triangle', slug: 'floyds-triangle', githubPath: '01.Patterns/Advanced/floyds_triangle.cpp', youtubePath: 'floyds-triangle-video' },
+          { title: 'Pyramid Pattern', slug: 'pyramid', githubPath: '01.Patterns/Advanced/pyramid.cpp', youtubePath: 'pyramid-video' },
+          { title: 'Diamond Pattern', slug: 'diamond', githubPath: '01.Patterns/Advanced/diamond.cpp', youtubePath: 'diamond-video' },
+          { title: 'Butterfly Pattern', slug: 'butterfly', githubPath: '01.Patterns/Advanced/butterfly.cpp', youtubePath: 'butterfly-video' }
+        ]
+      }
+    ]
+  },
+  { 
+    title: 'Basic Functions', 
+    slug: 'functions', 
+    difficulty: 'Beginner', 
+    estHours: 4, 
+    blurb: 'Learn function basics and mathematical computations',
+    githubPath: '02.Functions',
+    youtubePath: 'functions-playlist',
+    subtopics: [
+      { 
+        title: 'Function Basics', 
+        slug: 'functions/basics', 
+        githubPath: '02.Functions/Basics', 
+        youtubePath: 'function-basics',
+        files: [
+          { title: 'Sum of n numbers', slug: 'sum-n', githubPath: '02.Functions/Basics/01.sum_n.cpp', youtubePath: 'sum-n-video' },
+          { title: 'Factorial', slug: 'factorial', githubPath: '02.Functions/Basics/02.factorial.cpp', youtubePath: 'factorial-video' },
+          { title: 'Minimum of two', slug: 'min-two', githubPath: '02.Functions/Basics/03.min_two.cpp', youtubePath: 'min-two-video' }
+        ]
+      },
+      { 
+        title: 'Advanced Functions', 
+        slug: 'functions/advanced', 
+        githubPath: '02.Functions/Advanced', 
+        youtubePath: 'advanced-functions',
+        files: [
+          { title: 'Pass by Value', slug: 'pass-by-value', githubPath: '02.Functions/Advanced/01.pass_by_value.cpp', youtubePath: 'pass-by-value-video' },
+          { title: 'Sum of digits', slug: 'sum-digits', githubPath: '02.Functions/Advanced/02.sum_digits.cpp', youtubePath: 'sum-digits-video' },
+          { title: 'nCr Combination', slug: 'ncr', githubPath: '02.Functions/Advanced/03.ncr.cpp', youtubePath: 'ncr-video' }
+        ]
+      },
+      { 
+        title: 'Mathematical Functions', 
+        slug: 'functions/math', 
+        githubPath: '02.Functions/Mathematical', 
+        youtubePath: 'math-functions',
+        files: [
+          { title: 'Prime Check', slug: 'prime-check', githubPath: '02.Functions/Mathematical/01.prime.cpp', youtubePath: 'prime-check-video' },
+          { title: 'Prime Numbers up to N', slug: 'primes-upto-n', githubPath: '02.Functions/Mathematical/02.primes_upto_n.cpp', youtubePath: 'primes-upto-n-video' },
+          { title: 'Fibonacci', slug: 'fibonacci', githubPath: '02.Functions/Mathematical/03.fibonacci.cpp', youtubePath: 'fibonacci-video' }
+        ]
+      }
+    ]
+  },
+  { 
+    title: 'Complexity Analysis', 
+    slug: 'complexity-analysis', 
+    difficulty: 'Beginner', 
+    estHours: 4, 
+    blurb: 'Big-O, amortized analysis, and common complexity patterns.',
+    githubPath: 'Complexity-Analysis',
+    youtubePath: 'complexity-analysis-playlist',
+    subtopics: [
+      { 
+        title: 'Big-O Notation', 
+        slug: 'complexity-analysis/big-o', 
+        githubPath: 'Complexity-Analysis/Big-O-Notation', 
+        youtubePath: 'big-o-notation'
+      },
+      { 
+        title: 'Amortized Analysis', 
+        slug: 'complexity-analysis/amortized', 
+        githubPath: 'Complexity-Analysis/Amortized-Analysis', 
+        youtubePath: 'amortized-analysis'
+      },
+      { 
+        title: 'Common Complexity Patterns', 
+        slug: 'complexity-analysis/patterns', 
+        githubPath: 'Complexity-Analysis/Common-Patterns', 
+        youtubePath: 'complexity-patterns'
+      },
+      { 
+        title: 'Space Complexity', 
+        slug: 'complexity-analysis/space', 
+        githubPath: 'Complexity-Analysis/Space-Complexity', 
+        youtubePath: 'space-complexity'
+      }
+    ]
+  },
+  { 
+    title: 'Arrays', 
+    slug: 'arrays', 
+    difficulty: 'Beginner', 
+    estHours: 8, 
+    blurb: 'Two pointers, sliding windows, partitioning, in-place tricks.',
+    githubPath: 'Arrays',
+    youtubePath: 'arrays-playlist',
+    subtopics: [
+      { 
+        title: 'Two Pointers Technique', 
+        slug: 'arrays/two-pointers', 
+        githubPath: 'Arrays/Two-Pointers', 
+        youtubePath: 'two-pointers-technique'
+      },
+      { 
+        title: 'Sliding Window', 
+        slug: 'arrays/sliding-window', 
+        githubPath: 'Arrays/Sliding-Window', 
+        youtubePath: 'sliding-window-technique'
+      },
+      { 
+        title: 'Array Partitioning', 
+        slug: 'arrays/partitioning', 
+        githubPath: 'Arrays/Partitioning', 
+        youtubePath: 'array-partitioning'
+      },
+      { 
+        title: 'In-place Operations', 
+        slug: 'arrays/in-place', 
+        githubPath: 'Arrays/In-Place-Operations', 
+        youtubePath: 'in-place-operations'
+      }
+    ]
+  },
+  { 
+    title: 'Strings', 
+    slug: 'strings', 
+    difficulty: 'Beginner', 
+    estHours: 8, 
+    blurb: 'Parsing, pattern search, KMP, rolling hash basics.',
+    githubPath: 'Strings',
+    youtubePath: 'strings-playlist',
+    subtopics: [
+      { 
+        title: 'String Parsing', 
+        slug: 'strings/parsing', 
+        githubPath: 'Strings/Parsing', 
+        youtubePath: 'string-parsing'
+      },
+      { 
+        title: 'Pattern Matching', 
+        slug: 'strings/pattern-matching', 
+        githubPath: 'Strings/Pattern-Matching', 
+        youtubePath: 'pattern-matching'
+      },
+      { 
+        title: 'KMP Algorithm', 
+        slug: 'strings/kmp', 
+        githubPath: 'Strings/KMP-Algorithm', 
+        youtubePath: 'kmp-algorithm'
+      },
+      { 
+        title: 'Rolling Hash', 
+        slug: 'strings/rolling-hash', 
+        githubPath: 'Strings/Rolling-Hash', 
+        youtubePath: 'rolling-hash'
+      }
+    ]
+  },
+  { 
+    title: 'Linked Lists', 
+    slug: 'linked-list', 
+    difficulty: 'Beginner', 
+    estHours: 6, 
+    blurb: 'Pointers, reversal, cycle detection and common patterns.',
+    githubPath: 'Linked-Lists',
+    youtubePath: 'linked-lists-playlist',
+    subtopics: [
+      { 
+        title: 'Pointer Manipulation', 
+        slug: 'linked-list/pointers', 
+        githubPath: 'Linked-Lists/Pointer-Manipulation', 
+        youtubePath: 'pointer-manipulation'
+      },
+      { 
+        title: 'List Reversal', 
+        slug: 'linked-list/reversal', 
+        githubPath: 'Linked-Lists/List-Reversal', 
+        youtubePath: 'list-reversal'
+      },
+      { 
+        title: 'Cycle Detection', 
+        slug: 'linked-list/cycle-detection', 
+        githubPath: 'Linked-Lists/Cycle-Detection', 
+        youtubePath: 'cycle-detection'
+      },
+      { 
+        title: 'Merge Operations', 
+        slug: 'linked-list/merge', 
+        githubPath: 'Linked-Lists/Merge-Operations', 
+        youtubePath: 'merge-operations'
+      }
+    ]
+  },
+  { 
+    title: 'Stacks & Queues', 
+    slug: 'stacks-queues', 
+    difficulty: 'Beginner', 
+    estHours: 4, 
+    blurb: 'Monotonic stacks, deque tricks and use cases.',
+    githubPath: 'Stacks-Queues',
+    youtubePath: 'stacks-queues-playlist',
+    subtopics: [
+      { 
+        title: 'Basic Stack Operations', 
+        slug: 'stacks-queues/basic-stack', 
+        githubPath: 'Stacks-Queues/Basic-Stack', 
+        youtubePath: 'basic-stack-operations'
+      },
+      { 
+        title: 'Monotonic Stack', 
+        slug: 'stacks-queues/monotonic', 
+        githubPath: 'Stacks-Queues/Monotonic-Stack', 
+        youtubePath: 'monotonic-stack'
+      },
+      { 
+        title: 'Queue Implementation', 
+        slug: 'stacks-queues/queue', 
+        githubPath: 'Stacks-Queues/Queue-Implementation', 
+        youtubePath: 'queue-implementation'
+      },
+      { 
+        title: 'Deque Applications', 
+        slug: 'stacks-queues/deque', 
+        githubPath: 'Stacks-Queues/Deque-Applications', 
+        youtubePath: 'deque-applications'
+      }
+    ]
+  },
+  { 
+    title: 'Recursion & Backtracking', 
+    slug: 'recursion-backtracking', 
+    difficulty: 'Intermediate', 
+    estHours: 10, 
+    blurb: 'Tree recursion, pruning, and combinatorial backtracking.',
+    githubPath: 'Recursion-Backtracking',
+    youtubePath: 'recursion-backtracking-playlist',
+    subtopics: [
+      { 
+        title: 'Recursive Thinking', 
+        slug: 'recursion-backtracking/recursive-thinking', 
+        githubPath: 'Recursion-Backtracking/Recursive-Thinking', 
+        youtubePath: 'recursive-thinking'
+      },
+      { 
+        title: 'Tree Recursion', 
+        slug: 'recursion-backtracking/tree-recursion', 
+        githubPath: 'Recursion-Backtracking/Tree-Recursion', 
+        youtubePath: 'tree-recursion'
+      },
+      { 
+        title: 'Pruning Techniques', 
+        slug: 'recursion-backtracking/pruning', 
+        githubPath: 'Recursion-Backtracking/Pruning-Techniques', 
+        youtubePath: 'pruning-techniques'
+      },
+      { 
+        title: 'Combinatorial Problems', 
+        slug: 'recursion-backtracking/combinatorial', 
+        githubPath: 'Recursion-Backtracking/Combinatorial-Problems', 
+        youtubePath: 'combinatorial-problems'
+      }
+    ]
+  },
+  { 
+    title: 'Sorting & Searching', 
+    slug: 'sorting-searching', 
+    difficulty: 'Intermediate', 
+    estHours: 6, 
+    blurb: 'Divide & conquer sorts and binary search patterns.',
+    githubPath: 'Sorting-Searching',
+    youtubePath: 'sorting-searching-playlist',
+    subtopics: [
+      { 
+        title: 'Basic Sorting Algorithms', 
+        slug: 'sorting-searching/basic-sorting', 
+        githubPath: 'Sorting-Searching/Basic-Sorting', 
+        youtubePath: 'basic-sorting-algorithms'
+      },
+      { 
+        title: 'Advanced Sorting', 
+        slug: 'sorting-searching/advanced-sorting', 
+        githubPath: 'Sorting-Searching/Advanced-Sorting', 
+        youtubePath: 'advanced-sorting-algorithms'
+      },
+      { 
+        title: 'Binary Search', 
+        slug: 'sorting-searching/binary-search', 
+        githubPath: 'Sorting-Searching/Binary-Search', 
+        youtubePath: 'binary-search-tutorial',
+        subsubtopics: [
+          {
+            title: '1D Binary Search',
+            slug: 'sorting-searching/binary-search/1d',
+            githubPath: 'Sorting-Searching/Binary-Search/1D',
+            youtubePath: '1d-binary-search',
+            files: [
+              { title: 'Basic Binary Search', slug: 'basic-binary-search', githubPath: 'Sorting-Searching/Binary-Search/1D/01.Basic.cpp', youtubePath: 'basic-binary-search-video' },
+              { title: 'First Occurrence', slug: 'first-occurrence', githubPath: 'Sorting-Searching/Binary-Search/1D/02.FirstOccurrence.cpp', youtubePath: 'first-occurrence-video' },
+              { title: 'Last Occurrence', slug: 'last-occurrence', githubPath: 'Sorting-Searching/Binary-Search/1D/03.LastOccurrence.cpp', youtubePath: 'last-occurrence-video' }
+            ]
+          },
+          {
+            title: '2D Binary Search',
+            slug: 'sorting-searching/binary-search/2d',
+            githubPath: 'Sorting-Searching/Binary-Search/2D',
+            youtubePath: '2d-binary-search',
+            files: [
+              { title: 'Search in 2D Matrix', slug: 'search-2d-matrix', githubPath: 'Sorting-Searching/Binary-Search/2D/01.Search2DMatrix.cpp', youtubePath: 'search-2d-matrix-video' }
+            ]
+          }
+        ]
+      },
+      { 
+        title: 'Search Patterns', 
+        slug: 'sorting-searching/search-patterns', 
+        githubPath: 'Sorting-Searching/Search-Patterns', 
+        youtubePath: 'search-patterns'
+      }
+    ]
+  },
+  { 
+    title: 'Hashing & Maps', 
+    slug: 'hashing', 
+    difficulty: 'Intermediate', 
+    estHours: 6, 
+    blurb: 'Hashmaps, collision ideas, frequency trick patterns.',
+    githubPath: 'Hashing',
+    youtubePath: 'hashing-playlist',
+    subtopics: [
+      { 
+        title: 'Hash Table Basics', 
+        slug: 'hashing/basics', 
+        githubPath: 'Hashing/Hash-Table-Basics', 
+        youtubePath: 'hash-table-basics'
+      },
+      { 
+        title: 'Collision Resolution', 
+        slug: 'hashing/collision', 
+        githubPath: 'Hashing/Collision-Resolution', 
+        youtubePath: 'collision-resolution'
+      },
+      { 
+        title: 'Frequency Patterns', 
+        slug: 'hashing/frequency', 
+        githubPath: 'Hashing/Frequency-Patterns', 
+        youtubePath: 'frequency-patterns'
+      },
+      { 
+        title: 'Hash Functions', 
+        slug: 'hashing/functions', 
+        githubPath: 'Hashing/Hash-Functions', 
+        youtubePath: 'hash-functions'
+      }
+    ]
+  },
+  { 
+    title: 'Trees (Binary Trees)', 
+    slug: 'binary-trees', 
+    difficulty: 'Intermediate', 
+    estHours: 10, 
+    blurb: 'Traversals, recursion, iterative DFS/BFS and properties.',
+    githubPath: 'Binary-Trees',
+    youtubePath: 'binary-trees-playlist',
+    subtopics: [
+      { 
+        title: 'Tree Traversals', 
+        slug: 'binary-trees/traversals', 
+        githubPath: 'Binary-Trees/Tree-Traversals', 
+        youtubePath: 'tree-traversals'
+      },
+      { 
+        title: 'Tree Recursion', 
+        slug: 'binary-trees/recursion', 
+        githubPath: 'Binary-Trees/Tree-Recursion', 
+        youtubePath: 'tree-recursion'
+      },
+      { 
+        title: 'DFS & BFS', 
+        slug: 'binary-trees/dfs-bfs', 
+        githubPath: 'Binary-Trees/DFS-BFS', 
+        youtubePath: 'dfs-bfs-trees'
+      },
+      { 
+        title: 'Tree Properties', 
+        slug: 'binary-trees/properties', 
+        githubPath: 'Binary-Trees/Tree-Properties', 
+        youtubePath: 'tree-properties'
+      }
+    ]
+  },
+  { 
+    title: 'Binary Search Trees', 
+    slug: 'bst', 
+    difficulty: 'Intermediate', 
+    estHours: 6, 
+    blurb: 'BST operations, balancing ideas and order statistics.',
+    githubPath: 'Binary-Search-Trees',
+    youtubePath: 'bst-playlist',
+    subtopics: [
+      { 
+        title: 'BST Operations', 
+        slug: 'bst/operations', 
+        githubPath: 'Binary-Search-Trees/BST-Operations', 
+        youtubePath: 'bst-operations'
+      },
+      { 
+        title: 'Tree Balancing', 
+        slug: 'bst/balancing', 
+        githubPath: 'Binary-Search-Trees/Tree-Balancing', 
+        youtubePath: 'tree-balancing'
+      },
+      { 
+        title: 'Order Statistics', 
+        slug: 'bst/order-statistics', 
+        githubPath: 'Binary-Search-Trees/Order-Statistics', 
+        youtubePath: 'order-statistics'
+      },
+      { 
+        title: 'AVL Trees', 
+        slug: 'bst/avl', 
+        githubPath: 'Binary-Search-Trees/AVL-Trees', 
+        youtubePath: 'avl-trees'
+      }
+    ]
+  },
+  { 
+    title: 'Heaps & Priority Queues', 
+    slug: 'heaps', 
+    difficulty: 'Intermediate', 
+    estHours: 5, 
+    blurb: 'K-way merge, sliding-window maxima, scheduling problems.',
+    githubPath: 'Heaps-Priority-Queues',
+    youtubePath: 'heaps-playlist',
+    subtopics: [
+      { 
+        title: 'Heap Implementation', 
+        slug: 'heaps/implementation', 
+        githubPath: 'Heaps-Priority-Queues/Heap-Implementation', 
+        youtubePath: 'heap-implementation'
+      },
+      { 
+        title: 'Priority Queue Applications', 
+        slug: 'heaps/priority-queue', 
+        githubPath: 'Heaps-Priority-Queues/Priority-Queue-Applications', 
+        youtubePath: 'priority-queue-applications'
+      },
+      { 
+        title: 'K-way Merge', 
+        slug: 'heaps/k-way-merge', 
+        githubPath: 'Heaps-Priority-Queues/K-Way-Merge', 
+        youtubePath: 'k-way-merge'
+      },
+      { 
+        title: 'Heap Sort', 
+        slug: 'heaps/heap-sort', 
+        githubPath: 'Heaps-Priority-Queues/Heap-Sort', 
+        youtubePath: 'heap-sort'
+      }
+    ]
+  },
+  { 
+    title: 'Graphs', 
+    slug: 'graphs', 
+    difficulty: 'Advanced', 
+    estHours: 18, 
+    blurb: 'BFS, DFS, shortest paths, components, topological sort.',
+    githubPath: 'Graphs',
+    youtubePath: 'graphs-playlist',
+    subtopics: [
+      { 
+        title: 'Graph Representation', 
+        slug: 'graphs/representation', 
+        githubPath: 'Graphs/Graph-Representation', 
+        youtubePath: 'graph-representation'
+      },
+      { 
+        title: 'DFS & BFS', 
+        slug: 'graphs/dfs-bfs', 
+        githubPath: 'Graphs/DFS-BFS', 
+        youtubePath: 'dfs-bfs-graphs'
+      },
+      { 
+        title: 'Shortest Paths', 
+        slug: 'graphs/shortest-paths', 
+        githubPath: 'Graphs/Shortest-Paths', 
+        youtubePath: 'shortest-paths'
+      },
+      { 
+        title: 'Topological Sort', 
+        slug: 'graphs/topological-sort', 
+        githubPath: 'Graphs/Topological-Sort', 
+        youtubePath: 'topological-sort'
+      },
+      { 
+        title: 'Connected Components', 
+        slug: 'graphs/components', 
+        githubPath: 'Graphs/Connected-Components', 
+        youtubePath: 'connected-components'
+      }
+    ]
+  },
+  { 
+    title: 'Dynamic Programming', 
+    slug: 'dynamic-programming', 
+    difficulty: 'Advanced', 
+    estHours: 24, 
+    blurb: 'Patterns: knapsack, LIS, DP on trees and bitmask DP.',
+    githubPath: 'Dynamic-Programming',
+    youtubePath: 'dynamic-programming-playlist',
+    subtopics: [
+      { 
+        title: 'DP Fundamentals', 
+        slug: 'dynamic-programming/fundamentals', 
+        githubPath: 'Dynamic-Programming/DP-Fundamentals', 
+        youtubePath: 'dp-fundamentals'
+      },
+      { 
+        title: 'Knapsack Problems', 
+        slug: 'dynamic-programming/knapsack', 
+        githubPath: 'Dynamic-Programming/Knapsack-Problems', 
+        youtubePath: 'knapsack-problems'
+      },
+      { 
+        title: 'LIS Variations', 
+        slug: 'dynamic-programming/lis', 
+        githubPath: 'Dynamic-Programming/LIS-Variations', 
+        youtubePath: 'lis-variations'
+      },
+      { 
+        title: 'DP on Trees', 
+        slug: 'dynamic-programming/trees', 
+        githubPath: 'Dynamic-Programming/DP-on-Trees', 
+        youtubePath: 'dp-on-trees'
+      },
+      { 
+        title: 'Bitmask DP', 
+        slug: 'dynamic-programming/bitmask', 
+        githubPath: 'Dynamic-Programming/Bitmask-DP', 
+        youtubePath: 'bitmask-dp'
+      }
+    ]
+  },
+  { 
+    title: 'Greedy Algorithms', 
+    slug: 'greedy-algorithms', 
+    difficulty: 'Intermediate', 
+    estHours: 6, 
+    blurb: 'Greedy-choice property, interval problems, scheduling.',
+    githubPath: 'Greedy-Algorithms',
+    youtubePath: 'greedy-algorithms-playlist',
+    subtopics: [
+      { 
+        title: 'Greedy Strategy', 
+        slug: 'greedy-algorithms/strategy', 
+        githubPath: 'Greedy-Algorithms/Greedy-Strategy', 
+        youtubePath: 'greedy-strategy'
+      },
+      { 
+        title: 'Interval Problems', 
+        slug: 'greedy-algorithms/intervals', 
+        githubPath: 'Greedy-Algorithms/Interval-Problems', 
+        youtubePath: 'interval-problems'
+      },
+      { 
+        title: 'Scheduling Problems', 
+        slug: 'greedy-algorithms/scheduling', 
+        githubPath: 'Greedy-Algorithms/Scheduling-Problems', 
+        youtubePath: 'scheduling-problems'
+      },
+      { 
+        title: 'Proof Techniques', 
+        slug: 'greedy-algorithms/proofs', 
+        githubPath: 'Greedy-Algorithms/Proof-Techniques', 
+        youtubePath: 'proof-techniques'
+      }
+    ]
+  },
+  { 
+    title: 'Backtracking', 
+    slug: 'backtracking', 
+    difficulty: 'Advanced', 
+    estHours: 10, 
+    blurb: 'Advanced pruning, constraint solving, and search optimization.',
+    githubPath: 'Backtracking',
+    youtubePath: 'backtracking-playlist',
+    subtopics: [
+      { 
+        title: 'Backtracking Template', 
+        slug: 'backtracking/template', 
+        githubPath: 'Backtracking/Backtracking-Template', 
+        youtubePath: 'backtracking-template'
+      },
+      { 
+        title: 'Pruning Strategies', 
+        slug: 'backtracking/pruning', 
+        githubPath: 'Backtracking/Pruning-Strategies', 
+        youtubePath: 'pruning-strategies'
+      },
+      { 
+        title: 'Constraint Satisfaction', 
+        slug: 'backtracking/constraints', 
+        githubPath: 'Backtracking/Constraint-Satisfaction', 
+        youtubePath: 'constraint-satisfaction'
+      },
+      { 
+        title: 'Search Optimization', 
+        slug: 'backtracking/optimization', 
+        githubPath: 'Backtracking/Search-Optimization', 
+        youtubePath: 'search-optimization'
+      }
+    ]
+  },
+  { 
+    title: 'Tries & Advanced Strings', 
+    slug: 'tries', 
+    difficulty: 'Advanced', 
+    estHours: 8, 
+    blurb: 'Prefix trees, Aho-Corasick and autocomplete techniques.',
+    githubPath: 'Tries-Advanced-Strings',
+    youtubePath: 'tries-playlist',
+    subtopics: [
+      { 
+        title: 'Trie Implementation', 
+        slug: 'tries/implementation', 
+        githubPath: 'Tries-Advanced-Strings/Trie-Implementation', 
+        youtubePath: 'trie-implementation'
+      },
+      { 
+        title: 'Prefix Operations', 
+        slug: 'tries/prefix', 
+        githubPath: 'Tries-Advanced-Strings/Prefix-Operations', 
+        youtubePath: 'prefix-operations'
+      },
+      { 
+        title: 'Aho-Corasick Algorithm', 
+        slug: 'tries/aho-corasick', 
+        githubPath: 'Tries-Advanced-Strings/Aho-Corasick', 
+        youtubePath: 'aho-corasick'
+      },
+      { 
+        title: 'Autocomplete Systems', 
+        slug: 'tries/autocomplete', 
+        githubPath: 'Tries-Advanced-Strings/Autocomplete-Systems', 
+        youtubePath: 'autocomplete-systems'
+      }
+    ]
+  },
+  { 
+    title: 'Segment Trees & Fenwick', 
+    slug: 'segment-tree-fenwick', 
+    difficulty: 'Advanced', 
+    estHours: 12, 
+    blurb: 'Range queries, lazy propagation, BIT for fast updates.',
+    githubPath: 'Segment-Trees-Fenwick',
+    youtubePath: 'segment-trees-playlist',
+    subtopics: [
+      { 
+        title: 'Segment Tree Basics', 
+        slug: 'segment-tree-fenwick/segment-tree', 
+        githubPath: 'Segment-Trees-Fenwick/Segment-Tree-Basics', 
+        youtubePath: 'segment-tree-basics'
+      },
+      { 
+        title: 'Lazy Propagation', 
+        slug: 'segment-tree-fenwick/lazy-propagation', 
+        githubPath: 'Segment-Trees-Fenwick/Lazy-Propagation', 
+        youtubePath: 'lazy-propagation'
+      },
+      { 
+        title: 'Fenwick Tree (BIT)', 
+        slug: 'segment-tree-fenwick/fenwick', 
+        githubPath: 'Segment-Trees-Fenwick/Fenwick-Tree', 
+        youtubePath: 'fenwick-tree'
+      },
+      { 
+        title: 'Range Update Queries', 
+        slug: 'segment-tree-fenwick/range-updates', 
+        githubPath: 'Segment-Trees-Fenwick/Range-Update-Queries', 
+        youtubePath: 'range-update-queries'
+      }
+    ]
+  },
+  { 
+    title: 'Bit Manipulation & Number Theory', 
+    slug: 'bit-number-theory', 
+    difficulty: 'Advanced', 
+    estHours: 8, 
+    blurb: 'Bit hacks, modular arithmetic, SPF, gcd, primes.',
+    githubPath: 'Bit-Manipulation-Number-Theory',
+    youtubePath: 'bit-manipulation-playlist',
+    subtopics: [
+      { 
+        title: 'Bit Operations', 
+        slug: 'bit-number-theory/bit-operations', 
+        githubPath: 'Bit-Manipulation-Number-Theory/Bit-Operations', 
+        youtubePath: 'bit-operations'
+      },
+      { 
+        title: 'Bit Manipulation Tricks', 
+        slug: 'bit-number-theory/tricks', 
+        githubPath: 'Bit-Manipulation-Number-Theory/Bit-Tricks', 
+        youtubePath: 'bit-manipulation-tricks'
+      },
+      { 
+        title: 'Modular Arithmetic', 
+        slug: 'bit-number-theory/modular', 
+        githubPath: 'Bit-Manipulation-Number-Theory/Modular-Arithmetic', 
+        youtubePath: 'modular-arithmetic'
+      },
+      { 
+        title: 'Prime Numbers & GCD', 
+        slug: 'bit-number-theory/primes-gcd', 
+        githubPath: 'Bit-Manipulation-Number-Theory/Primes-GCD', 
+        youtubePath: 'primes-gcd'
+      }
+    ]
+  }
+];
