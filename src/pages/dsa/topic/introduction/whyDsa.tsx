@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Code, Book, Rocket, Lightbulb, BarChart, Globe, ChevronRight, ArrowUp, Menu, X } from 'lucide-react';
-import { Line, Bar } from 'recharts';
 import Navbar from '@/components/Navbar/Navbar';
 
 const WhyDSA = () => {
@@ -64,7 +63,12 @@ const WhyDSA = () => {
     { id: 6, title: "Career Growth", icon: <BarChart className="w-4 h-4" /> },
   ];
 
-  const CustomBarChart = ({ data, title, dataKey, nameKey = "topic" }) => (
+  const CustomBarChart = ({ data, title, dataKey, nameKey = "topic" }: {
+    data: Array<{ [key: string]: string | number }>;
+    title: string;
+    dataKey: string;
+    nameKey?: string;
+  }) => (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
@@ -91,7 +95,7 @@ const WhyDSA = () => {
                 animate={{ width: `${item[dataKey]}%` }}
                 transition={{ duration: 1, delay: index * 0.1 }}
                 className="h-3 rounded-full"
-                style={{ backgroundColor: item.color }}
+                
               />
             </div>
           </motion.div>
@@ -100,7 +104,10 @@ const WhyDSA = () => {
     </motion.div>
   );
 
-  const CustomLineChart = ({ data, title }) => (
+  const CustomLineChart = ({ data, title }: {
+    data: Array<{ size: number; linear: number; binary: number }>;
+    title: string;
+  }) => (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
