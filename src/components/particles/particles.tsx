@@ -49,7 +49,7 @@ interface Particle {
   eleganceModifier: number;
 }
 
-const PremiumParticleSystem: React.FC = () => {
+const Particle: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const particles = useRef<Particle[]>([]);
   const mouse = useRef<{
@@ -683,7 +683,7 @@ const PremiumParticleSystem: React.FC = () => {
         ref={canvasRef}
         className="w-full h-full cursor-crosshair"
         style={{
-          opacity: 0.9,
+          opacity: 0.5,
         }}
       />
       
@@ -708,4 +708,4 @@ const PremiumParticleSystem: React.FC = () => {
   );
 };
 
-export default PremiumParticleSystem;
+export default Particle;

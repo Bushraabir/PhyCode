@@ -2,8 +2,8 @@ import React, { useMemo, useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { motion } from 'framer-motion';
-import { FiSearch, FiChevronDown, FiChevronUp, FiGithub, FiExternalLink, FiChevronRight } from 'react-icons/fi';
-import { FaRocket, FaClipboardList, FaYoutube } from 'react-icons/fa';
+import { FiSearch, FiChevronDown, FiChevronUp, FiGithub, FiExternalLink, FiChevronRight, FiStar, FiTrendingUp } from 'react-icons/fi';
+import { FaRocket, FaClipboardList, FaYoutube, FaCode, FaPlayCircle, FaBookmark } from 'react-icons/fa';
 import { collection, getDocs, orderBy, query as firebaseQuery } from 'firebase/firestore';
 
 import Navbar from '@/components/Navbar/Navbar';
@@ -77,57 +77,63 @@ const getYoutubeUrl = (path: string) => {
   return `${YOUTUBE_CONFIG.baseUrl}/${path}`;
 };
 
-// GitHub Link Component
+// Premium GitHub Link Component
 const GitHubLink = ({ githubPath, className = "" }: { githubPath?: string; className?: string }) => {
   const url = githubPath ? getGithubUrl(githubPath) : null;
   
   if (!url) {
     return (
-      <span className={`text-slate-500 text-sm ${className}`} title="No GitHub content available">
-        -
+      <span className={`text-softSilver/40 text-sm font-medium ${className}`} title="No GitHub content available">
+        <FiGithub className="w-4 h-4 opacity-30" />
       </span>
     );
   }
 
   return (
-    <a
+    <motion.a
       href={url}
       target="_blank"
       rel="noopener noreferrer"
-      className={`inline-flex items-center gap-1 px-2 py-1 rounded-md bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors text-sm ${className}`}
+      whileHover={{ scale: 1.05, y: -1 }}
+      whileTap={{ scale: 0.95 }}
+      className={`group inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-gradient-to-br from-slateBlack/80 to-charcoalBlack/80 backdrop-blur-sm border border-softSilver/10 hover:border-softSilver/20 text-softSilver/80 hover:text-softSilver transition-all duration-300 text-sm font-medium shadow-lg hover:shadow-xl ${className}`}
       title={`View ${githubPath} on GitHub`}
       onClick={(e) => e.stopPropagation()}
     >
-      <FiGithub className="w-4 h-4" />
-      <FiExternalLink className="w-3 h-3" />
-    </a>
+      <FiGithub className="w-4 h-4 group-hover:rotate-12 transition-transform duration-300" />
+      <FiExternalLink className="w-3 h-3 opacity-70 group-hover:opacity-100" />
+      <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-tealBlue/0 to-goldenAmber/0 group-hover:from-tealBlue/5 group-hover:to-goldenAmber/5 transition-all duration-300" />
+    </motion.a>
   );
 };
 
-// YouTube Link Component
+// Premium YouTube Link Component
 const YouTubeLink = ({ youtubePath, className = "" }: { youtubePath?: string; className?: string }) => {
   const url = youtubePath ? getYoutubeUrl(youtubePath) : null;
   
   if (!url) {
     return (
-      <span className={`text-slate-500 text-sm ${className}`} title="No YouTube content available">
-        -
+      <span className={`text-softSilver/40 text-sm font-medium ${className}`} title="No YouTube content available">
+        <FaYoutube className="w-4 h-4 opacity-30" />
       </span>
     );
   }
 
   return (
-    <a
+    <motion.a
       href={url}
       target="_blank"
       rel="noopener noreferrer"
-      className={`inline-flex items-center gap-1 px-2 py-1 rounded-md bg-red-800 hover:bg-red-700 text-red-300 hover:text-white transition-colors text-sm ${className}`}
+      whileHover={{ scale: 1.05, y: -1 }}
+      whileTap={{ scale: 0.95 }}
+      className={`group inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-gradient-to-br from-crimsonRed/20 to-softOrange/20 backdrop-blur-sm border border-crimsonRed/20 hover:border-crimsonRed/40 text-softSilver/80 hover:text-softSilver transition-all duration-300 text-sm font-medium shadow-lg hover:shadow-xl ${className}`}
       title={`Watch ${youtubePath} on YouTube`}
       onClick={(e) => e.stopPropagation()}
     >
-      <FaYoutube className="w-4 h-4" />
-      <FiExternalLink className="w-3 h-3" />
-    </a>
+      <FaYoutube className="w-4 h-4 group-hover:scale-110 transition-transform duration-300 text-crimsonRed" />
+      <FiExternalLink className="w-3 h-3 opacity-70 group-hover:opacity-100" />
+      <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-crimsonRed/0 to-softOrange/0 group-hover:from-crimsonRed/10 group-hover:to-softOrange/10 transition-all duration-300" />
+    </motion.a>
   );
 };
 
@@ -357,594 +363,888 @@ export default function LearningDsa() {
     }
   };
 
+  // Premium loading state
   if (loading) {
     return (
-      <div className="relative min-h-screen bg-charcoalBlack text-softSilver overflow-hidden font-sans">
+      <div className="relative min-h-screen bg-gradient-to-br from-charcoalBlack via-slateBlack to-deepPlum/20 text-softSilver overflow-hidden font-sans">
         <Particles />
-        <header className="fixed top-0 left-0 right-0 z-50 bg-slateBlack border-b border-deepPlum shadow-lg">
+        <header className="fixed top-0 left-0 right-0 z-50 bg-charcoalBlack/80 backdrop-blur-xl border-b border-softSilver/10 shadow-2xl">
           <Navbar />
         </header>
         <div className="flex items-center justify-center min-h-screen">
-          <div className="text-center">
-            <div className="w-12 h-12 border-4 border-tealBlue border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="text-lg text-slate-300">Loading DSA topics...</p>
-          </div>
+          <motion.div 
+            className="text-center"
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.6, ease: "easeOut" }}
+          >
+            <div className="relative">
+              <div className="w-16 h-16 border-4 border-tealBlue/30 border-t-tealBlue rounded-full animate-spin mx-auto mb-6"></div>
+              <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-12 h-12 border-4 border-goldenAmber/30 border-t-goldenAmber rounded-full animate-spin animate-reverse"></div>
+            </div>
+            <h2 className="text-2xl font-heading font-bold bg-gradient-to-r from-tealBlue to-goldenAmber bg-clip-text text-transparent mb-2">
+              Loading Excellence
+            </h2>
+            <p className="text-lg text-softSilver/70">Preparing your DSA journey...</p>
+          </motion.div>
         </div>
       </div>
     );
   }
 
+  // Premium error state
   if (error) {
     return (
-      <div className="relative min-h-screen bg-charcoalBlack text-softSilver overflow-hidden font-sans">
+      <div className="relative min-h-screen bg-gradient-to-br from-charcoalBlack via-slateBlack to-deepPlum/20 text-softSilver overflow-hidden font-sans">
         <Particles />
-        <header className="fixed top-0 left-0 right-0 z-50 bg-slateBlack border-b border-deepPlum shadow-lg">
+        <header className="fixed top-0 left-0 right-0 z-50 bg-charcoalBlack/80 backdrop-blur-xl border-b border-softSilver/10 shadow-2xl">
           <Navbar />
         </header>
         <div className="flex items-center justify-center min-h-screen">
-          <div className="text-center max-w-md mx-auto p-6">
-            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <motion.div 
+            className="text-center max-w-md mx-auto p-8"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+          >
+            <div className="w-20 h-20 bg-gradient-to-br from-crimsonRed/20 to-softOrange/20 rounded-full flex items-center justify-center mx-auto mb-6 backdrop-blur-sm border border-crimsonRed/20">
+              <svg className="w-10 h-10 text-crimsonRed" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
-            <h2 className="text-xl font-semibold text-red-400 mb-2">Error Loading Content</h2>
-            <p className="text-slate-300 mb-4">{error}</p>
-            <button
+            <h2 className="text-2xl font-heading font-bold text-crimsonRed mb-3">Something went wrong</h2>
+            <p className="text-softSilver/70 mb-6">{error}</p>
+            <motion.button
               onClick={() => window.location.reload()}
-              className="px-6 py-2 bg-tealBlue text-white rounded-lg hover:bg-teal-600 transition-colors"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="px-8 py-3 bg-gradient-to-r from-tealBlue to-goldenAmber text-charcoalBlack font-semibold rounded-xl hover:shadow-lg transition-all duration-300"
             >
               Try Again
-            </button>
-          </div>
+            </motion.button>
+          </motion.div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="relative min-h-screen bg-charcoalBlack text-softSilver overflow-hidden font-sans">
+    <div className="relative min-h-screen bg-gradient-to-br from-charcoalBlack via-slateBlack to-deepPlum/20 text-softSilver overflow-hidden font-sans">
       <Particles />
-      {/* Navigation Header - Always Sticky */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-slateBlack border-b border-deepPlum shadow-lg">
+      
+      {/* Premium Navigation Header */}
+      <header className="fixed top-0 left-0 right-0 z-50 bg-charcoalBlack/80 backdrop-blur-xl border-b border-softSilver/10 shadow-2xl">
         <Navbar />
       </header>
       
       <div className="relative z-20 max-w-7xl mx-auto px-6 pt-20">
-        <div className="mt-8 flex flex-col lg:flex-row gap-8">
+        <div className="mt-12 flex flex-col lg:flex-row gap-12">
           <main className="flex-1">
-            <div className="flex items-center gap-4 mb-4">
-              <h1 className="font-heading text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-emeraldGreen to-tealBlue">
-                PhyCode<br/> DSA Roadmap
-              </h1>
-              <div className="flex gap-2">
-                <a
-                  href={GITHUB_CONFIG.baseUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors"
-                  title="View full repository on GitHub"
+            {/* Premium Hero Section */}
+            <motion.div 
+              className="mb-12"
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, ease: "easeOut" }}
+            >
+              <div className="flex flex-col lg:flex-row lg:items-center gap-6 mb-8">
+                <div className="flex-1">
+                  <h1 className="font-heading text-5xl md:text-7xl font-bold mb-4">
+                    <span className="bg-gradient-to-r from-tealBlue via-emeraldGreen to-goldenAmber bg-clip-text text-transparent">
+                      PhyCode
+                    </span>
+                    <br/>
+                    <span className="text-3xl md:text-4xl font-medium text-softSilver/90">
+                      DSA Mastery
+                    </span>
+                  </h1>
+                  <p className="text-xl text-softSilver/70 leading-relaxed max-w-2xl">
+                    Embark on a structured journey to master Data Structures and Algorithms. 
+                    Each step includes interactive lessons, practice problems, visual demonstrations, 
+                    source code examples, and premium video tutorials.
+                  </p>
+                </div>
+                
+                <div className="flex gap-3">
+                  <motion.a
+                    href={GITHUB_CONFIG.baseUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    whileHover={{ scale: 1.05, y: -2 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="group inline-flex items-center gap-3 px-6 py-4 rounded-2xl bg-gradient-to-br from-slateBlack/80 to-charcoalBlack/80 backdrop-blur-sm border border-softSilver/10 hover:border-softSilver/20 text-softSilver hover:text-softSilver transition-all duration-300 shadow-xl hover:shadow-2xl"
+                    title="View full repository on GitHub"
+                  >
+                    <FiGithub className="w-6 h-6 group-hover:rotate-12 transition-transform duration-300" />
+                    <div className="hidden sm:block">
+                      <div className="text-sm font-semibold">Repository</div>
+                      <div className="text-xs text-softSilver/60">View Source</div>
+                    </div>
+                  </motion.a>
+                  
+                  <motion.a
+                    href={YOUTUBE_CONFIG.baseUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    whileHover={{ scale: 1.05, y: -2 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="group inline-flex items-center gap-3 px-6 py-4 rounded-2xl bg-gradient-to-br from-crimsonRed/20 to-softOrange/20 backdrop-blur-sm border border-crimsonRed/20 hover:border-crimsonRed/40 text-softSilver hover:text-softSilver transition-all duration-300 shadow-xl hover:shadow-2xl"
+                    title="Watch premium tutorials on YouTube"
+                  >
+                    <FaYoutube className="w-6 h-6 group-hover:scale-110 transition-transform duration-300 text-crimsonRed" />
+                    <div className="hidden sm:block">
+                      <div className="text-sm font-semibold">YouTube</div>
+                      <div className="text-xs text-softSilver/60">Watch Tutorials</div>
+                    </div>
+                  </motion.a>
+                </div>
+              </div>
+
+              {/* Premium Search and Filters */}
+              <div className="flex flex-wrap items-center gap-4 mb-8">
+                <div className="relative flex items-center bg-slateBlack/60 backdrop-blur-sm border border-softSilver/10 rounded-2xl px-6 py-4 shadow-lg flex-1 max-w-lg">
+                  <FiSearch className="w-5 h-5 text-softSilver/60 mr-4" />
+                  <input
+                    ref={searchRef}
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search topics, concepts, algorithms..."
+                    className="bg-transparent placeholder:text-softSilver/40 focus:outline-none text-softSilver w-full"
+                    aria-label="Search DSA topics"
+                  />
+                </div>
+
+                <select 
+                  value={filter} 
+                  onChange={(e) => setFilter(e.target.value as any)} 
+                  className="bg-slateBlack/60 backdrop-blur-sm border border-softSilver/10 rounded-xl px-4 py-3 text-softSilver focus:outline-none focus:border-tealBlue/50 transition-colors"
                 >
-                  <FiGithub className="w-5 h-5" />
-                  <span className="hidden sm:inline">Repository</span>
-                </a>
-                <a
-                  href={YOUTUBE_CONFIG.baseUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-red-800 hover:bg-red-700 text-red-300 hover:text-white transition-colors"
-                  title="Watch tutorials on YouTube"
+                  <option value="All">All Levels</option>
+                  <option value="Beginner">Beginner</option>
+                  <option value="Intermediate">Intermediate</option>
+                  <option value="Advanced">Advanced</option>
+                </select>
+
+                <select 
+                  value={sortBy} 
+                  onChange={(e) => setSortBy(e.target.value as any)} 
+                  className="bg-slateBlack/60 backdrop-blur-sm border border-softSilver/10 rounded-xl px-4 py-3 text-softSilver focus:outline-none focus:border-tealBlue/50 transition-colors"
                 >
-                  <FaYoutube className="w-5 h-5" />
-                  <span className="hidden sm:inline">YouTube</span>
-                </a>
-              </div>
-            </div>
-            <p className="mt-4 text-lg text-slate-300 max-w-2xl">Embark on a structured journey to master Data Structures and Algorithms. Each step includes interactive lessons, practice problems, visual demonstrations, source code examples, and video tutorials.</p>
+                  <option value="recommended">Recommended Order</option>
+                  <option value="time">By Duration</option>
+                  <option value="difficulty">By Difficulty</option>
+                </select>
 
-            <div className="mt-6 flex flex-wrap items-center gap-4">
-              <div className="relative flex items-center bg-slateBlack/40 border border-deepPlum rounded-full px-4 py-2 shadow-sm flex-1 max-w-md">
-                <FiSearch className="w-5 h-5 text-softSilver mr-3" />
-                <input
-                  ref={searchRef}
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search topics or concepts..."
-                  className="bg-transparent placeholder:text-slate-400 focus:outline-none text-sm w-full"
-                  aria-label="Search DSA topics"
-                />
+                <motion.button
+                  onClick={() => router.push('/dsa/learning-plan')}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="inline-flex items-center gap-3 px-6 py-3 rounded-xl bg-gradient-to-r from-tealBlue to-goldenAmber text-charcoalBlack font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
+                >
+                  <FaClipboardList className="w-4 h-4" /> 
+                  <span className="hidden sm:inline">Create Learning Plan</span>
+                  <span className="sm:hidden">Plan</span>
+                </motion.button>
               </div>
 
-              <select 
-                value={filter} 
-                onChange={(e) => setFilter(e.target.value as any)} 
-                className="bg-slateBlack/30 border border-deepPlum rounded-full px-4 py-2 text-sm"
+              {/* Premium Stats Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+                <motion.div 
+                  className="p-8 rounded-3xl bg-gradient-to-br from-slateBlack/60 to-charcoalBlack/40 backdrop-blur-sm border border-softSilver/10 shadow-xl hover:shadow-2xl transition-all duration-300"
+                  whileHover={{ y: -5 }}
+                >
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="p-3 rounded-xl bg-gradient-to-br from-tealBlue/20 to-emeraldGreen/20">
+                      <FaCode className="w-6 h-6 text-tealBlue" />
+                    </div>
+                    <div className="text-right">
+                      <div className="text-3xl font-bold text-softSilver">{topicsWithGithub}</div>
+                      <div className="text-sm text-softSilver/60">Code Examples</div>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="text-softSilver/80">
+                      <div className="text-lg font-semibold">{topics.length - topicsWithGithub} Coming Soon</div>
+                      <div className="text-sm text-softSilver/60">In Development</div>
+                    </div>
+                    <div className="w-12 h-2 bg-slateBlack/60 rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-gradient-to-r from-tealBlue to-emeraldGreen rounded-full transition-all duration-500" 
+                        style={{ width: `${topics.length > 0 ? (topicsWithGithub / topics.length) * 100 : 0}%` }}
+                      />
+                    </div>
+                  </div>
+                </motion.div>
+
+                <motion.div 
+                  className="p-8 rounded-3xl bg-gradient-to-br from-slateBlack/60 to-charcoalBlack/40 backdrop-blur-sm border border-softSilver/10 shadow-xl hover:shadow-2xl transition-all duration-300"
+                  whileHover={{ y: -5 }}
+                >
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="p-3 rounded-xl bg-gradient-to-br from-crimsonRed/20 to-softOrange/20">
+                      <FaPlayCircle className="w-6 h-6 text-crimsonRed" />
+                    </div>
+                    <div className="text-right">
+                      <div className="text-3xl font-bold text-softSilver">{topicsWithYoutube}</div>
+                      <div className="text-sm text-softSilver/60">Video Tutorials</div>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="text-softSilver/80">
+                      <div className="text-lg font-semibold">{topics.length - topicsWithYoutube} Coming Soon</div>
+                      <div className="text-sm text-softSilver/60">In Production</div>
+                    </div>
+                    <div className="w-12 h-2 bg-slateBlack/60 rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-gradient-to-r from-crimsonRed to-softOrange rounded-full transition-all duration-500" 
+                        style={{ width: `${topics.length > 0 ? (topicsWithYoutube / topics.length) * 100 : 0}%` }}
+                      />
+                    </div>
+                  </div>
+                </motion.div>
+              </div>
+
+              {/* Premium Guidance Card */}
+              <motion.div 
+                className="p-8 rounded-3xl bg-gradient-to-br from-deepPlum/30 to-slateBlack/40 backdrop-blur-sm border border-goldenAmber/20 shadow-2xl relative overflow-hidden mb-12"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: 0.2 }}
               >
-                <option value="All">All difficulties</option>
-                <option value="Beginner">Beginner</option>
-                <option value="Intermediate">Intermediate</option>
-                <option value="Advanced">Advanced</option>
-              </select>
-
-              <select 
-                value={sortBy} 
-                onChange={(e) => setSortBy(e.target.value as any)} 
-                className="bg-slateBlack/30 border border-deepPlum rounded-full px-4 py-2 text-sm"
-              >
-                <option value="recommended">Recommended Order</option>
-                <option value="time">By Time Estimate</option>
-                <option value="difficulty">By Difficulty</option>
-              </select>
-
-              <button
-                onClick={() => router.push('/dsa/learning-plan')}
-                className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-gradient-to-r from-tealBlue to-goldenAmber text-charcoalBlack font-semibold shadow-lg hover:opacity-90 transition-opacity"
-              >
-                <FaClipboardList className="w-4 h-4" /> Start Your Plan
-              </button>
-            </div>
-
-            <div className="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <div className="p-6 rounded-2xl bg-gradient-to-tr from-slateBlack/60 to-charcoalBlack/30 border border-deepPlum">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <div className="text-sm text-slate-400">Total Topics</div>
-                    <div className="text-2xl font-bold">{topics.length}</div>
+                <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-goldenAmber/10 to-transparent rounded-full -translate-y-16 translate-x-16" />
+                <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-tealBlue/10 to-transparent rounded-full translate-y-12 -translate-x-12" />
+                
+                <div className="relative z-10">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="p-3 rounded-xl bg-gradient-to-br from-goldenAmber/20 to-softOrange/20">
+                      <FaRocket className="w-6 h-6 text-goldenAmber" />
+                    </div>
+                    <h3 className="text-2xl font-heading font-bold text-softSilver">Roadmap Essentials</h3>
                   </div>
-                  <div>
-                    <div className="text-sm text-slate-400">Estimated Hours</div>
-                    <div className="text-2xl font-bold">{totalHours} hrs</div>
-                  </div>
-                </div>
-                <div className="mt-4 text-sm text-slate-300/75">Recommended pace: 3-8 hours per topic, tailored to your schedule.</div>
-              </div>
-
-              <div className="p-6 rounded-2xl bg-gradient-to-tr from-slateBlack/60 to-charcoalBlack/30 border border-deepPlum">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <div className="text-sm text-slate-400">GitHub Integration</div>
-                    <div className="text-2xl font-bold">{topicsWithGithub}/{topics.length}</div>
-                  </div>
-                  <FiGithub className="w-8 h-8 text-slate-400" />
-                </div>
-                <div className="mt-4 text-sm text-slate-300/75">Topics with source code examples and implementations available.</div>
-              </div>
-
-              <div className="p-6 rounded-2xl bg-gradient-to-tr from-slateBlack/60 to-charcoalBlack/30 border border-deepPlum">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <div className="text-sm text-slate-400">YouTube Integration</div>
-                    <div className="text-2xl font-bold">{topicsWithYoutube}/{topics.length}</div>
-                  </div>
-                  <FaYoutube className="w-8 h-8 text-red-400" />
-                </div>
-                <div className="mt-4 text-sm text-slate-300/75">Topics with video tutorials and visual explanations available.</div>
-              </div>
-            </div>
-
-            <div className="mt-8 p-6 rounded-2xl bg-gradient-to-tr from-slateBlack/60 to-charcoalBlack/30 border border-deepPlum relative overflow-hidden">
-              <h4 className="text-lg font-semibold">Roadmap Essentials</h4>
-              <ul className="mt-4 text-sm text-slate-300/70 space-y-2">
-                <li>Begin with Arrays, Strings, and Linked Lists for strong foundations.</li>
-                <li>Progress to Trees and Graphs, integrating DP practice regularly.</li>
-                <li>Use GitHub examples to understand implementation details.</li>
-                <li>Watch YouTube tutorials for visual learning and deeper understanding.</li>
-              </ul>
-              <svg className="absolute right-4 bottom-4 w-24 h-24 opacity-10" viewBox="0 0 100 100">
-                <circle cx="50" cy="50" r="45" stroke="#FDC57B" strokeWidth="2" fill="none" />
-              </svg>
-            </div>
-
-            <section className="mt-12">
-              <h2 className="text-2xl font-semibold mb-6 text-goldenAmber">Your Learning Path</h2>
-              {filtered.length === 0 ? (
-                <div className="text-center py-12">
-                  <div className="text-slate-400 text-lg mb-2">No topics found</div>
-                  <div className="text-slate-500 text-sm">Try adjusting your search or filter criteria</div>
-                </div>
-              ) : (
-                <ul className="space-y-6">
-                  {filtered.map((topic, index) => (
-                    <li key={topic.id} className="relative">
-                      <div className="absolute left-0 top-0 w-8 h-8 rounded-full bg-gradient-to-br from-emeraldGreen to-tealBlue flex items-center justify-center text-charcoalBlack font-bold text-sm shadow-md">
-                        {topic.serial || index + 1}
+                  
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <div className="space-y-4">
+                      <div className="flex items-start gap-3">
+                        <div className="w-2 h-2 bg-tealBlue rounded-full mt-2 flex-shrink-0" />
+                        <p className="text-softSilver/80">Begin with Arrays, Strings, and Linked Lists for strong foundations</p>
                       </div>
+                      <div className="flex items-start gap-3">
+                        <div className="w-2 h-2 bg-emeraldGreen rounded-full mt-2 flex-shrink-0" />
+                        <p className="text-softSilver/80">Progress to Trees and Graphs, integrating DP practice regularly</p>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-4">
+                      <div className="flex items-start gap-3">
+                        <div className="w-2 h-2 bg-goldenAmber rounded-full mt-2 flex-shrink-0" />
+                        <p className="text-softSilver/80">Use GitHub examples to understand implementation details</p>
+                      </div>
+                      <div className="flex items-start gap-3">
+                        <div className="w-2 h-2 bg-crimsonRed rounded-full mt-2 flex-shrink-0" />
+                        <p className="text-softSilver/80">Watch YouTube tutorials for visual learning and deeper understanding</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            </motion.div>
+
+            {/* Premium Learning Path Section */}
+            <section>
+              <div className="flex items-center justify-between mb-8">
+                <h2 className="text-3xl font-heading font-bold bg-gradient-to-r from-tealBlue to-goldenAmber bg-clip-text text-transparent">
+                  Your Premium Learning Path
+                </h2>
+                <div className="flex items-center gap-2 text-sm text-softSilver/60">
+                  <FiStar className="w-4 h-4" />
+                  <span>Curated Excellence</span>
+                </div>
+              </div>
+              
+              {filtered.length === 0 ? (
+                <motion.div 
+                  className="text-center py-16"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.6 }}
+                >
+                  <div className="p-8 rounded-3xl bg-slateBlack/40 backdrop-blur-sm border border-softSilver/10 max-w-md mx-auto">
+                    <div className="w-16 h-16 bg-gradient-to-br from-deepPlum/20 to-slateBlack/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <FiSearch className="w-8 h-8 text-softSilver/40" />
+                    </div>
+                    <h3 className="text-xl font-semibold text-softSilver/80 mb-2">No topics found</h3>
+                    <p className="text-softSilver/60">Try adjusting your search or filter criteria</p>
+                  </div>
+                </motion.div>
+              ) : (
+                <div className="space-y-8">
+                  {filtered.map((topic, index) => (
+                    <motion.div 
+                      key={topic.id} 
+                      className="relative"
+                      initial={{ opacity: 0, x: -20 }}
+                      whileInView={{ opacity: 1, x: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 0.5, delay: index * 0.1 }}
+                    >
+                      {/* Premium Serial Number Badge */}
+                      <div className="absolute -left-4 top-6 z-10">
+                        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-tealBlue to-emeraldGreen flex items-center justify-center shadow-xl">
+                          <span className="text-charcoalBlack font-bold text-lg">{topic.serial || index + 1}</span>
+                        </div>
+                      </div>
+                      
+                      {/* Premium Connection Line */}
                       {index < filtered.length - 1 && (
-                        <div className="absolute left-4 top-8 bottom-[-2.5rem] w-0.5 bg-deepPlum/50" />
+                        <div className="absolute left-2 top-16 bottom-[-2rem] w-0.5 bg-gradient-to-b from-tealBlue/30 via-emeraldGreen/20 to-transparent" />
                       )}
-                      <motion.div
-                        initial={{ opacity: 0, x: -20 }}
-                        whileInView={{ opacity: 1, x: 0 }}
-                        viewport={{ once: true }}
-                        transition={{ duration: 0.5, delay: index * 0.1 }}
-                        className="ml-12"
-                      >
-                        <div
-                          className="p-6 rounded-xl bg-slateBlack/50 border border-deepPlum hover:bg-slateBlack/70 hover:border-tealBlue transition-all cursor-pointer shadow-lg hover:shadow-xl"
+                      
+                      <div className="ml-16">
+                        <motion.div
+                          className="group p-8 rounded-3xl bg-gradient-to-br from-slateBlack/60 to-charcoalBlack/40 backdrop-blur-sm border border-softSilver/10 hover:border-tealBlue/30 cursor-pointer shadow-xl hover:shadow-2xl transition-all duration-500"
                           onClick={() => handleTopicClick(topic)}
+                          whileHover={{ y: -3 }}
                           role="button"
                           tabIndex={0}
                           onKeyDown={(e) => { if (e.key === 'Enter') handleTopicClick(topic); }}
                         >
-                          <div className="flex justify-between items-start gap-4">
+                          <div className="flex justify-between items-start gap-6">
                             <div className="flex-1">
-                              <div className="flex items-center gap-3">
-                                <h3 className="text-xl font-semibold text-softSilver">{topic.title}</h3>
+                              <div className="flex items-center gap-4 mb-4">
+                                <h3 className="text-2xl font-heading font-bold text-softSilver group-hover:text-transparent group-hover:bg-gradient-to-r group-hover:from-tealBlue group-hover:to-goldenAmber group-hover:bg-clip-text transition-all duration-300">
+                                  {topic.title}
+                                </h3>
+                                
                                 {topic.subtopics && topic.subtopics.length > 0 && (
-                                  <div className="text-tealBlue">
-                                    {expandedTopics.has(topic.slug) ? <FiChevronUp className="w-5 h-5" /> : <FiChevronDown className="w-5 h-5" />}
-                                  </div>
+                                  <motion.div 
+                                    className="text-tealBlue"
+                                    animate={{ rotate: expandedTopics.has(topic.slug) ? 180 : 0 }}
+                                    transition={{ duration: 0.3 }}
+                                  >
+                                    <FiChevronDown className="w-6 h-6" />
+                                  </motion.div>
                                 )}
-                                <div className="ml-auto flex gap-2">
+                                
+                                <div className="ml-auto flex gap-3">
                                   <GitHubLink githubPath={topic.githubPath} />
                                   <YouTubeLink youtubePath={topic.youtubePath} />
                                 </div>
                               </div>
-                              <p className="mt-2 text-sm text-slate-300">{topic.blurb}</p>
-                            </div>
-                            <div className="text-right shrink-0">
-                              <span className="px-3 py-1 rounded-full text-xs font-medium bg-deepPlum/50 text-goldenAmber">{topic.difficulty}</span>
-                              <p className="mt-2 text-sm font-medium">{topic.estHours} hrs</p>
+                              
+                              <p className="text-softSilver/70 text-lg leading-relaxed mb-4">{topic.blurb}</p>
+                              
+                              <div className="flex items-center gap-4">
+                                <span className={`px-4 py-2 rounded-xl text-sm font-semibold ${
+                                  topic.difficulty === 'Beginner' 
+                                    ? 'bg-emeraldGreen/20 text-emeraldGreen border border-emeraldGreen/30'
+                                    : topic.difficulty === 'Intermediate'
+                                    ? 'bg-goldenAmber/20 text-goldenAmber border border-goldenAmber/30'
+                                    : 'bg-crimsonRed/20 text-crimsonRed border border-crimsonRed/30'
+                                }`}>
+                                  {topic.difficulty}
+                                </span>
+                                
+                                <div className="flex items-center gap-2 text-softSilver/60">
+                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                  </svg>
+                                  <span className="text-sm font-medium">{topic.estHours} hours</span>
+                                </div>
+                                
+                                {topic.subtopics && topic.subtopics.length > 0 && (
+                                  <div className="flex items-center gap-2 text-softSilver/60">
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                                    </svg>
+                                    <span className="text-sm">{topic.subtopics.length} subtopics</span>
+                                  </div>
+                                )}
+                              </div>
                             </div>
                           </div>
-                        </div>
+                        </motion.div>
 
-                        {/* Subtopics Dropdown */}
+                        {/* Premium Subtopics Dropdown */}
                         {expandedTopics.has(topic.slug) && topic.subtopics && (
                           <motion.div
                             initial={{ opacity: 0, height: 0 }}
                             animate={{ opacity: 1, height: 'auto' }}
                             exit={{ opacity: 0, height: 0 }}
-                            transition={{ duration: 0.3 }}
-                            className="mt-4 ml-6 space-y-2 border-l-2 border-deepPlum/30 pl-4"
+                            transition={{ duration: 0.4, ease: "easeInOut" }}
+                            className="mt-6 ml-8 space-y-4"
                           >
-                            {topic.subtopics.map((subtopic, subIndex) => (
-                              <div key={subtopic.slug} className="space-y-2">
-                                <div
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleSubtopicItemClick(subtopic);
-                                  }}
-                                  className="p-3 rounded-lg bg-charcoalBlack/40 border border-deepPlum/30 hover:border-tealBlue/50 cursor-pointer transition-all hover:bg-charcoalBlack/60"
-                                  role="button"
-                                  tabIndex={0}
-                                  onKeyDown={(e) => { 
-                                    if (e.key === 'Enter') {
+                            <div className="relative">
+                              <div className="absolute -left-4 top-0 bottom-0 w-px bg-gradient-to-b from-tealBlue/30 to-transparent" />
+                              
+                              {topic.subtopics.map((subtopic, subIndex) => (
+                                <div key={subtopic.slug} className="relative mb-4">
+                                  <motion.div
+                                    onClick={(e) => {
                                       e.stopPropagation();
                                       handleSubtopicItemClick(subtopic);
-                                    }
-                                  }}
-                                >
-                                  <div className="flex items-center justify-between gap-3">
-                                    <div className="flex items-center gap-3">
-                                      <div className="w-6 h-6 rounded-full bg-deepPlum/40 flex items-center justify-center text-xs font-medium text-goldenAmber">
-                                        {subIndex + 1}
-                                      </div>
-                                      <span className="text-sm font-medium text-softSilver hover:text-tealBlue transition-colors">
-                                        {subtopic.title}
-                                      </span>
-                                      {((subtopic.subsubtopics && subtopic.subsubtopics.length > 0) || (subtopic.files && subtopic.files.length > 0)) && (
-                                        <div className="text-tealBlue">
-                                          {expandedSubtopics.has(subtopic.slug) ? <FiChevronUp className="w-4 h-4" /> : <FiChevronDown className="w-4 h-4" />}
-                                        </div>
-                                      )}
-                                    </div>
-                                    <div className="flex gap-2">
-                                      <GitHubLink githubPath={subtopic.githubPath} className="ml-auto" />
-                                      <YouTubeLink youtubePath={subtopic.youtubePath} className="ml-auto" />
-                                    </div>
-                                  </div>
-                                </div>
-
-                                {/* Sub-subtopics and Files Dropdown */}
-                                {expandedSubtopics.has(subtopic.slug) && (
-                                  <motion.div
-                                    initial={{ opacity: 0, height: 0 }}
-                                    animate={{ opacity: 1, height: 'auto' }}
-                                    exit={{ opacity: 0, height: 0 }}
-                                    transition={{ duration: 0.3 }}
-                                    className="ml-8 space-y-2 border-l-2 border-deepPlum/20 pl-4"
+                                    }}
+                                    className="group p-6 rounded-2xl bg-gradient-to-br from-charcoalBlack/60 to-slateBlack/40 backdrop-blur-sm border border-softSilver/5 hover:border-tealBlue/20 cursor-pointer transition-all duration-300 hover:shadow-lg"
+                                    whileHover={{ x: 4 }}
+                                    role="button"
+                                    tabIndex={0}
+                                    onKeyDown={(e) => { 
+                                      if (e.key === 'Enter') {
+                                        e.stopPropagation();
+                                        handleSubtopicItemClick(subtopic);
+                                      }
+                                    }}
                                   >
-                                    {/* Sub-subtopics */}
-                                    {subtopic.subsubtopics && subtopic.subsubtopics.map((subsubtopic, subSubIndex) => (
-                                      <div key={subsubtopic.slug} className="space-y-2">
-                                        <div
+                                    <div className="flex items-center justify-between gap-4">
+                                      <div className="flex items-center gap-4">
+                                        <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-tealBlue/20 to-emeraldGreen/20 flex items-center justify-center">
+                                          <span className="text-sm font-bold text-tealBlue">{subIndex + 1}</span>
+                                        </div>
+                                        
+                                        <div className="flex-1">
+                                          <h4 className="text-lg font-semibold text-softSilver group-hover:text-tealBlue transition-colors">
+                                            {subtopic.title}
+                                          </h4>
+                                        </div>
+                                        
+                                        {((subtopic.subsubtopics && subtopic.subsubtopics.length > 0) || (subtopic.files && subtopic.files.length > 0)) && (
+                                          <motion.div 
+                                            className="text-tealBlue"
+                                            animate={{ rotate: expandedSubtopics.has(subtopic.slug) ? 180 : 0 }}
+                                            transition={{ duration: 0.3 }}
+                                          >
+                                            <FiChevronDown className="w-5 h-5" />
+                                          </motion.div>
+                                        )}
+                                      </div>
+                                      
+                                      <div className="flex gap-2">
+                                        <GitHubLink githubPath={subtopic.githubPath} />
+                                        <YouTubeLink youtubePath={subtopic.youtubePath} />
+                                      </div>
+                                    </div>
+                                  </motion.div>
+
+                                  {/* Sub-subtopics and Files Dropdown */}
+                                  {expandedSubtopics.has(subtopic.slug) && (
+                                    <motion.div
+                                      initial={{ opacity: 0, height: 0 }}
+                                      animate={{ opacity: 1, height: 'auto' }}
+                                      exit={{ opacity: 0, height: 0 }}
+                                      transition={{ duration: 0.3 }}
+                                      className="mt-4 ml-12 space-y-3"
+                                    >
+                                      {/* Sub-subtopics */}
+                                      {subtopic.subsubtopics && subtopic.subsubtopics.map((subsubtopic, subSubIndex) => (
+                                        <div key={subsubtopic.slug} className="relative">
+                                          <motion.div
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              handleSubSubtopicItemClick(subsubtopic);
+                                            }}
+                                            className="group p-4 rounded-xl bg-gradient-to-br from-charcoalBlack/40 to-slateBlack/20 backdrop-blur-sm border border-softSilver/5 hover:border-tealBlue/15 cursor-pointer transition-all duration-300"
+                                            whileHover={{ x: 2 }}
+                                            role="button"
+                                            tabIndex={0}
+                                            onKeyDown={(e) => { 
+                                              if (e.key === 'Enter') {
+                                                e.stopPropagation();
+                                                handleSubSubtopicItemClick(subsubtopic);
+                                              }
+                                            }}
+                                          >
+                                            <div className="flex items-center justify-between gap-3">
+                                              <div className="flex items-center gap-3">
+                                                <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-deepPlum/20 to-goldenAmber/20 flex items-center justify-center">
+                                                  <span className="text-xs font-bold text-goldenAmber">{subSubIndex + 1}</span>
+                                                </div>
+                                                <span className="text-softSilver group-hover:text-goldenAmber transition-colors font-medium">
+                                                  {subsubtopic.title}
+                                                </span>
+                                                {subsubtopic.files && subsubtopic.files.length > 0 && (
+                                                  <motion.div 
+                                                    className="text-goldenAmber"
+                                                    animate={{ rotate: expandedSubSubtopics.has(subsubtopic.slug) ? 180 : 0 }}
+                                                    transition={{ duration: 0.3 }}
+                                                  >
+                                                    <FiChevronDown className="w-4 h-4" />
+                                                  </motion.div>
+                                                )}
+                                              </div>
+                                              <div className="flex gap-2">
+                                                <GitHubLink githubPath={subsubtopic.githubPath} />
+                                                <YouTubeLink youtubePath={subsubtopic.youtubePath} />
+                                              </div>
+                                            </div>
+                                          </motion.div>
+
+                                          {/* Files under sub-subtopics */}
+                                          {expandedSubSubtopics.has(subsubtopic.slug) && subsubtopic.files && (
+                                            <motion.div
+                                              initial={{ opacity: 0, height: 0 }}
+                                              animate={{ opacity: 1, height: 'auto' }}
+                                              exit={{ opacity: 0, height: 0 }}
+                                              transition={{ duration: 0.3 }}
+                                              className="mt-3 ml-8 space-y-2"
+                                            >
+                                              {subsubtopic.files.map((file, fileIndex) => (
+                                                <motion.div
+                                                  key={file.slug}
+                                                  onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleFileClick(file.slug);
+                                                  }}
+                                                  className="group p-3 rounded-lg bg-gradient-to-br from-charcoalBlack/30 to-slateBlack/10 backdrop-blur-sm border border-softSilver/5 hover:border-goldenAmber/20 cursor-pointer transition-all duration-300"
+                                                  whileHover={{ x: 1 }}
+                                                  role="button"
+                                                  tabIndex={0}
+                                                  onKeyDown={(e) => { 
+                                                    if (e.key === 'Enter') {
+                                                      e.stopPropagation();
+                                                      handleFileClick(file.slug);
+                                                    }
+                                                  }}
+                                                >
+                                                  <div className="flex items-center justify-between gap-3">
+                                                    <div className="flex items-center gap-3">
+                                                      <FiChevronRight className="w-3 h-3 text-softSilver/40 group-hover:text-goldenAmber transition-colors" />
+                                                      <span className="text-sm text-softSilver group-hover:text-goldenAmber transition-colors">
+                                                        {file.title}
+                                                      </span>
+                                                    </div>
+                                                    <div className="flex gap-1">
+                                                      <GitHubLink githubPath={file.githubPath} className="scale-75" />
+                                                      <YouTubeLink youtubePath={file.youtubePath} className="scale-75" />
+                                                    </div>
+                                                  </div>
+                                                </motion.div>
+                                              ))}
+                                            </motion.div>
+                                          )}
+                                        </div>
+                                      ))}
+
+                                      {/* Direct files under subtopics (no sub-subtopics) */}
+                                      {subtopic.files && !subtopic.subsubtopics && subtopic.files.map((file, fileIndex) => (
+                                        <motion.div
+                                          key={file.slug}
                                           onClick={(e) => {
                                             e.stopPropagation();
-                                            handleSubSubtopicItemClick(subsubtopic);
+                                            handleFileClick(file.slug);
                                           }}
-                                          className="p-2 rounded-lg bg-charcoalBlack/30 border border-deepPlum/20 hover:border-tealBlue/30 cursor-pointer transition-all hover:bg-charcoalBlack/50"
+                                          className="group p-4 rounded-xl bg-gradient-to-br from-charcoalBlack/40 to-slateBlack/20 backdrop-blur-sm border border-softSilver/5 hover:border-goldenAmber/20 cursor-pointer transition-all duration-300"
+                                          whileHover={{ x: 2 }}
                                           role="button"
                                           tabIndex={0}
                                           onKeyDown={(e) => { 
                                             if (e.key === 'Enter') {
                                               e.stopPropagation();
-                                              handleSubSubtopicItemClick(subsubtopic);
+                                              handleFileClick(file.slug);
                                             }
                                           }}
                                         >
                                           <div className="flex items-center justify-between gap-3">
                                             <div className="flex items-center gap-3">
-                                              <div className="w-5 h-5 rounded-full bg-deepPlum/30 flex items-center justify-center text-xs font-medium text-goldenAmber">
-                                                {subSubIndex + 1}
-                                              </div>
-                                              <span className="text-sm text-softSilver hover:text-tealBlue transition-colors">
-                                                {subsubtopic.title}
+                                              <FiChevronRight className="w-4 h-4 text-softSilver/40 group-hover:text-goldenAmber transition-colors" />
+                                              <span className="text-softSilver group-hover:text-goldenAmber transition-colors font-medium">
+                                                {file.title}
                                               </span>
-                                              {subsubtopic.files && subsubtopic.files.length > 0 && (
-                                                <div className="text-tealBlue">
-                                                  {expandedSubSubtopics.has(subsubtopic.slug) ? <FiChevronUp className="w-4 h-4" /> : <FiChevronDown className="w-4 h-4" />}
-                                                </div>
-                                              )}
                                             </div>
                                             <div className="flex gap-2">
-                                              <GitHubLink githubPath={subsubtopic.githubPath} className="ml-auto" />
-                                              <YouTubeLink youtubePath={subsubtopic.youtubePath} className="ml-auto" />
+                                              <GitHubLink githubPath={file.githubPath} />
+                                              <YouTubeLink youtubePath={file.youtubePath} />
                                             </div>
                                           </div>
-                                        </div>
-
-                                        {/* Files under sub-subtopics */}
-                                        {expandedSubSubtopics.has(subsubtopic.slug) && subsubtopic.files && (
-                                          <motion.div
-                                            initial={{ opacity: 0, height: 0 }}
-                                            animate={{ opacity: 1, height: 'auto' }}
-                                            exit={{ opacity: 0, height: 0 }}
-                                            transition={{ duration: 0.3 }}
-                                            className="ml-6 space-y-1 border-l-2 border-deepPlum/10 pl-3"
-                                          >
-                                            {subsubtopic.files.map((file, fileIndex) => (
-                                              <div
-                                                key={file.slug}
-                                                onClick={(e) => {
-                                                  e.stopPropagation();
-                                                  handleFileClick(file.slug);
-                                                }}
-                                                className="p-2 rounded-lg bg-charcoalBlack/20 border border-deepPlum/10 hover:border-tealBlue/20 cursor-pointer transition-all hover:bg-charcoalBlack/40"
-                                                role="button"
-                                                tabIndex={0}
-                                                onKeyDown={(e) => { 
-                                                  if (e.key === 'Enter') {
-                                                    e.stopPropagation();
-                                                    handleFileClick(file.slug);
-                                                  }
-                                                }}
-                                              >
-                                                <div className="flex items-center justify-between gap-3">
-                                                  <div className="flex items-center gap-3">
-                                                    <FiChevronRight className="w-3 h-3 text-slate-400" />
-                                                    <span className="text-xs text-softSilver hover:text-tealBlue transition-colors">
-                                                      {file.title}
-                                                    </span>
-                                                  </div>
-                                                  <div className="flex gap-1">
-                                                    <GitHubLink githubPath={file.githubPath} className="ml-auto text-xs" />
-                                                    <YouTubeLink youtubePath={file.youtubePath} className="ml-auto text-xs" />
-                                                  </div>
-                                                </div>
-                                              </div>
-                                            ))}
-                                          </motion.div>
-                                        )}
-                                      </div>
-                                    ))}
-
-                                    {/* Direct files under subtopics (no sub-subtopics) */}
-                                    {subtopic.files && !subtopic.subsubtopics && subtopic.files.map((file, fileIndex) => (
-                                      <div
-                                        key={file.slug}
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          handleFileClick(file.slug);
-                                        }}
-                                        className="p-2 rounded-lg bg-charcoalBlack/30 border border-deepPlum/20 hover:border-tealBlue/30 cursor-pointer transition-all hover:bg-charcoalBlack/50"
-                                        role="button"
-                                        tabIndex={0}
-                                        onKeyDown={(e) => { 
-                                          if (e.key === 'Enter') {
-                                            e.stopPropagation();
-                                            handleFileClick(file.slug);
-                                          }
-                                        }}
-                                      >
-                                        <div className="flex items-center justify-between gap-3">
-                                          <div className="flex items-center gap-3">
-                                            <FiChevronRight className="w-3 h-3 text-slate-400" />
-                                            <span className="text-sm text-softSilver hover:text-tealBlue transition-colors">
-                                              {file.title}
-                                            </span>
-                                          </div>
-                                          <div className="flex gap-2">
-                                            <GitHubLink githubPath={file.githubPath} className="ml-auto" />
-                                            <YouTubeLink youtubePath={file.youtubePath} className="ml-auto" />
-                                          </div>
-                                        </div>
-                                      </div>
-                                    ))}
-                                  </motion.div>
-                                )}
-                              </div>
-                            ))}
+                                        </motion.div>
+                                      ))}
+                                    </motion.div>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
                           </motion.div>
                         )}
-                      </motion.div>
-                    </li>
+                      </div>
+                    </motion.div>
                   ))}
-                </ul>
+                </div>
               )}
             </section>
           </main>
 
-          <aside className="lg:w-80 lg:shrink-0">
-            <div className="lg:sticky lg:top-24 space-y-6">
-              <div className="p-6 rounded-2xl bg-gradient-to-tr from-slateBlack/60 to-charcoalBlack/30 border border-deepPlum shadow-lg">
-                <div className="flex items-center gap-3">
-                  <FaRocket className="w-6 h-6 text-goldenAmber" />
-                  <div>
-                    <div className="text-sm text-slate-400">Ultimate Goal</div>
-                    <div className="font-semibold text-lg">Contest-Ready in 12-20 Weeks</div>
+          {/* Premium Sidebar */}
+          <aside className="lg:w-96 lg:shrink-0">
+            <div className="lg:sticky lg:top-32 space-y-8">
+              {/* Ultimate Goal Card */}
+              <motion.div 
+                className="p-8 rounded-3xl bg-gradient-to-br from-deepPlum/40 to-slateBlack/60 backdrop-blur-sm border border-goldenAmber/20 shadow-2xl relative overflow-hidden"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.8, delay: 0.3 }}
+              >
+                <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-goldenAmber/20 to-transparent rounded-full -translate-y-12 translate-x-12" />
+                
+                <div className="relative z-10">
+                  <div className="flex items-center gap-4 mb-6">
+                    <div className="p-3 rounded-xl bg-gradient-to-br from-goldenAmber/30 to-softOrange/20">
+                      <FaRocket className="w-6 h-6 text-goldenAmber" />
+                    </div>
+                    <div>
+                      <div className="text-sm text-softSilver/60 font-medium">Ultimate Goal</div>
+                      <div className="font-heading font-bold text-xl text-softSilver">Contest-Ready</div>
+                      <div className="text-sm text-goldenAmber">in 12-20 Weeks</div>
+                    </div>
                   </div>
-                </div>
 
-                <ol className="mt-6 text-sm text-slate-300/75 space-y-3 list-decimal pl-5">
-                  <li>Weeks 1-3: Build fundamentals with Arrays, Strings, Linked Lists.</li>
-                  <li>Weeks 4-7: Dive into Trees, Graphs, and Sorting techniques.</li>
-                  <li>Weeks 8-12: Master DP and advanced structures like Segment Trees.</li>
-                  <li>Practice with GitHub examples and YouTube tutorials throughout your journey.</li>
-                </ol>
-
-                <div className="mt-6">
-                  <button onClick={() => router.push('/dsa/roadmap-download')} className="w-full px-4 py-3 rounded-full bg-gradient-to-r from-tealBlue to-goldenAmber text-charcoalBlack font-semibold hover:opacity-90 transition-opacity">Download Full Roadmap</button>
-                </div>
-              </div>
-
-              <div className="p-6 rounded-2xl bg-gradient-to-tr from-slateBlack/60 to-charcoalBlack/30 border border-deepPlum shadow-lg">
-                <div className="flex items-center gap-3 mb-4">
-                  <FiGithub className="w-6 h-6 text-goldenAmber" />
-                  <div>
-                    <div className="text-sm text-slate-400">Repository Stats</div>
-                    <div className="font-semibold text-lg">Code Examples</div>
+                  <div className="space-y-4 text-softSilver/70">
+                    <div className="flex items-start gap-3">
+                      <div className="w-6 h-6 rounded-lg bg-tealBlue/20 flex items-center justify-center mt-0.5 flex-shrink-0">
+                        <span className="text-xs font-bold text-tealBlue">1-3</span>
+                      </div>
+                      <p className="text-sm">Build fundamentals with Arrays, Strings, Linked Lists</p>
+                    </div>
+                    
+                    <div className="flex items-start gap-3">
+                      <div className="w-6 h-6 rounded-lg bg-emeraldGreen/20 flex items-center justify-center mt-0.5 flex-shrink-0">
+                        <span className="text-xs font-bold text-emeraldGreen">4-7</span>
+                      </div>
+                      <p className="text-sm">Dive into Trees, Graphs, and Sorting techniques</p>
+                    </div>
+                    
+                    <div className="flex items-start gap-3">
+                      <div className="w-6 h-6 rounded-lg bg-goldenAmber/20 flex items-center justify-center mt-0.5 flex-shrink-0">
+                        <span className="text-xs font-bold text-goldenAmber">8+</span>
+                      </div>
+                      <p className="text-sm">Master DP and advanced structures like Segment Trees</p>
+                    </div>
                   </div>
-                </div>
 
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-slate-300">Available Topics</span>
-                    <span className="text-sm font-medium text-emeraldGreen">{topicsWithGithub}</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-slate-300">Coming Soon</span>
-                    <span className="text-sm font-medium text-slate-400">{topics.length - topicsWithGithub}</span>
-                  </div>
-                  <div className="w-full bg-deepPlum/30 rounded-full h-2">
-                    <div 
-                      className="bg-gradient-to-r from-emeraldGreen to-tealBlue h-2 rounded-full transition-all duration-500" 
-                      style={{ width: `${topics.length > 0 ? (topicsWithGithub / topics.length) * 100 : 0}%` }}
-                    ></div>
-                  </div>
-                </div>
-
-                <div className="mt-4">
-                  <a
-                    href={GITHUB_CONFIG.baseUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors"
+                  <motion.button 
+                    onClick={() => router.push('/dsa/roadmap-download')} 
+                    className="w-full mt-6 px-6 py-4 rounded-xl bg-gradient-to-r from-tealBlue to-goldenAmber text-charcoalBlack font-semibold hover:shadow-lg transition-all duration-300"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
                   >
-                    <FiGithub className="w-4 h-4" />
-                    View Full Repository
-                  </a>
+                    Download Premium Roadmap
+                  </motion.button>
                 </div>
-              </div>
+              </motion.div>
 
-              <div className="p-6 rounded-2xl bg-gradient-to-tr from-slateBlack/60 to-charcoalBlack/30 border border-deepPlum shadow-lg">
-                <div className="flex items-center gap-3 mb-4">
-                  <FaYoutube className="w-6 h-6 text-red-400" />
+              {/* GitHub Stats Card */}
+              <motion.div 
+                className="p-8 rounded-3xl bg-gradient-to-br from-slateBlack/60 to-charcoalBlack/40 backdrop-blur-sm border border-softSilver/10 shadow-xl"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.8, delay: 0.4 }}
+              >
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="p-3 rounded-xl bg-gradient-to-br from-slateBlack/60 to-charcoalBlack/60">
+                    <FiGithub className="w-6 h-6 text-softSilver" />
+                  </div>
                   <div>
-                    <div className="text-sm text-slate-400">YouTube Stats</div>
-                    <div className="font-semibold text-lg">Video Tutorials</div>
+                    <div className="text-sm text-softSilver/60">Repository Stats</div>
+                    <div className="font-heading font-bold text-xl text-softSilver">Code Examples</div>
                   </div>
                 </div>
 
-                <div className="space-y-3">
+                <div className="space-y-4 mb-6">
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-slate-300">Available Videos</span>
-                    <span className="text-sm font-medium text-red-400">{topicsWithYoutube}</span>
+                    <span className="text-softSilver/70">Coming Soon</span>
+                    <span className="font-medium text-softSilver/50">{topics.length - topicsWithGithub}</span>
+                  </div>
+                  <div className="w-full bg-slateBlack/60 rounded-full h-3 overflow-hidden">
+                    <motion.div 
+                      className="h-full bg-gradient-to-r from-emeraldGreen to-tealBlue rounded-full"
+                      initial={{ width: 0 }}
+                      animate={{ width: `${topics.length > 0 ? (topicsWithGithub / topics.length) * 100 : 0}%` }}
+                      transition={{ duration: 1, delay: 0.5 }}
+                    />
+                  </div>
+                </div>
+
+                <motion.a
+                  href={GITHUB_CONFIG.baseUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="w-full inline-flex items-center justify-center gap-3 px-6 py-4 rounded-xl bg-gradient-to-br from-slateBlack/80 to-charcoalBlack/80 border border-softSilver/10 hover:border-softSilver/20 text-softSilver hover:text-softSilver transition-all duration-300"
+                >
+                  <FiGithub className="w-5 h-5" />
+                  <span className="font-semibold">View Full Repository</span>
+                </motion.a>
+              </motion.div>
+
+              {/* YouTube Stats Card */}
+              <motion.div 
+                className="p-8 rounded-3xl bg-gradient-to-br from-slateBlack/60 to-charcoalBlack/40 backdrop-blur-sm border border-softSilver/10 shadow-xl"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.8, delay: 0.5 }}
+              >
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="p-3 rounded-xl bg-gradient-to-br from-crimsonRed/20 to-softOrange/20">
+                    <FaYoutube className="w-6 h-6 text-crimsonRed" />
+                  </div>
+                  <div>
+                    <div className="text-sm text-softSilver/60">YouTube Stats</div>
+                    <div className="font-heading font-bold text-xl text-softSilver">Video Tutorials</div>
+                  </div>
+                </div>
+
+                <div className="space-y-4 mb-6">
+                  <div className="flex justify-between items-center">
+                    <span className="text-softSilver/70">Available Videos</span>
+                    <span className="font-bold text-crimsonRed">{topicsWithYoutube}</span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-slate-300">Coming Soon</span>
-                    <span className="text-sm font-medium text-slate-400">{topics.length - topicsWithYoutube}</span>
+                    <span className="text-softSilver/70">In Production</span>
+                    <span className="font-medium text-softSilver/50">{topics.length - topicsWithYoutube}</span>
                   </div>
-                  <div className="w-full bg-deepPlum/30 rounded-full h-2">
-                    <div 
-                      className="bg-gradient-to-r from-red-600 to-red-400 h-2 rounded-full transition-all duration-500" 
-                      style={{ width: `${topics.length > 0 ? (topicsWithYoutube / topics.length) * 100 : 0}%` }}
-                    ></div>
+                  <div className="w-full bg-slateBlack/60 rounded-full h-3 overflow-hidden">
+                    <motion.div 
+                      className="h-full bg-gradient-to-r from-crimsonRed to-softOrange rounded-full"
+                      initial={{ width: 0 }}
+                      animate={{ width: `${topics.length > 0 ? (topicsWithYoutube / topics.length) * 100 : 0}%` }}
+                      transition={{ duration: 1, delay: 0.6 }}
+                    />
                   </div>
                 </div>
 
-                <div className="mt-4">
-                  <a
-                    href={YOUTUBE_CONFIG.baseUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-full bg-red-800 hover:bg-red-700 text-red-300 hover:text-white transition-colors"
-                  >
-                    <FaYoutube className="w-4 h-4" />
-                    Watch Tutorials
-                  </a>
-                </div>
-              </div>
+                <motion.a
+                  href={YOUTUBE_CONFIG.baseUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="w-full inline-flex items-center justify-center gap-3 px-6 py-4 rounded-xl bg-gradient-to-br from-crimsonRed/20 to-softOrange/20 border border-crimsonRed/20 hover:border-crimsonRed/40 text-softSilver hover:text-softSilver transition-all duration-300"
+                >
+                  <FaYoutube className="w-5 h-5" />
+                  <span className="font-semibold">Watch Tutorials</span>
+                </motion.a>
+              </motion.div>
 
-              <div className="p-6 rounded-2xl bg-gradient-to-tr from-slateBlack/60 to-charcoalBlack/30 border border-deepPlum shadow-lg">
-                <h4 className="text-lg font-semibold mb-4 text-goldenAmber">How to Use</h4>
-                <ul className="text-sm text-slate-300/75 space-y-2">
-                  <li className="flex items-start gap-2">
-                    <span className="w-1.5 h-1.5 bg-tealBlue rounded-full mt-2 shrink-0"></span>
-                    Click on topic titles to expand and see subtopics
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="w-1.5 h-1.5 bg-tealBlue rounded-full mt-2 shrink-0"></span>
-                    Navigate through multiple levels: Topics → Subtopics → Sub-subtopics → Files
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="w-1.5 h-1.5 bg-tealBlue rounded-full mt-2 shrink-0"></span>
-                    Use GitHub icons to view source code examples
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="w-1.5 h-1.5 bg-tealBlue rounded-full mt-2 shrink-0"></span>
-                    Use YouTube icons to watch video tutorials
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="w-1.5 h-1.5 bg-tealBlue rounded-full mt-2 shrink-0"></span>
-                    Items marked with "-" are coming soon
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="w-1.5 h-1.5 bg-tealBlue rounded-full mt-2 shrink-0"></span>
-                    Follow the recommended order for best results
-                  </li>
-                </ul>
-              </div>
+              {/* How to Use Guide */}
+              <motion.div 
+                className="p-8 rounded-3xl bg-gradient-to-br from-deepPlum/20 to-slateBlack/40 backdrop-blur-sm border border-softSilver/10 shadow-xl"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.8, delay: 0.6 }}
+              >
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="p-3 rounded-xl bg-gradient-to-br from-goldenAmber/20 to-softOrange/20">
+                    <FaBookmark className="w-5 h-5 text-goldenAmber" />
+                  </div>
+                  <h4 className="text-xl font-heading font-bold text-goldenAmber">Premium Guide</h4>
+                </div>
+                
+                <div className="space-y-4 text-softSilver/70">
+                  <div className="flex items-start gap-3">
+                    <div className="w-2 h-2 bg-tealBlue rounded-full mt-2 flex-shrink-0" />
+                    <p className="text-sm">Click topic titles to expand and explore subtopics</p>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="w-2 h-2 bg-emeraldGreen rounded-full mt-2 flex-shrink-0" />
+                    <p className="text-sm">Navigate through multiple levels: Topics → Subtopics → Files</p>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="w-2 h-2 bg-goldenAmber rounded-full mt-2 flex-shrink-0" />
+                    <p className="text-sm">Use GitHub icons to access premium source code examples</p>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="w-2 h-2 bg-crimsonRed rounded-full mt-2 flex-shrink-0" />
+                    <p className="text-sm">Use YouTube icons to watch curated video tutorials</p>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="w-2 h-2 bg-deepPlum rounded-full mt-2 flex-shrink-0" />
+                    <p className="text-sm">Follow the recommended order for optimal learning</p>
+                  </div>
+                </div>
+              </motion.div>
             </div>
           </aside>
         </div>
 
-        <div className="mt-12 flex flex-col sm:flex-row items-center justify-between gap-6 border-t border-deepPlum pt-8">
-          <div className="text-sm text-slate-300 text-center sm:text-left">Looking for motivation? Join the PhyCode community to find study partners and share progress.</div>
-          <div className="flex gap-4">
-            <Link href="/dsa/quiz" className="px-5 py-2 rounded-full border border-deepPlum hover:bg-deepPlum/30 transition-colors">Take a Quick Quiz</Link>
-            <button onClick={() => router.push('/dsa/projects')} className="px-5 py-2 rounded-full bg-gradient-to-r from-emeraldGreen to-tealBlue text-charcoalBlack font-semibold hover:opacity-90 transition-opacity">Build a Project</button>
-            <div className="flex gap-2">
-              <a
+        {/* Premium Footer Section */}
+        <motion.div 
+          className="mt-20 flex flex-col lg:flex-row items-center justify-between gap-8 border-t border-softSilver/10 pt-12"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.7 }}
+        >
+          <div className="text-center lg:text-left">
+            <h3 className="text-xl font-heading font-semibold text-softSilver mb-2">
+              Ready to join the elite?
+            </h3>
+            <p className="text-softSilver/60 max-w-md">
+              Join the PhyCode community to find study partners, share progress, and accelerate your learning journey.
+            </p>
+          </div>
+          
+          <div className="flex flex-wrap items-center gap-4">
+            <Link href="/dsa/quiz">
+              <motion.span
+                className="px-6 py-3 rounded-xl border border-softSilver/20 hover:bg-softSilver/5 hover:border-tealBlue/30 text-softSilver transition-all duration-300 cursor-pointer"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                Take Premium Quiz
+              </motion.span>
+            </Link>
+            
+            <motion.button 
+              onClick={() => router.push('/dsa/projects')} 
+              className="px-6 py-3 rounded-xl bg-gradient-to-r from-emeraldGreen to-tealBlue text-charcoalBlack font-semibold hover:shadow-lg transition-all duration-300"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              Build Premium Projects
+            </motion.button>
+            
+            <div className="flex gap-3">
+              <motion.a
                 href={GITHUB_CONFIG.baseUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="px-5 py-2 rounded-full border border-slate-600 hover:bg-slate-700 transition-colors inline-flex items-center gap-2"
+                className="px-4 py-3 rounded-xl border border-softSilver/20 hover:border-softSilver/40 transition-colors inline-flex items-center gap-2 text-softSilver"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
               >
                 <FiGithub className="w-4 h-4" />
-                Repository
-              </a>
-              <a
+                <span className="hidden sm:inline">Repository</span>
+              </motion.a>
+              
+              <motion.a
                 href={YOUTUBE_CONFIG.baseUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="px-5 py-2 rounded-full border border-red-600 hover:bg-red-700 transition-colors inline-flex items-center gap-2"
+                className="px-4 py-3 rounded-xl border border-crimsonRed/40 hover:border-crimsonRed/60 transition-colors inline-flex items-center gap-2 text-softSilver"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
               >
                 <FaYoutube className="w-4 h-4" />
-                YouTube
-              </a>
+                <span className="hidden sm:inline">YouTube</span>
+              </motion.a>
             </div>
           </div>
-        </div>
+        </motion.div>
       </div>
 
-      <button 
-        aria-label="Open learning plan" 
+      {/* Premium Floating Action Button */}
+      <motion.button 
+        aria-label="Open premium learning plan" 
         onClick={() => router.push('/dsa/learning-plan')} 
-        className="fixed right-6 bottom-6 z-40 p-4 rounded-full shadow-2xl bg-gradient-to-br from-goldenAmber to-softOrange hover:scale-105 transition-transform"
+        className="fixed right-8 bottom-8 z-40 p-4 rounded-2xl shadow-2xl bg-gradient-to-br from-goldenAmber to-softOrange hover:shadow-3xl group"
+        whileHover={{ scale: 1.1, rotate: 5 }}
+        whileTap={{ scale: 0.9 }}
+        initial={{ opacity: 0, scale: 0 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.5, delay: 1 }}
       >
-        <FaClipboardList className="w-6 h-6 text-charcoalBlack" />
-      </button>
+        <FaClipboardList className="w-6 h-6 text-charcoalBlack group-hover:scale-110 transition-transform duration-300" />
+        <div className="absolute -top-12 -left-6 bg-charcoalBlack/90 backdrop-blur-sm text-softSilver px-3 py-1 rounded-lg text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+          Create Learning Plan
+        </div>
+      </motion.button>
     </div>
   );
 }
