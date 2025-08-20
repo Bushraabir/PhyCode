@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion, Variants } from 'framer-motion';
 import { Book, Lightbulb, Rocket, Code, Globe, BarChart, Pencil, Eye, Bug, Brain, Search, FileText } from 'lucide-react';
+import Navbar from '@/components/Navbar/Navbar';
 
 const ProblemSolving: React.FC = () => {
   const sections = [
@@ -263,13 +264,19 @@ Step 2: low=2, high=3, mid=2 (5 == 5) → Found at index 2`}
   };
 
   return (
-    <div className="w-full mx-auto p-8 bg-charcoalBlack text-softSilver shadow-xl rounded-lg font-sans">
+    <div className="w-full  p-8 bg-charcoalBlack text-softSilver shadow-xl rounded-lg font-sans">
+        <header className="fixed top-0 left-0 right-0 z-50 bg-slateBlack border-b border-deepPlum shadow-lg">
+          <Navbar />
+        </header>
+      
+      
+      
       {/* Introduction Section */}
       <motion.section
         initial="hidden"
         animate="visible"
         variants={containerVariants}
-        className="mb-12 text-center"
+        className="mt-24 mb-12 text-center w-2/3 mx-auto"
       >
         <h1 className="text-4xl font-heading font-bold text-goldenAmber mb-4">How to Solve DSA Problems: Thinking Like a Problem Solver</h1>
         <p className="text-xl text-softSilver mb-4">
@@ -290,7 +297,7 @@ Step 2: low=2, high=3, mid=2 (5 == 5) → Found at index 2`}
         variants={containerVariants}
         initial="hidden"
         animate="visible"
-        className="space-y-6"
+        className="space-y-6 max-w-7xl mx-auto "
       >
         {sections.map((section, index) => (
           <motion.div
