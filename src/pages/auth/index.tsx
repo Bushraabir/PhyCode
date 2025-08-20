@@ -110,7 +110,7 @@ const AuthPage = () => {
   `;
 
   return (
-    <div className="relative min-h-screen bg-slateBlack text-softSilver overflow-hidden font-sans antialiased">
+    <div className="relative min-h-screen w-full bg-slateBlack text-softSilver overflow-hidden font-sans antialiased">
       <style dangerouslySetInnerHTML={{ __html: inlineCss }} />
 
       <Particles />
@@ -122,7 +122,7 @@ const AuthPage = () => {
 
       <div className="pointer-events-none absolute inset-0 bg-[url('/grid.svg')] opacity-[0.04]" />
 
-      <div className="relative z-20 max-w-8xl mx-auto px-6 lg:px-12">
+      <div className="relative ">
         <Navbar />
 
         <main className="min-h-[85vh] flex items-center justify-center">

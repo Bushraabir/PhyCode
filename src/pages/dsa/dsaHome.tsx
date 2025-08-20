@@ -386,15 +386,19 @@ export default function LearningDsa() {
   return (
     <div className="relative min-h-screen bg-charcoalBlack text-softSilver overflow-hidden font-sans">
       <Particles />
-
-      <div className="relative z-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <Navbar />
+      {/* Navigation Header */}
+      <header className="sticky top-0 z-50 bg-slateBlack border-b border-deepPlum shadow-lg">
+        < Navbar />
+      </header>
+      
+      <div className="relative z-20 max-w-9xl mx-24  ">
+        
 
         <div className="mt-8 flex flex-col lg:flex-row gap-8">
           <main className="flex-1">
             <div className="flex items-center gap-4 mb-4">
               <h1 className="font-heading text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-emeraldGreen to-tealBlue">
-                PhyCode DSA Roadmap
+                PhyCode<br/> DSA Roadmap
               </h1>
               <a
                 href={GITHUB_CONFIG.baseUrl}
