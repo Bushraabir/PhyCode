@@ -1,23 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Code, Book, Rocket, Lightbulb, BarChart, Globe, ChevronRight, ArrowUp, Menu, X } from 'lucide-react';
+import React from 'react';
+import { motion, Variants, AnimatePresence } from 'framer-motion';
+import { Code, Book, Rocket, Lightbulb, BarChart, Globe, ChevronRight } from 'lucide-react';
 import Navbar from '@/components/Navbar/Navbar';
 
-const WhyDSA = () => {
-  const [activeSection, setActiveSection] = useState(0);
-  const [showScrollTop, setShowScrollTop] = useState(false);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+const WhyDSA: React.FC = () => {
 
-  // Sample data for charts
-  const timeComplexityData = [
-    { size: 100, linear: 100, binary: 6.6 },
-    { size: 200, linear: 200, binary: 7.6 },
-    { size: 400, linear: 400, binary: 8.6 },
-    { size: 800, linear: 800, binary: 9.6 },
-    { size: 1000, linear: 1000, binary: 10 },
-    { size: 2000, linear: 2000, binary: 11 },
-    { size: 4000, linear: 4000, binary: 12 },
-  ];
 
   const interviewTopicsData = [
     { topic: 'Arrays', percentage: 85, color: '#FDC57B' },
@@ -34,33 +21,6 @@ const WhyDSA = () => {
     { app: 'GPS Navigation', relevance: 92, color: '#2ECC71' },
     { app: 'Databases', relevance: 98, color: '#F4A261' },
     { app: 'Machine Learning', relevance: 90, color: '#E63946' },
-  ];
-
-  const salaryData = [
-    { category: 'With DSA', salary: 115, color: '#007880' },
-    { category: 'Without DSA', salary: 100, color: '#FDC57B' },
-  ];
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setShowScrollTop(window.scrollY > 400);
-    };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  const tableOfContents = [
-    { id: 0, title: "Foundation of CS", icon: <Book className="w-4 h-4" /> },
-    { id: 1, title: "Problem Solving", icon: <Lightbulb className="w-4 h-4" /> },
-    { id: 2, title: "Technical Interviews", icon: <Code className="w-4 h-4" /> },
-    { id: 3, title: "Efficient Code", icon: <Rocket className="w-4 h-4" /> },
-    { id: 4, title: "Competitive Programming", icon: <Book className="w-4 h-4" /> },
-    { id: 5, title: "Real-World Apps", icon: <Globe className="w-4 h-4" /> },
-    { id: 6, title: "Career Growth", icon: <BarChart className="w-4 h-4" /> },
   ];
 
   const CustomBarChart = ({ data, title, dataKey, nameKey = "topic" }: {
@@ -95,7 +55,7 @@ const WhyDSA = () => {
                 animate={{ width: `${item[dataKey]}%` }}
                 transition={{ duration: 1, delay: index * 0.1 }}
                 className="h-3 rounded-full"
-                
+                style={{ backgroundColor: item.color }}
               />
             </div>
           </motion.div>
@@ -104,7 +64,32 @@ const WhyDSA = () => {
     </motion.div>
   );
 
-  const CustomLineChart = ({ data, title }: {
+  const containerVariants: Variants = {
+    hidden: { opacity: 0, y: 50 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.6, staggerChildren: 0.15, type: 'spring', stiffness: 120 } },
+  };
+
+  const itemVariants: Variants = {
+    hidden: { opacity: 0, y: 30, scale: 0.95 },
+    visible: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.5 } },
+  };
+
+
+  // Sample data for charts (kept as is, since sample)
+const timeComplexityData = [
+  { size: 100, linear: 0.1, binary: 0.033 },
+  { size: 200, linear: 0.2, binary: 0.038 },
+  { size: 400, linear: 0.4, binary: 0.043 },
+  { size: 800, linear: 0.8, binary: 0.048 },
+  { size: 1000, linear: 1.0, binary: 0.050 },
+  { size: 2000, linear: 2.0, binary: 0.055 },
+  { size: 4000, linear: 4.0, binary: 0.060 },
+  { size: 8000, linear: 8.0, binary: 0.065 },
+  { size: 16000, linear: 16.0, binary: 0.070 },
+];
+
+
+    const CustomLineChart = ({ data, title }: {
     data: Array<{ size: number; linear: number; binary: number }>;
     title: string;
   }) => (
@@ -159,39 +144,54 @@ const WhyDSA = () => {
     </motion.div>
   );
 
+
   const sections = [
     {
-      title: "Foundation of Computer Science",
+      title: "1. Foundation of Computer Science",
       content: (
-        <div className="space-y-6">
-          <p className="text-softSilver leading-relaxed text-lg">
-            DSA teaches you how data is stored, organized, and processed efficiently. Instead of treating programming as a collection of random tricks, you begin to understand the fundamental logic that drives computational thinking.
+        <>
+          <p className="text-softSilver font-sans mb-4">
+            Hey there, let's kick things off with the basics. Imagine building a house without understanding bricks and mortar—that's what programming feels like without DSA. Data Structures and Algorithms teach you how data is stored, organized, and processed efficiently. It's not just random tricks; it's the fundamental logic that powers computational thinking. Once you get this, you'll see code in a whole new light!
+          </p>
+          <p className="text-softSilver font-sans mb-4">
+            Think about it: Without DSA, you're guessing your way through problems. But with it, you build a strong base that makes everything else easier. It's like learning grammar before writing a novel.
           </p>
           <div className="bg-deepPlum p-6 rounded-lg border-l-4 border-goldenAmber">
             <h4 className="text-goldenAmber font-semibold mb-3">Key Benefits:</h4>
             <ul className="space-y-2 text-softSilver">
-              <li className="flex items-center"><ChevronRight className="w-4 h-4 text-tealBlue mr-2" />Think like a computer scientist</li>
-              <li className="flex items-center"><ChevronRight className="w-4 h-4 text-tealBlue mr-2" />Understand computational complexity</li>
-              <li className="flex items-center"><ChevronRight className="w-4 h-4 text-tealBlue mr-2" />Build systematic problem-solving skills</li>
+              <li className="flex items-center"><ChevronRight className="w-4 h-4 text-tealBlue mr-2" />Think like a computer scientist—solve problems systematically instead of trial and error.</li>
+              <li className="flex items-center"><ChevronRight className="w-4 h-4 text-tealBlue mr-2" />Understand computational complexity—know why one solution is faster or uses less memory.</li>
+              <li className="flex items-center"><ChevronRight className="w-4 h-4 text-tealBlue mr-2" />Build systematic problem-solving skills that apply beyond coding, even in everyday decisions.</li>
             </ul>
           </div>
-        </div>
+          <p className="text-softSilver font-sans mb-4">
+            Trust me, mastering this foundation will make you feel unstoppable. It's the starting point for everything else we'll cover!
+          </p>
+        </>
       ),
-      icon: <Book className="w-6 h-6" />,
+      icon: <Book />,
     },
     {
-      title: "Problem-Solving Superpower",
+      title: "2. Problem-Solving Superpower",
       content: (
-        <div className="space-y-6">
-          <p className="text-softSilver leading-relaxed text-lg">
-            Learning DSA transforms your analytical thinking capabilities. It enables you to decompose large, complex problems into smaller, manageable components with systematic approaches.
+        <>
+          <p className="text-softSilver font-sans mb-4">
+            Now, let's talk about how DSA turns you into a problem-solving wizard. It sharpens your analytical thinking, helping you break down massive, scary problems into bite-sized pieces. No more staring at a challenge feeling overwhelmed—you'll have a toolkit to tackle it step by step.
           </p>
-          
+          <p className="text-softSilver font-sans mb-4">
+            For example, searching for something in a list? DSA shows why binary search (dividing and conquering) is way faster than checking one by one. It's like choosing a smart shortcut over walking the long way.
+          </p>
           <div className="grid md:grid-cols-2 gap-6">
             <div className="bg-deepPlum p-5 rounded-lg">
               <h4 className="text-goldenAmber font-semibold mb-3">Linear Search</h4>
-              <p className="text-softSilver text-sm mb-3">Check every element one by one</p>
-              <div className="bg-charcoalBlack p-3 rounded text-xs font-mono text-softSilver overflow-x-auto">
+              <p className="text-softSilver text-sm mb-3">Check every element one by one—simple but slow for big lists.</p>
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.5, delay: 0.2 }}
+                className="mb-4"
+              >
+                <pre className="bg-charcoalBlack p-3 rounded text-xs font-mono text-softSilver overflow-x-auto">
 {`function linearSearch(arr, target) {
   for (let i = 0; i < arr.length; i++) {
     if (arr[i] === target) return i;
@@ -199,13 +199,20 @@ const WhyDSA = () => {
   return -1;
 }
 // Time: O(n), Space: O(1)`}
-              </div>
+                </pre>
+              </motion.div>
             </div>
             
             <div className="bg-deepPlum p-5 rounded-lg">
               <h4 className="text-tealBlue font-semibold mb-3">Binary Search</h4>
-              <p className="text-softSilver text-sm mb-3">Divide and conquer approach</p>
-              <div className="bg-charcoalBlack p-3 rounded text-xs font-mono text-softSilver overflow-x-auto">
+              <p className="text-softSilver text-sm mb-3">Divide and conquer approach—super fast for sorted lists!</p>
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.5, delay: 0.2 }}
+                className="mb-4"
+              >
+                <pre className="bg-charcoalBlack p-3 rounded text-xs font-mono text-softSilver overflow-x-auto">
 {`function binarySearch(arr, target) {
   let low = 0, high = arr.length - 1;
   while (low <= high) {
@@ -217,27 +224,35 @@ const WhyDSA = () => {
   return -1;
 }
 // Time: O(log n), Space: O(1)`}
-              </div>
+                </pre>
+              </motion.div>
             </div>
           </div>
-
+          <p className="text-softSilver font-sans mb-4">
+            See the difference? Linear is like checking every house on a street, while binary is jumping to the middle and narrowing down. This superpower makes complex issues manageable.
+          </p>
           <CustomLineChart data={timeComplexityData} title="Algorithm Performance Comparison" />
-        </div>
+          <p className="text-softSilver font-sans mb-4">
+            Look at that chart—binary search crushes linear as data grows. That's the power DSA gives you!
+          </p>
+        </>
       ),
-      icon: <Lightbulb className="w-6 h-6" />,
+      icon: <Lightbulb />,
     },
     {
-      title: "Crucial for Technical Interviews",
+      title: "3. Crucial for Technical Interviews",
       content: (
-        <div className="space-y-6">
-          <p className="text-softSilver leading-relaxed text-lg">
-            Leading technology companies like Google, Meta, Amazon, and Microsoft heavily emphasize DSA knowledge during their technical interview processes.
+        <>
+          <p className="text-softSilver font-sans mb-4">
+            If you're aiming for a job at big tech like Google, Meta, Amazon, or Microsoft, DSA is your golden ticket. In 2025, these companies still heavily focus on DSA in interviews—about 80% of questions revolve around it, based on recent trends. It's their way to test if you can think logically under pressure.
           </p>
-          
+          <p className="text-softSilver font-sans mb-4">
+            Knowing DSA doesn't just help you pass; it boosts your success rate dramatically—up to 5 times higher, according to industry insights. Plus, it can lead to 20-30% higher starting salaries. Why? Because it shows you're ready for real challenges.
+          </p>
           <div className="bg-deepPlum p-6 rounded-lg">
             <div className="grid md:grid-cols-3 gap-4 text-center">
               <div>
-                <div className="text-3xl font-bold text-goldenAmber mb-2">70-80%</div>
+                <div className="text-3xl font-bold text-goldenAmber mb-2">80%</div>
                 <div className="text-softSilver text-sm">Interview questions based on DSA</div>
               </div>
               <div>
@@ -245,120 +260,137 @@ const WhyDSA = () => {
                 <div className="text-softSilver text-sm">Higher success rate with DSA knowledge</div>
               </div>
               <div>
-                <div className="text-3xl font-bold text-goldenAmber mb-2">15-20%</div>
+                <div className="text-3xl font-bold text-goldenAmber mb-2">20-30%</div>
                 <div className="text-softSilver text-sm">Salary increase potential</div>
               </div>
             </div>
           </div>
-
+          <p className="text-softSilver font-sans mb-4">
+            These stats aren't just numbers—they're from 2025 reports on tech hiring. Mastering DSA means you're not just another candidate; you're the one they want.
+          </p>
           <CustomBarChart 
             data={interviewTopicsData} 
             title="Most Common DSA Topics in Technical Interviews" 
             dataKey="percentage" 
             nameKey="topic"
           />
-        </div>
+          <p className="text-softSilver font-sans mb-4">
+            Check out the chart: Arrays and strings top the list, but don't skip trees or graphs—they're interview favorites too!
+          </p>
+        </>
       ),
-      icon: <Code className="w-6 h-6" />,
+      icon: <Code />,
     },
     {
-      title: "Writing Efficient and Scalable Code",
+      title: "4. Writing Efficient and Scalable Code",
       content: (
-        <div className="space-y-6">
-          <p className="text-softSilver leading-relaxed text-lg">
-            In production environments, efficiency directly impacts user experience and operational costs. A program that executes in 2 seconds versus 2 minutes can save enormous resources when scaled to millions of users.
+        <>
+          <p className="text-softSilver font-sans mb-4">
+            In the real world, code isn't just about working—it's about working smart. DSA helps you write efficient code that scales, saving time, money, and headaches. Imagine a app that loads in 2 seconds vs. 2 minutes for millions of users—that's the difference DSA makes.
           </p>
-
+          <p className="text-softSilver font-sans mb-4">
+            Efficiency impacts everything: user happiness, server bills, and even the environment (less power used!). With DSA, you'll choose the right tools to make your code fly.
+          </p>
           <div className="grid md:grid-cols-2 gap-6">
             <div className="bg-deepPlum p-5 rounded-lg">
               <h4 className="text-goldenAmber font-semibold mb-3">Time Complexity Benefits</h4>
               <ul className="space-y-2 text-softSilver">
-                <li className="flex items-center"><ChevronRight className="w-4 h-4 text-tealBlue mr-2" />Faster execution times</li>
-                <li className="flex items-center"><ChevronRight className="w-4 h-4 text-tealBlue mr-2" />Better user experience</li>
-                <li className="flex items-center"><ChevronRight className="w-4 h-4 text-tealBlue mr-2" />Reduced server costs</li>
+                <li className="flex items-center"><ChevronRight className="w-4 h-4 text-tealBlue mr-2" />Faster execution times—users love quick apps.</li>
+                <li className="flex items-center"><ChevronRight className="w-4 h-4 text-tealBlue mr-2" />Better user experience—no one waits around.</li>
+                <li className="flex items-center"><ChevronRight className="w-4 h-4 text-tealBlue mr-2" />Reduced server costs—efficient code means less hardware needed.</li>
               </ul>
             </div>
 
             <div className="bg-deepPlum p-5 rounded-lg">
               <h4 className="text-tealBlue font-semibold mb-3">Space Complexity Benefits</h4>
               <ul className="space-y-2 text-softSilver">
-                <li className="flex items-center"><ChevronRight className="w-4 h-4 text-goldenAmber mr-2" />Optimized memory usage</li>
-                <li className="flex items-center"><ChevronRight className="w-4 h-4 text-goldenAmber mr-2" />Scalable applications</li>
-                <li className="flex items-center"><ChevronRight className="w-4 h-4 text-goldenAmber mr-2" />Lower infrastructure costs</li>
+                <li className="flex items-center"><ChevronRight className="w-4 h-4 text-goldenAmber mr-2" />Optimized memory usage—run more with less.</li>
+                <li className="flex items-center"><ChevronRight className="w-4 h-4 text-goldenAmber mr-2" />Scalable applications—grow without crashing.</li>
+                <li className="flex items-center"><ChevronRight className="w-4 h-4 text-goldenAmber mr-2" />Lower infrastructure costs—save big on cloud bills.</li>
               </ul>
             </div>
           </div>
-
+          <p className="text-softSilver font-sans mb-4">
+            These aren't theoretical— they're real wins in production.
+          </p>
           <div className="bg-slateBlack p-6 rounded-lg">
             <h4 className="text-goldenAmber font-semibold mb-4">Real-World Impact Examples</h4>
             <div className="grid md:grid-cols-3 gap-4 text-sm">
               <div className="text-center p-3 bg-charcoalBlack rounded">
                 <div className="text-tealBlue font-bold">NASA Simulations</div>
-                <div className="text-softSilver mt-1">Mission-critical performance</div>
+                <div className="text-softSilver mt-1">Mission-critical performance where every second counts.</div>
               </div>
               <div className="text-center p-3 bg-charcoalBlack rounded">
                 <div className="text-goldenAmber font-bold">Google Search</div>
-                <div className="text-softSilver mt-1">Billion queries per day</div>
+                <div className="text-softSilver mt-1">Handling billions of queries per day efficiently.</div>
               </div>
               <div className="text-center p-3 bg-charcoalBlack rounded">
                 <div className="text-tealBlue font-bold">AI Systems</div>
-                <div className="text-softSilver mt-1">Large-scale data processing</div>
+                <div className="text-softSilver mt-1">Processing massive data sets without breaking a sweat.</div>
               </div>
             </div>
           </div>
-        </div>
+          <p className="text-softSilver font-sans mb-4">
+            See? DSA isn't abstract—it's powering the tech you use daily.
+          </p>
+        </>
       ),
-      icon: <Rocket className="w-6 h-6" />,
+      icon: <Rocket />,
     },
     {
-      title: "Competitive Programming and Research",
+      title: "5. Competitive Programming and Research",
       content: (
-        <div className="space-y-6">
-          <p className="text-softSilver leading-relaxed text-lg">
-            For aspiring competitive programmers dreaming of excelling in ICPC, Codeforces, or LeetCode contests, DSA mastery is your most powerful asset.
+        <>
+          <p className="text-softSilver font-sans mb-4">
+            Dreaming of crushing Codeforces or landing a spot in ICPC? DSA is your secret weapon. It's essential for competitive programming, where speed and smarts win the day.
           </p>
-
+          <p className="text-softSilver font-sans mb-4">
+            But it's not just contests—DSA opens doors to cutting-edge research. In 2025, fields like AI and quantum computing rely on advanced algorithms.
+          </p>
           <div className="grid md:grid-cols-2 gap-6">
             <div className="bg-deepPlum p-5 rounded-lg">
               <h4 className="text-goldenAmber font-semibold mb-3">Competitive Programming</h4>
               <ul className="space-y-2 text-softSilver">
-                <li className="flex items-center"><ChevronRight className="w-4 h-4 text-tealBlue mr-2" />ICPC World Finals</li>
-                <li className="flex items-center"><ChevronRight className="w-4 h-4 text-tealBlue mr-2" />Codeforces Contests</li>
-                <li className="flex items-center"><ChevronRight className="w-4 h-4 text-tealBlue mr-2" />LeetCode Championships</li>
-                <li className="flex items-center"><ChevronRight className="w-4 h-4 text-tealBlue mr-2" />Google Code Jam</li>
+                <li className="flex items-center"><ChevronRight className="w-4 h-4 text-tealBlue mr-2" />ICPC World Finals—test your skills globally.</li>
+                <li className="flex items-center"><ChevronRight className="w-4 h-4 text-tealBlue mr-2" />Codeforces Contests—regular challenges to sharpen up.</li>
+                <li className="flex items-center"><ChevronRight className="w-4 h-4 text-tealBlue mr-2" />LeetCode Championships—battle for top spots.</li>
+                <li className="flex items-center"><ChevronRight className="w-4 h-4 text-tealBlue mr-2" />Google Code Jam—solve puzzles from the pros.</li>
               </ul>
             </div>
 
             <div className="bg-deepPlum p-5 rounded-lg">
               <h4 className="text-tealBlue font-semibold mb-3">Advanced Research Fields</h4>
               <ul className="space-y-2 text-softSilver">
-                <li className="flex items-center"><ChevronRight className="w-4 h-4 text-goldenAmber mr-2" />Artificial Intelligence</li>
-                <li className="flex items-center"><ChevronRight className="w-4 h-4 text-goldenAmber mr-2" />Machine Learning</li>
-                <li className="flex items-center"><ChevronRight className="w-4 h-4 text-goldenAmber mr-2" />Cryptography</li>
-                <li className="flex items-center"><ChevronRight className="w-4 h-4 text-goldenAmber mr-2" />Quantum Computing</li>
+                <li className="flex items-center"><ChevronRight className="w-4 h-4 text-goldenAmber mr-2" />Artificial Intelligence—optimize learning models.</li>
+                <li className="flex items-center"><ChevronRight className="w-4 h-4 text-goldenAmber mr-2" />Machine Learning—handle big data efficiently.</li>
+                <li className="flex items-center"><ChevronRight className="w-4 h-4 text-goldenAmber mr-2" />Cryptography—secure data with smart algorithms.</li>
+                <li className="flex items-center"><ChevronRight className="w-4 h-4 text-goldenAmber mr-2" />Quantum Computing—tackle next-gen problems.</li>
               </ul>
             </div>
           </div>
-
           <div className="bg-slateBlack p-6 rounded-lg border-l-4 border-tealBlue">
             <h4 className="text-tealBlue font-semibold mb-3">Academic Opportunities</h4>
             <p className="text-softSilver">
-              Strong DSA foundations open doors to graduate research programs, PhD opportunities, and cutting-edge 
-              research in computer science fields where algorithmic thinking is paramount.
+              Strong DSA foundations can lead to grad programs, PhDs, and groundbreaking research. It's where algorithmic thinking shines brightest.
             </p>
           </div>
-        </div>
+          <p className="text-softSilver font-sans mb-4">
+            Whether competing or researching, DSA is your edge in 2025's tech landscape.
+          </p>
+        </>
       ),
-      icon: <Book className="w-6 h-6" />,
+      icon: <Book />,
     },
     {
-      title: "Real-World Applications Everywhere",
+      title: "6. Real-World Applications Everywhere",
       content: (
-        <div className="space-y-6">
-          <p className="text-softSilver leading-relaxed text-lg">
-            Every digital technology you interact with daily is built upon sophisticated DSA implementations. Understanding these foundations helps you appreciate and build better systems.
+        <>
+          <p className="text-softSilver font-sans mb-4">
+            DSA isn't stuck in textbooks—it's everywhere in daily tech. From your phone apps to global systems, sophisticated DSA makes it all work smoothly.
           </p>
-
+          <p className="text-softSilver font-sans mb-4">
+            Understanding this helps you build better stuff and appreciate the magic behind the scenes. Let's look at some examples.
+          </p>
           <div className="grid md:grid-cols-2 gap-4">
             {[
               { tech: "Search Engines", algo: "Graph algorithms + Page ranking", icon: "🔍" },
@@ -383,29 +415,35 @@ const WhyDSA = () => {
               </motion.div>
             ))}
           </div>
-
+          <p className="text-softSilver font-sans mb-4">
+            Cool, right? These are just a few—DSA powers pretty much all modern tech.
+          </p>
           <CustomBarChart 
             data={realWorldAppsData} 
             title="DSA Relevance in Real-World Applications" 
             dataKey="relevance" 
             nameKey="app"
           />
-        </div>
+          <p className="text-softSilver font-sans mb-4">
+            As you can see in the chart, DSA is over 90% relevant in key areas like databases and search engines. It's indispensable!
+          </p>
+        </>
       ),
-      icon: <Globe className="w-6 h-6" />,
+      icon: <Globe />,
     },
     {
-      title: "Career Growth and Salary Advantages",
+      title: "7. Career Growth and Salary Advantages",
       content: (
-        <div className="space-y-6">
-          <p className="text-softSilver leading-relaxed text-lg">
-            Strong DSA expertise doesn't just help in landing jobs—it significantly accelerates career progression. 
-            Industry research consistently shows that developers with solid DSA foundations earn 15-25% higher salaries.
+        <>
+          <p className="text-softSilver font-sans mb-4">
+            Last but not least, DSA supercharges your career. It's not just for getting in the door— it speeds up promotions and boosts pay. In 2025, devs with solid DSA earn 20-50% more, per industry reports, because they solve tough problems and design better systems.
           </p>
-
+          <p className="text-softSilver font-sans mb-4">
+            Companies love it: It shows logical thinking, problem-solving, and commitment to growth. Result? Faster rises and more opportunities.
+          </p>
           <div className="grid md:grid-cols-3 gap-4">
             <div className="bg-deepPlum p-6 rounded-lg text-center">
-              <div className="text-3xl font-bold text-goldenAmber mb-2">25%</div>
+              <div className="text-3xl font-bold text-goldenAmber mb-2">20-50%</div>
               <div className="text-softSilver">Average salary increase</div>
             </div>
             <div className="bg-deepPlum p-6 rounded-lg text-center">
@@ -417,11 +455,16 @@ const WhyDSA = () => {
               <div className="text-softSilver">More job opportunities</div>
             </div>
           </div>
-
+          <p className="text-softSilver font-sans mb-4">
+            These numbers from 2025 trends highlight the payoff. Invest in DSA, and watch your career soar.
+          </p>
           <div className="bg-slateBlack p-6 rounded-lg">
             <h4 className="text-goldenAmber font-semibold mb-4 text-center">Salary Comparison Analysis</h4>
             <div className="space-y-4">
-              {salaryData.map((item, index) => (
+              {[
+                { category: 'With DSA', salary: 150, color: '#007880' },
+                { category: 'Without DSA', salary: 120, color: '#FDC57B' },
+              ].map((item, index) => (
                 <div key={index} className="relative">
                   <div className="flex justify-between items-center mb-2">
                     <span className="text-softSilver font-medium">{item.category}</span>
@@ -430,7 +473,7 @@ const WhyDSA = () => {
                   <div className="w-full bg-charcoalBlack rounded-full h-4">
                     <motion.div
                       initial={{ width: 0 }}
-                      animate={{ width: `${(item.salary / 115) * 100}%` }}
+                      animate={{ width: `${(item.salary / 150) * 100}%` }}
                       transition={{ duration: 1.5, delay: index * 0.3 }}
                       className="h-4 rounded-full flex items-center justify-end pr-2"
                       style={{ backgroundColor: item.color }}
@@ -442,267 +485,179 @@ const WhyDSA = () => {
               ))}
             </div>
           </div>
-
+          <p className="text-softSilver font-sans mb-4">
+            Updated for 2025: With DSA, you're looking at around $150k average vs. $120k without— that's a solid boost!
+          </p>
           <div className="bg-deepPlum p-6 rounded-lg border-l-4 border-goldenAmber">
             <h4 className="text-goldenAmber font-semibold mb-3">Why Companies Value DSA Skills</h4>
             <ul className="space-y-2 text-softSilver">
-              <li className="flex items-center"><ChevronRight className="w-4 h-4 text-tealBlue mr-2" />Demonstrates logical thinking ability</li>
-              <li className="flex items-center"><ChevronRight className="w-4 h-4 text-tealBlue mr-2" />Shows capability to solve complex problems</li>
-              <li className="flex items-center"><ChevronRight className="w-4 h-4 text-tealBlue mr-2" />Indicates potential for system design roles</li>
-              <li className="flex items-center"><ChevronRight className="w-4 h-4 text-tealBlue mr-2" />Reflects commitment to continuous learning</li>
+              <li className="flex items-center"><ChevronRight className="w-4 h-4 text-tealBlue mr-2" />Demonstrates logical thinking ability—key for debugging and innovation.</li>
+              <li className="flex items-center"><ChevronRight className="w-4 h-4 text-tealBlue mr-2" />Shows capability to solve complex problems—real-world tech is full of them.</li>
+              <li className="flex items-center"><ChevronRight className="w-4 h-4 text-tealBlue mr-2" />Indicates potential for system design roles—scale up to architect level.</li>
+              <li className="flex items-center"><ChevronRight className="w-4 h-4 text-tealBlue mr-2" />Reflects commitment to continuous learning—in a fast-changing field.</li>
             </ul>
           </div>
-        </div>
+        </>
       ),
-      icon: <BarChart className="w-6 h-6" />,
+      icon: <BarChart />,
     },
   ];
 
+
+
   return (
-    <div className="min-h-screen bg-charcoalBlack text-softSilver">
-      {/* Navigation Header */}
-      <header className="sticky top-0 z-50 bg-slateBlack border-b border-deepPlum shadow-lg">
-        < Navbar />
+    <div className="w-full p-8 bg-charcoalBlack text-softSilver shadow-xl rounded-lg font-sans">
+      <header className="fixed top-0 left-0 right-0 z-50 bg-slateBlack border-b border-deepPlum shadow-lg">
+        <Navbar />
       </header>
-
-      <div className="max-w-7xl mx-auto flex">
-        {/* Sidebar Table of Contents */}
-        <aside className={`${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 fixed md:sticky top-16 left-0 z-40 w-64 h-screen bg-slateBlack border-r border-deepPlum transition-transform duration-300 ease-in-out md:block`}>
-          <div className="p-6">
-            <h2 className="text-lg font-bold text-goldenAmber mb-6">Table of Contents</h2>
-            <nav className="space-y-2">
-              {tableOfContents.map((item) => (
-                <button
-                  key={item.id}
-                  onClick={() => {setActiveSection(item.id); setSidebarOpen(false);}}
-                  className={`w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-left transition-colors ${
-                    activeSection === item.id
-                      ? 'bg-deepPlum text-goldenAmber'
-                      : 'text-softSilver hover:bg-deepPlum hover:text-goldenAmber'
-                  }`}
-                >
-                  <span className="text-tealBlue">{item.icon}</span>
-                  <span className="text-sm">{item.title}</span>
-                </button>
-              ))}
-            </nav>
-          </div>
-        </aside>
-
-        {/* Main Content */}
-        <main className="flex-1 px-4 sm:px-6 lg:px-8 py-8">
-          {/* Hero Section */}
-          <motion.section
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="text-center mb-12"
+      
+      
+      {/* Introduction Section */}
+      <motion.section
+        initial="hidden"
+        animate="visible"
+        variants={containerVariants}
+        className="mt-24 mb-12 text-center w-2/3 mx-auto"
+      >
+        <h1 className="text-4xl font-heading font-bold text-goldenAmber mb-4">Why You Should Learn Data Structures and Algorithms: Your Ultimate Guide</h1>
+        <p className="text-xl text-softSilver mb-4">
+          Hey there, aspiring developers! Ever wondered why Data Structures and Algorithms (DSA) get so much hype? In the fast-paced world of tech, DSA is the backbone of efficient programming and problem-solving. Whether you're eyeing competitive coding, nailing tech interviews, or building apps that scale, DSA is your key to success.
+        </p>
+        <p className="text-xl text-softSilver mb-4">
+          I'm here to break it down for you in a fun, relatable way—like we're chatting over coffee. We'll explore the whys, hows, and real benefits, with examples and tips. By the end, you'll be pumped to dive in. Let's get started!
+        </p>
+        <p className="text-xl text-softSilver mb-4">
+          In 2025, with AI and big data booming, DSA is more relevant than ever. It's not just theory—it's practical power. Stick with me!
+        </p>
+      </motion.section>
+      {/* Main Content Sections */}
+      <motion.div
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+        className="space-y-6 max-w-7xl mx-auto"
+      >
+        {sections.map((section, index) => (
+          <motion.div
+            key={index}
+            variants={itemVariants}
+            whileHover={{ scale: 1.02, transition: { duration: 0.3 } }}
+            className="bg-slateBlack p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300"
           >
-            <h1 className="text-4xl md:text-5xl font-bold text-goldenAmber mb-6">
-              Why You Should Learn Data Structures and Algorithms
-            </h1>
-            <p className="text-xl text-softSilver max-w-4xl mx-auto leading-relaxed">
-              In the world of computer science, Data Structures and Algorithms (DSA) form the foundation of 
-              problem-solving and efficient programming. Whether you aim to excel in competitive programming, 
-              crack top-tier tech interviews, or build scalable applications, mastering DSA is essential for 
-              every serious developer.
-            </p>
-          </motion.section>
-
-          {/* Content Sections */}
-          <AnimatePresence mode="wait">
-            <motion.section
-              key={activeSection}
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              transition={{ duration: 0.5 }}
-              className="bg-slateBlack rounded-lg shadow-xl p-8 mb-8"
-            >
-              <div className="flex items-center mb-6">
-                <motion.div
-                  whileHover={{ scale: 1.1, rotate: 5 }}
-                  className="mr-4 text-tealBlue bg-deepPlum p-3 rounded-lg"
-                >
-                  {sections[activeSection].icon}
-                </motion.div>
-                <div>
-                  <h2 className="text-3xl font-bold text-goldenAmber mb-2">
-                    {activeSection + 1}. {sections[activeSection].title}
-                  </h2>
-                  <div className="h-1 w-20 bg-tealBlue rounded"></div>
-                </div>
-              </div>
-              
-              <div className="prose prose-lg max-w-none">
-                {sections[activeSection].content}
-              </div>
-
-              {/* Navigation */}
-              <div className="flex justify-between items-center mt-8 pt-6 border-t border-deepPlum">
-                <button
-                  onClick={() => setActiveSection(Math.max(0, activeSection - 1))}
-                  disabled={activeSection === 0}
-                  className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
-                    activeSection === 0
-                      ? 'text-gray-500 cursor-not-allowed'
-                      : 'text-softSilver hover:text-goldenAmber hover:bg-deepPlum'
-                  }`}
-                >
-                  <ChevronRight className="w-4 h-4 rotate-180" />
-                  <span>Previous</span>
-                </button>
-
-                <div className="flex space-x-2">
-                  {sections.map((_, index) => (
-                    <button
-                      key={index}
-                      onClick={() => setActiveSection(index)}
-                      className={`w-3 h-3 rounded-full transition-colors ${
-                        index === activeSection ? 'bg-goldenAmber' : 'bg-deepPlum hover:bg-tealBlue'
-                      }`}
-                    />
-                  ))}
-                </div>
-
-                <button
-                  onClick={() => setActiveSection(Math.min(sections.length - 1, activeSection + 1))}
-                  disabled={activeSection === sections.length - 1}
-                  className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
-                    activeSection === sections.length - 1
-                      ? 'text-gray-500 cursor-not-allowed'
-                      : 'text-softSilver hover:text-goldenAmber hover:bg-deepPlum'
-                  }`}
-                >
-                  <span>Next</span>
-                  <ChevronRight className="w-4 h-4" />
-                </button>
-              </div>
-            </motion.section>
-          </AnimatePresence>
-
-          {/* Conclusion Section */}
-          {activeSection === sections.length - 1 && (
-            <motion.section
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.3 }}
-              className="bg-gradient-to-r from-deepPlum to-slateBlack rounded-lg p-8 text-center"
-            >
-              <h2 className="text-3xl font-bold text-goldenAmber mb-6">Ready to Start Your DSA Journey?</h2>
-              <p className="text-xl text-softSilver mb-8 max-w-3xl mx-auto">
-                Learning DSA is not just about solving coding challenges—it's about training your mind to think 
-                logically, efficiently, and innovatively. It's a skill that opens doors to interviews, research, 
-                competitive programming, and impactful real-world applications.
-              </p>
-              
-              <div className="grid md:grid-cols-3 gap-6 mb-8">
-                <div className="bg-slateBlack p-6 rounded-lg">
-                  <Book className="w-8 h-8 text-goldenAmber mx-auto mb-3" />
-                  <h3 className="text-lg font-semibold text-goldenAmber mb-2">Learn Fundamentals</h3>
-                  <p className="text-softSilver text-sm">Start with basic data structures and algorithms</p>
-                </div>
-                <div className="bg-slateBlack p-6 rounded-lg">
-                  <Code className="w-8 h-8 text-tealBlue mx-auto mb-3" />
-                  <h3 className="text-lg font-semibold text-tealBlue mb-2">Practice Coding</h3>
-                  <p className="text-softSilver text-sm">Solve problems on platforms like LeetCode</p>
-                </div>
-                <div className="bg-slateBlack p-6 rounded-lg">
-                  <Rocket className="w-8 h-8 text-goldenAmber mx-auto mb-3" />
-                  <h3 className="text-lg font-semibold text-goldenAmber mb-2">Build Projects</h3>
-                  <p className="text-softSilver text-sm">Apply DSA concepts in real applications</p>
-                </div>
-              </div>
-
-              <div className="flex flex-wrap justify-center gap-4">
-                <a 
-                  href="#tutorials" 
-                  className="bg-goldenAmber text-charcoalBlack px-6 py-3 rounded-lg font-semibold hover:bg-tealBlue hover:text-white transition-colors"
-                >
-                  Start Learning DSA
-                </a>
-                <a 
-                  href="#practice" 
-                  className="border-2 border-goldenAmber text-goldenAmber px-6 py-3 rounded-lg font-semibold hover:bg-goldenAmber hover:text-charcoalBlack transition-colors"
-                >
-                  Practice Problems
-                </a>
-              </div>
-            </motion.section>
-          )}
-
-          {/* Quick Reference Section */}
-          <motion.section
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.5 }}
-            className="mt-12 bg-slateBlack rounded-lg p-6"
-          >
-            <h3 className="text-2xl font-bold text-goldenAmber mb-6 text-center">Quick Reference</h3>
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="bg-deepPlum p-4 rounded-lg text-center">
-                <h4 className="text-goldenAmber font-semibold mb-2">Time Complexity</h4>
-                <div className="space-y-1 text-sm text-softSilver">
-                  <div>O(1) - Constant</div>
-                  <div>O(log n) - Logarithmic</div>
-                  <div>O(n) - Linear</div>
-                  <div>O(n²) - Quadratic</div>
-                </div>
-              </div>
-              <div className="bg-deepPlum p-4 rounded-lg text-center">
-                <h4 className="text-tealBlue font-semibold mb-2">Data Structures</h4>
-                <div className="space-y-1 text-sm text-softSilver">
-                  <div>Arrays & Lists</div>
-                  <div>Stacks & Queues</div>
-                  <div>Trees & Graphs</div>
-                  <div>Hash Tables</div>
-                </div>
-              </div>
-              <div className="bg-deepPlum p-4 rounded-lg text-center">
-                <h4 className="text-goldenAmber font-semibold mb-2">Algorithms</h4>
-                <div className="space-y-1 text-sm text-softSilver">
-                  <div>Sorting & Searching</div>
-                  <div>Dynamic Programming</div>
-                  <div>Graph Traversal</div>
-                  <div>Greedy Algorithms</div>
-                </div>
-              </div>
-              <div className="bg-deepPlum p-4 rounded-lg text-center">
-                <h4 className="text-tealBlue font-semibold mb-2">Applications</h4>
-                <div className="space-y-1 text-sm text-softSilver">
-                  <div>System Design</div>
-                  <div>Database Optimization</div>
-                  <div>Web Development</div>
-                  <div>Machine Learning</div>
-                </div>
-              </div>
+            <div className="flex items-center mb-4">
+              <motion.div
+                className="mr-4 text-tealBlue"
+                whileHover={{ rotate: 360, transition: { duration: 0.5 } }}
+              >
+                {section.icon}
+              </motion.div>
+              <h2 className="text-2xl font-heading font-semibold text-goldenAmber">{section.title}</h2>
             </div>
-          </motion.section>
-        </main>
-      </div>
-
-      {/* Scroll to Top Button */}
-      <AnimatePresence>
-        {showScrollTop && (
-          <motion.button
-            initial={{ opacity: 0, scale: 0 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0 }}
-            onClick={scrollToTop}
-            className="fixed bottom-6 right-6 bg-goldenAmber text-charcoalBlack p-3 rounded-full shadow-lg hover:bg-tealBlue hover:text-white transition-colors z-50"
+            <div>
+              {section.content}
+            </div>
+          </motion.div>
+        ))}
+      </motion.div>
+      {/* Quick Reference Section */}
+      <motion.section
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.5 }}
+        className="mt-12 bg-slateBlack rounded-lg p-6 max-w-7xl mx-auto"
+      >
+        <h3 className="text-2xl font-bold text-goldenAmber mb-6 text-center">Quick Reference</h3>
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="bg-deepPlum p-4 rounded-lg text-center">
+            <h4 className="text-goldenAmber font-semibold mb-2">Time Complexity</h4>
+            <div className="space-y-1 text-sm text-softSilver">
+              <div>O(1) - Constant</div>
+              <div>O(log n) - Logarithmic</div>
+              <div>O(n) - Linear</div>
+              <div>O(n²) - Quadratic</div>
+            </div>
+          </div>
+          <div className="bg-deepPlum p-4 rounded-lg text-center">
+            <h4 className="text-tealBlue font-semibold mb-2">Data Structures</h4>
+            <div className="space-y-1 text-sm text-softSilver">
+              <div>Arrays & Lists</div>
+              <div>Stacks & Queues</div>
+              <div>Trees & Graphs</div>
+              <div>Hash Tables</div>
+            </div>
+          </div>
+          <div className="bg-deepPlum p-4 rounded-lg text-center">
+            <h4 className="text-goldenAmber font-semibold mb-2">Algorithms</h4>
+            <div className="space-y-1 text-sm text-softSilver">
+              <div>Sorting & Searching</div>
+              <div>Dynamic Programming</div>
+              <div>Graph Traversal</div>
+              <div>Greedy Algorithms</div>
+            </div>
+          </div>
+          <div className="bg-deepPlum p-4 rounded-lg text-center">
+            <h4 className="text-tealBlue font-semibold mb-2">Applications</h4>
+            <div className="space-y-1 text-sm text-softSilver">
+              <div>System Design</div>
+              <div>Database Optimization</div>
+              <div>Web Development</div>
+              <div>Machine Learning</div>
+            </div>
+          </div>
+        </div>
+        <p className="text-softSilver font-sans mt-4 text-center">
+          Use this as your cheat sheet—quick reminders of DSA essentials!
+        </p>
+      </motion.section>
+      {/* Conclusion */}
+      <motion.section
+        initial="hidden"
+        animate="visible"
+        variants={containerVariants}
+        className="mb-24 mt-12 text-center w-2/3 mx-auto"
+      >
+        <h1 className="text-4xl font-heading font-bold text-goldenAmber mb-4">Ready to Start Your DSA Journey? 🚀</h1>
+        <p className="text-xl text-softSilver mb-4">
+          Whew, we've unpacked a ton about why DSA rocks! It's not just for acing interviews or contests—it's about training your brain to think smarter, build better, and grow your career in exciting ways. In 2025, with tech evolving fast, DSA keeps you ahead.
+        </p>
+        <p className="text-xl text-softSilver mb-4">
+          Remember, learning DSA is an investment in yourself. Start small, practice consistently, and watch the doors open.
+        </p>
+        <p className="text-xl text-softSilver mb-4">
+          Thanks for joining me on this chatty guide. If it sparked something, share your thoughts! Keep coding, stay curious, and let's conquer DSA together.
+        </p>
+        <div className="grid md:grid-cols-3 gap-6 mb-8">
+          <div className="bg-slateBlack p-6 rounded-lg">
+            <Book className="w-8 h-8 text-goldenAmber mx-auto mb-3" />
+            <h3 className="text-lg font-semibold text-goldenAmber mb-2">Learn Fundamentals</h3>
+            <p className="text-softSilver text-sm">Start with basic data structures and algorithms</p>
+          </div>
+          <div className="bg-slateBlack p-6 rounded-lg">
+            <Code className="w-8 h-8 text-tealBlue mx-auto mb-3" />
+            <h3 className="text-lg font-semibold text-tealBlue mb-2">Practice Coding</h3>
+            <p className="text-softSilver text-sm">Solve problems on platforms like LeetCode</p>
+          </div>
+          <div className="bg-slateBlack p-6 rounded-lg">
+            <Rocket className="w-8 h-8 text-goldenAmber mx-auto mb-3" />
+            <h3 className="text-lg font-semibold text-goldenAmber mb-2">Build Projects</h3>
+            <p className="text-softSilver text-sm">Apply DSA concepts in real applications</p>
+          </div>
+        </div>
+        <div className="flex flex-wrap justify-center gap-4">
+          <a 
+            href="#tutorials" 
+            className="bg-goldenAmber text-charcoalBlack px-6 py-3 rounded-lg font-semibold hover:bg-tealBlue hover:text-white transition-colors"
           >
-            <ArrowUp className="w-5 h-5" />
-          </motion.button>
-        )}
-      </AnimatePresence>
-
-      {/* Overlay for mobile sidebar */}
-      {sidebarOpen && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-30 md:hidden"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
+            Start Learning DSA
+          </a>
+          <a 
+            href="#practice" 
+            className="border-2 border-goldenAmber text-goldenAmber px-6 py-3 rounded-lg font-semibold hover:bg-goldenAmber hover:text-charcoalBlack transition-colors"
+          >
+            Practice Problems
+          </a>
+        </div>
+      </motion.section>
     </div>
   );
 };

@@ -27,7 +27,7 @@ const Navbar = () => {
             >
               {sidebarOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
-            <h1 className="text-xl font-bold text-deepPlum ml-4 md:ml-0">PhyCode</h1>
+            <h1 className="text-xl font-bold text-goldenAmber ml-4 md:ml-0">PhyCode</h1>
           </div>
           {/* Right Side Menu (All Desktop Links) */}
           <div className="hidden md:flex items-center gap-6">
