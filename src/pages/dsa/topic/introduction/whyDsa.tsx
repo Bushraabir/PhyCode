@@ -55,7 +55,7 @@ const WhyDSA: React.FC = () => {
                 animate={{ width: `${item[dataKey]}%` }}
                 transition={{ duration: 1, delay: index * 0.1 }}
                 className="h-3 rounded-full"
-                style={{ backgroundColor: item.color }}
+                
               />
             </div>
           </motion.div>

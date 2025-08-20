@@ -79,7 +79,7 @@ const DSAEnvironmentSetup: React.FC = () => {
           <p className="text-softSilver font-sans mb-4">
             Pro tip: Stick to one at first, but learn another later for versatility. Check this quick video on why Python for DSA:
           </p>
-          <iframe width="560" height="315" src="https://www.youtube.com/embed/G5_Q2_yRFsY" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen className="mx-auto mb-4 rounded-lg"></iframe>
+          <iframe width="560" height="315" src="https://www.youtube.com/embed/G5_Q2_yRFsY" title="YouTube video player"  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"  className="mx-auto mb-4 rounded-lg"></iframe>
           <img src="https://example.com/language-popularity-graph.png" alt="Popularity of DSA Languages in 2025" className="rounded-lg mx-auto mb-4" />
           <p className="text-softSilver font-sans mb-4">
             As you can see in this graph (imagine a bar chart: Python 45%, Java 30%, C++ 25%), Python leads the pack!
@@ -172,7 +172,7 @@ source dsa_env/bin/activate`}
           <p className="text-softSilver font-sans mb-4">
             Watch this quick video on essential VS Code extensions for DSA:
           </p>
-          <iframe width="560" height="315" src="https://www.youtube.com/embed/h3uDCJ5mvgw" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen className="mx-auto mb-4 rounded-lg"></iframe>
+          <iframe width="560" height="315" src="https://www.youtube.com/embed/h3uDCJ5mvgw" title="YouTube video player"  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"  className="mx-auto mb-4 rounded-lg"></iframe>
           <p className="text-softSilver font-sans mb-4">
             These tools make learning smoother— like having a coding sidekick!
           </p>
