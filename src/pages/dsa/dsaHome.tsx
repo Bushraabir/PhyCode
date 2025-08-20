@@ -516,7 +516,10 @@ export default function LearningDsa() {
                                   {expandedTopics.has(t.slug) ? <FiChevronUp className="w-5 h-5" /> : <FiChevronDown className="w-5 h-5" />}
                                 </div>
                               )}
-                              <GitHubLink githubPath={t.githubPath} />
+                                <div className=" ml-auto ">
+                                  <GitHubLink githubPath={t.githubPath} />
+                                </div>
+                                
                             </div>
                             <p className="mt-2 text-sm text-slate-300">{t.blurb}</p>
                           </div>
