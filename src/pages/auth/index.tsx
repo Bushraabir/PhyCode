@@ -197,14 +197,14 @@ const AuthPage = () => {
                   Learn to Code
                 </motion.a>
 
-                <motion.button
-                  onClick={() => window.scrollTo({ top: window.innerHeight, behavior: 'smooth' })}
+                <motion.a
+                  href="/stimulations/gravity.tsx"
                   whileHover={{ y: -3 }}
                   className="hidden sm:inline-flex items-center gap-2 bg-charcoalBlack/30 backdrop-blur-sm text-softSilver/90 font-medium py-3 px-5 rounded-full border border-slateBlack"
                 >
                   <BeakerIcon className="w-5 h-5" />
                   Explore Labs
-                </motion.button>
+                </motion.a>
               </div>
 
               <div className="mt-2 flex flex-col sm:flex-row  gap-3 text-xs text-softSilver/70">
