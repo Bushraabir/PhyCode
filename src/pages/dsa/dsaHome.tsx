@@ -10,7 +10,32 @@ import Navbar from '@/components/Navbar/Navbar';
 import Particles from '@/components/particles/particles';
 import { firestore } from '@/firebase/firebase';
 
-type Topic = {
+// Type definitions
+interface FileItem {
+  title: string;
+  slug: string;
+  githubPath?: string;
+  youtubePath?: string;
+}
+
+interface SubSubtopic {
+  title: string;
+  slug: string;
+  githubPath?: string;
+  youtubePath?: string;
+  files?: FileItem[];
+}
+
+interface Subtopic {
+  title: string;
+  slug: string;
+  githubPath?: string;
+  youtubePath?: string;
+  subsubtopics?: SubSubtopic[];
+  files?: FileItem[];
+}
+
+interface Topic {
   id: string;
   title: string;
   slug: string;
@@ -21,31 +46,7 @@ type Topic = {
   subtopics?: Subtopic[];
   githubPath?: string;
   youtubePath?: string;
-};
-
-type Subtopic = {
-  title: string;
-  slug: string;
-  githubPath?: string;
-  youtubePath?: string;
-  subsubtopics?: SubSubtopic[];
-  files?: FileItem[];
-};
-
-type SubSubtopic = {
-  title: string;
-  slug: string;
-  githubPath?: string;
-  youtubePath?: string;
-  files?: FileItem[];
-};
-
-type FileItem = {
-  title: string;
-  slug: string;
-  githubPath?: string;
-  youtubePath?: string;
-};
+}
 
 // GitHub repository configuration
 const GITHUB_CONFIG = {
@@ -63,8 +64,6 @@ const YOUTUBE_CONFIG = {
 
 const difficultyOrder = { Beginner: 0, Intermediate: 1, Advanced: 2 } as const;
 
-const slugToPath = (slug: string) => `/dsa/${slug}`;
-
 // Helper function to generate GitHub URL
 const getGithubUrl = (path: string) => {
   if (!path || path.trim() === '') return null;
@@ -78,12 +77,18 @@ const getYoutubeUrl = (path: string) => {
 };
 
 // Premium GitHub Link Component
-const GitHubLink = ({ githubPath, className = "" }: { githubPath?: string; className?: string }) => {
+const GitHubLink: React.FC<{ githubPath?: string; className?: string }> = ({ 
+  githubPath, 
+  className = "" 
+}) => {
   const url = githubPath ? getGithubUrl(githubPath) : null;
   
   if (!url) {
     return (
-      <span className={`text-softSilver/40 text-sm font-medium ${className}`} title="No GitHub content available">
+      <span 
+        className={`text-softSilver/40 text-sm font-medium ${className}`} 
+        title="No GitHub content available"
+      >
         <FiGithub className="w-4 h-4 opacity-30" />
       </span>
     );
@@ -108,12 +113,18 @@ const GitHubLink = ({ githubPath, className = "" }: { githubPath?: string; class
 };
 
 // Premium YouTube Link Component
-const YouTubeLink = ({ youtubePath, className = "" }: { youtubePath?: string; className?: string }) => {
+const YouTubeLink: React.FC<{ youtubePath?: string; className?: string }> = ({ 
+  youtubePath, 
+  className = "" 
+}) => {
   const url = youtubePath ? getYoutubeUrl(youtubePath) : null;
   
   if (!url) {
     return (
-      <span className={`text-softSilver/40 text-sm font-medium ${className}`} title="No YouTube content available">
+      <span 
+        className={`text-softSilver/40 text-sm font-medium ${className}`} 
+        title="No YouTube content available"
+      >
         <FaYoutube className="w-4 h-4 opacity-30" />
       </span>
     );
@@ -331,27 +342,20 @@ export default function LearningDsa() {
     setExpandedSubSubtopics(newExpanded);
   };
 
-  const handleSubtopicClick = (subtopicSlug: string) => {
-    router.push(slugToPath(subtopicSlug));
-  };
-
-  const handleFileClick = (fileSlug: string) => {
-    router.push(slugToPath(fileSlug));
-  };
-
   const handleTopicClick = (topic: Topic) => {
     if (topic.subtopics && topic.subtopics.length > 0) {
       toggleTopicExpansion(topic.slug);
     } else {
-      router.push(slugToPath(topic.slug));
+      router.push(`/dsa/article/${topic.slug}`);
     }
   };
 
   const handleSubtopicItemClick = (subtopic: Subtopic) => {
-    if ((subtopic.subsubtopics && subtopic.subsubtopics.length > 0) || (subtopic.files && subtopic.files.length > 0)) {
+    if ((subtopic.subsubtopics && subtopic.subsubtopics.length > 0) || 
+        (subtopic.files && subtopic.files.length > 0)) {
       toggleSubtopicExpansion(subtopic.slug);
     } else {
-      router.push(slugToPath(subtopic.slug));
+      router.push(`/dsa/article/${subtopic.slug}`);
     }
   };
 
@@ -359,8 +363,12 @@ export default function LearningDsa() {
     if (subsubtopic.files && subsubtopic.files.length > 0) {
       toggleSubSubtopicExpansion(subsubtopic.slug);
     } else {
-      router.push(slugToPath(subsubtopic.slug));
+      router.push(`/dsa/article/${subsubtopic.slug}`);
     }
+  };
+
+  const handleFileClick = (fileSlug: string) => {
+    router.push(`/dsa/article/${fileSlug}`);
   };
 
   // Premium loading state
@@ -602,7 +610,35 @@ export default function LearningDsa() {
                     </div>
                   </div>
                 </motion.div>
+
+                <motion.div 
+                  className="p-8 rounded-3xl bg-gradient-to-br from-slateBlack/60 to-charcoalBlack/40 backdrop-blur-sm border border-softSilver/10 shadow-xl hover:shadow-2xl transition-all duration-300"
+                  whileHover={{ y: -5 }}
+                >
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="p-3 rounded-xl bg-gradient-to-br from-goldenAmber/20 to-softOrange/20">
+                      <FaBookmark className="w-6 h-6 text-goldenAmber" />
+                    </div>
+                    <div className="text-right">
+                      <div className="text-3xl font-bold text-softSilver">{totalHours}</div>
+                      <div className="text-sm text-softSilver/60">Total Hours</div>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="text-softSilver/80">
+                      <div className="text-lg font-semibold">{topics.length} Topics</div>
+                      <div className="text-sm text-softSilver/60">Complete Course</div>
+                    </div>
+                    <div className="w-12 h-2 bg-slateBlack/60 rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-gradient-to-r from-goldenAmber to-softOrange rounded-full transition-all duration-500" 
+                        style={{ width: '100%' }}
+                      />
+                    </div>
+                  </div>
+                </motion.div>
               </div>
+
 
               {/* Premium Guidance Card */}
               <motion.div 
