@@ -62,8 +62,14 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     const topicsRef = collection(firestore, 'topics');
     const topicsSnapshot = await getDocs(firebaseQuery(topicsRef, orderBy('serial', 'asc')));
     
-    let articleData = null;
-    let allItems = [];
+    let articleData: {
+      title: string;
+      slug: string;
+      githubPath: string;
+      youtubePath: string;
+      content: any[];
+    } | null = null;
+    let allItems: Array<{ slug: string; title: string; serial: number }>= [];
     
     // Process all topics and build a flat list for navigation
     topicsSnapshot.forEach((doc) => {

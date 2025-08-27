@@ -21,7 +21,7 @@ const DSAEnvironmentSetup: React.FC = () => {
     dataKey,
     nameKey = "platform"
   }: {
-    data: Array<{ [key: string]: string | number }>;
+    data: Array<{ [key: string]: string | number } & { color?: string }>;
     title: string;
     dataKey: string;
     nameKey?: string;
@@ -52,7 +52,7 @@ const DSAEnvironmentSetup: React.FC = () => {
                 animate={{ width: `${item[dataKey]}%` }}
                 transition={{ duration: 1, delay: index * 0.1 }}
                 className="h-3 rounded-full"
-                style={{ backgroundColor: item.color }}
+                style={{ backgroundColor: typeof item.color === 'string' ? item.color : '#999' }}
               />
             </div>
           </motion.div>
