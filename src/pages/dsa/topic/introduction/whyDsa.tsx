@@ -34,7 +34,7 @@ const WhyDSA: React.FC = () => {
   ];
 
   const CustomBarChart = ({ data, title, dataKey, nameKey = "topic" }: {
-    data: Array<{ [key: string]: string | number }>;
+    data: Array<{ [key: string]: string | number } & { color?: string }>;
     title: string;
     dataKey: string;
     nameKey?: string;
@@ -65,7 +65,7 @@ const WhyDSA: React.FC = () => {
                 animate={{ width: `${item[dataKey]}%` }}
                 transition={{ duration: 1, delay: index * 0.1 }}
                 className="h-3 rounded-full"
-                style={{ backgroundColor: item.color }}
+                style={{ backgroundColor: typeof (item as any).color === 'string' ? (item as any).color : '#999' }}
               />
             </div>
           </motion.div>

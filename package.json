@@ -19,6 +19,7 @@
     "chart.js": "^4.5.0",
     "firebase": "^10.14.1",
     "framer": "^2.4.1",
+    "isomorphic-dompurify": "^2.26.0",
     "lucide-react": "^0.539.0",
     "motion": "^12.23.12",
     "next": "14.2.15",

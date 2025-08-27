@@ -14,9 +14,11 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
-const app = !getApps.length ? initializeApp(firebaseConfig) : getApp();
+const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 
-const auth = getAuth(app);
+// Avoid initializing Auth during SSR/build where browser APIs/env may be unavailable
+const isBrowser = typeof window !== "undefined";
+const auth = isBrowser ? getAuth(app) : (null as any);
 const firestore = getFirestore(app);
 
 export { auth, firestore, app };
