@@ -1,3 +1,4 @@
+import DOMPurify from 'isomorphic-dompurify';
 import CircleSkeleton from "@/components/Skeletons/CircleSkeleton";
 import RectangleSkeleton from "@/components/Skeletons/RectangleSkeleton";
 import { auth, firestore } from "@/firebase/firebase";
@@ -305,7 +306,7 @@ const ProblemDescription: React.FC<ProblemDescriptionProps> = ({
       </div>
       <div className="p-4 overflow-y-auto h-[calc(100vh-100px)]">
         <div className="prose prose-invert max-w-none">
-          <div dangerouslySetInnerHTML={{ __html: problem.problemStatement }} />
+          <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(problem.problemStatement) }} />
           {problem.examples.length > 0 && (
             <div className="mt-4">
               {problem.examples.map((example, index) => (
@@ -336,7 +337,7 @@ const ProblemDescription: React.FC<ProblemDescriptionProps> = ({
           <div className="mt-4">
             <h3 className="text-softSilver font-medium">Constraints:</h3>
             <ul className="list-disc list-inside text-softSilver">
-              <div dangerouslySetInnerHTML={{ __html: problem.constraints }} />
+              <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(problem.problemStatement) }} />
             </ul>
           </div>
         </div>

@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { BsChevronUp, BsChevronDown } from 'react-icons/bs';
+import { useAuthState } from "react-firebase-hooks/auth";
+import { auth } from "@/firebase/firebase";
 import { 
   submitCode, 
   getSubmissionResult, 
   SubmissionResult, 
   validateCode, 
-  normalizeOutput, 
-  InputProcessor, 
+  validateOutput, 
+  UniversalInputProcessor, 
   LANGUAGE_IDS, 
   waitForResult,
   testJudge0Connection 
@@ -50,45 +52,66 @@ const EditorFooter: React.FC<EditorFooterProps> = ({
   const [testResult, setTestResult] = useState<'passed' | 'failed' | null>(null);
   const [connectionTested, setConnectionTested] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState<'testing' | 'connected' | 'failed'>('testing');
+  const [executionStats, setExecutionStats] = useState<{time: number, memory?: number} | null>(null);
+  const [user] = useAuthState(auth);
 
   const effectiveCode = userCode || code || '';
 
-  // Test connection on mount
+  // Test connection on mount with retry logic
   useEffect(() => {
-    const testConnection = async () => {
+    let isMounted = true;
+    
+    const testConnection = async (retryCount = 0) => {
+      if (!isMounted) return;
+      
       try {
         setConnectionStatus('testing');
-        console.log('Testing Judge0 connection...');
+        console.log(`Testing Judge0 connection... (attempt ${retryCount + 1})`);
         
         const isConnected = await testJudge0Connection();
-        setConnectionTested(true);
+        
+        if (!isMounted) return;
         
         if (isConnected) {
           setConnectionStatus('connected');
-          console.log('✅ Connection test passed');
+          setConnectionTested(true);
+          console.log('Connection test passed');
         } else {
-          setConnectionStatus('failed');
-          setError('Judge0 connection failed. Please check your API configuration in environment variables.');
+          throw new Error('Connection test failed');
         }
       } catch (err) {
         console.error('Connection test failed:', err);
-        setConnectionStatus('failed');
-        setError('Failed to test Judge0 connection. Please check your network and API configuration.');
-        setConnectionTested(true);
+        
+        if (!isMounted) return;
+        
+        // Retry up to 2 times
+        if (retryCount < 2) {
+          setTimeout(() => testConnection(retryCount + 1), 2000);
+        } else {
+          setConnectionStatus('failed');
+          setConnectionTested(true);
+          setError('Judge0 connection failed. Please check your API configuration or try refreshing the page.');
+        }
       }
     };
 
     testConnection();
+    
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
+  // Enhanced code execution with better error handling
   const executeCode = async (isSubmission: boolean = false) => {
     console.log('=== EXECUTION START ===');
     console.log('Is submission:', isSubmission);
     console.log('Code length:', effectiveCode.length);
-    console.log('Active test case:', activeTestCase);
+    console.log('Active test case:', activeTestCase?.id);
     console.log('Connection status:', connectionStatus);
+    console.log('User:', user?.uid || 'guest');
 
-    // Check connection status first
+    // Pre-execution validation
     if (connectionStatus === 'failed') {
       setError('Cannot execute code: Judge0 connection failed. Please refresh the page and try again.');
       setConsoleOpen(true);
@@ -101,10 +124,17 @@ const EditorFooter: React.FC<EditorFooterProps> = ({
       return;
     }
 
-    // Validate code first
+    // Enhanced code validation
     const validationErrors = validateCode(effectiveCode, languageId);
     if (validationErrors.length > 0) {
-      setError(`Validation failed: ${validationErrors.join('; ')}`);
+      setError(`Code validation failed:\n${validationErrors.join('\n')}`);
+      setConsoleOpen(true);
+      return;
+    }
+
+    // Check code complexity/size limits
+    if (effectiveCode.length > 100000) { // 100KB limit
+      setError('Code is too large. Please reduce the size of your solution.');
       setConsoleOpen(true);
       return;
     }
@@ -114,7 +144,10 @@ const EditorFooter: React.FC<EditorFooterProps> = ({
     setError(null);
     setResult(null);
     setTestResult(null);
+    setExecutionStats(null);
     setConsoleOpen(true); // Auto-open console when running
+
+    const startTime = Date.now();
 
     try {
       let stdin = '';
@@ -123,7 +156,7 @@ const EditorFooter: React.FC<EditorFooterProps> = ({
       // Process test case if available
       if (activeTestCase) {
         try {
-          const processed = InputProcessor.processInput(activeTestCase, languageId);
+          const processed = UniversalInputProcessor.processInput(activeTestCase, languageId);
           stdin = processed.stdin;
           expectedOutput = processed.expectedOutput;
           
@@ -138,50 +171,90 @@ const EditorFooter: React.FC<EditorFooterProps> = ({
         }
       }
 
-      // Submit code with processed inputs
+      // Submit code with user context for rate limiting
       console.log('=== SUBMITTING TO JUDGE0 VIA API ROUTE ===');
-      const submission = await submitCode(effectiveCode, languageId, stdin, expectedOutput);
+      const submission = await submitCode(
+        effectiveCode, 
+        languageId, 
+        stdin, 
+        expectedOutput,
+        user?.uid || 'guest'
+      );
       
       if (!submission.token) {
         throw new Error('No execution token received from Judge0');
       }
 
-      console.log('✅ Submission successful, token:', submission.token);
+      console.log('Submission successful, token:', submission.token);
 
-      // Wait for results
+      // Wait for results with progress tracking
       console.log('=== WAITING FOR RESULTS ===');
       const resultData = await waitForResult(submission.token);
       
+      const executionTime = Date.now() - startTime;
+      setExecutionStats({
+        time: executionTime,
+        memory: resultData.memory
+      });
+      
       console.log('=== EXECUTION COMPLETED ===');
       console.log('Final result:', resultData);
+      console.log('Total time:', `${executionTime}ms`);
+      
       setResult(resultData);
 
-      // Determine if test case passed
-      if (activeTestCase && activeTestCase.outputText && resultData.stdout) {
-        const normalizedActual = normalizeOutput(resultData.stdout);
-        const normalizedExpected = normalizeOutput(activeTestCase.outputText);
+      // Enhanced output validation
+      if (activeTestCase && activeTestCase.outputText && resultData.stdout !== undefined) {
+        const passed = validateOutput(resultData.stdout, activeTestCase.outputText);
         
         console.log('=== OUTPUT COMPARISON ===');
-        console.log('Actual (normalized):', JSON.stringify(normalizedActual));
-        console.log('Expected (normalized):', JSON.stringify(normalizedExpected));
-        console.log('Match:', normalizedActual === normalizedExpected);
+        console.log('Actual output:', JSON.stringify(resultData.stdout));
+        console.log('Expected output:', JSON.stringify(activeTestCase.outputText));
+        console.log('Validation result:', passed);
         
-        const passed = normalizedActual === normalizedExpected;
         setTestResult(passed ? 'passed' : 'failed');
 
         // For submissions, only call handleSubmit if test passed and execution was successful
         if (isSubmission && passed && resultData.status?.id === 3 && handleSubmit) {
+          console.log('Calling submission handler...');
           handleSubmit();
+        } else if (isSubmission && !passed) {
+          console.log('Submission failed validation, not calling handler');
         }
       } else if (isSubmission && resultData.status?.id === 3 && handleSubmit) {
         // No test case to compare against, just check if execution was successful
+        console.log('No test case validation, calling submission handler...');
         handleSubmit();
       }
 
+      // Log execution statistics
+      if (resultData.time || resultData.memory) {
+        console.log('Judge0 execution stats:', {
+          time: resultData.time,
+          memory: resultData.memory
+        });
+      }
+
     } catch (err) {
+      const executionTime = Date.now() - startTime;
       const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
+      
       console.error('=== EXECUTION ERROR ===', err);
-      setError(errorMessage);
+      console.error('Execution time before error:', `${executionTime}ms`);
+      
+      // Enhanced error categorization
+      let userFriendlyError = errorMessage;
+      if (errorMessage.includes('Rate limit')) {
+        userFriendlyError = 'Too many submissions. Please wait a minute before trying again.';
+      } else if (errorMessage.includes('timeout') || errorMessage.includes('Timeout')) {
+        userFriendlyError = 'Execution timed out. Your code may have an infinite loop or be too slow.';
+      } else if (errorMessage.includes('Network') || errorMessage.includes('fetch')) {
+        userFriendlyError = 'Network error. Please check your internet connection and try again.';
+      } else if (errorMessage.includes('unavailable') || errorMessage.includes('503')) {
+        userFriendlyError = 'Judge0 service is temporarily unavailable. Please try again in a few minutes.';
+      }
+      
+      setError(userFriendlyError);
     } finally {
       setLoading(false);
       console.log('=== EXECUTION END ===');
@@ -193,6 +266,7 @@ const EditorFooter: React.FC<EditorFooterProps> = ({
 
   const toggleConsole = () => setConsoleOpen(!consoleOpen);
 
+  // Enhanced status color mapping
   const getStatusColor = (statusId?: number): string => {
     switch (statusId) {
       case 3: return 'text-green-400'; // Accepted
@@ -213,18 +287,18 @@ const EditorFooter: React.FC<EditorFooterProps> = ({
     switch (statusId) {
       case 1: return 'In Queue';
       case 2: return 'Processing';
-      case 3: return '✅ Accepted';
-      case 4: return '❌ Wrong Answer';
-      case 5: return '⏱️ Time Limit Exceeded';
-      case 6: return '🔨 Compilation Error';
-      case 7: return '💥 Runtime Error (SIGSEGV)';
-      case 8: return '💥 Runtime Error (SIGXFSZ)';
-      case 9: return '💥 Runtime Error (SIGFPE)';
-      case 10: return '💥 Runtime Error (SIGABRT)';
-      case 11: return '💥 Runtime Error (NZEC)';
-      case 12: return '💥 Runtime Error (Other)';
-      case 13: return '⚠️ Internal Error';
-      case 14: return '⚠️ Exec Format Error';
+      case 3: return 'Accepted';
+      case 4: return 'Wrong Answer';
+      case 5: return 'Time Limit Exceeded';
+      case 6: return 'Compilation Error';
+      case 7: return 'Runtime Error (SIGSEGV)';
+      case 8: return 'Runtime Error (SIGXFSZ)';
+      case 9: return 'Runtime Error (SIGFPE)';
+      case 10: return 'Runtime Error (SIGABRT)';
+      case 11: return 'Runtime Error (NZEC)';
+      case 12: return 'Runtime Error (Other)';
+      case 13: return 'Internal Error';
+      case 14: return 'Exec Format Error';
       default: return 'Unknown Status';
     }
   };
@@ -232,11 +306,11 @@ const EditorFooter: React.FC<EditorFooterProps> = ({
   const getConnectionStatusDisplay = () => {
     switch (connectionStatus) {
       case 'testing':
-        return <span className="text-yellow-400">Testing connection...</span>;
+        return <span className="text-yellow-400">Testing...</span>;
       case 'connected':
-        return <span className="text-green-400">●</span>;
+        return <span className="text-green-400" title="Judge0 connected">●</span>;
       case 'failed':
-        return <span className="text-red-400">●</span>;
+        return <span className="text-red-400" title="Judge0 connection failed">●</span>;
       default:
         return <span className="text-gray-400">●</span>;
     }
@@ -259,13 +333,18 @@ const EditorFooter: React.FC<EditorFooterProps> = ({
           <div className="text-xs text-gray-400 flex items-center space-x-2">
             <span>C++</span>
             {getConnectionStatusDisplay()}
+            {user && (
+              <span className="text-tealBlue" title={`Logged in as ${user.email}`}>
+                {user.displayName || user.email?.split('@')[0]}
+              </span>
+            )}
           </div>
           
           <button
             onClick={handleRun}
             disabled={!canRunCode}
             className="px-3 py-1.5 bg-deepPlum text-softSilver text-sm font-medium rounded-lg hover:bg-tealBlue transition focus:outline-none disabled:bg-gray-400 disabled:cursor-not-allowed disabled:opacity-50"
-            title={!canRunCode ? (connectionStatus !== 'connected' ? 'Waiting for connection...' : 'Enter code to run') : 'Run code'}
+            title={!canRunCode ? (connectionStatus !== 'connected' ? 'Waiting for connection...' : 'Enter code to run') : 'Run code with current test case'}
           >
             {loading ? 'Running...' : 'Run'}
           </button>
@@ -275,7 +354,7 @@ const EditorFooter: React.FC<EditorFooterProps> = ({
               onClick={handleSubmitCode}
               disabled={!canRunCode}
               className="px-3 py-1.5 bg-emeraldGreen text-softSilver text-sm font-medium rounded-lg hover:bg-tealBlue transition focus:outline-none disabled:bg-gray-400 disabled:cursor-not-allowed disabled:opacity-50"
-              title={!canRunCode ? (connectionStatus !== 'connected' ? 'Waiting for connection...' : 'Enter code to submit') : 'Submit code'}
+              title={!canRunCode ? (connectionStatus !== 'connected' ? 'Waiting for connection...' : 'Enter code to submit') : 'Submit solution (runs all test cases)'}
             >
               {loading ? 'Submitting...' : 'Submit'}
             </button>
@@ -284,7 +363,7 @@ const EditorFooter: React.FC<EditorFooterProps> = ({
       </div>
 
       {consoleOpen && (
-        <div className="w-full bg-charcoalBlack text-softSilver p-4 border-t border-slate700 max-h-80 overflow-y-auto">
+        <div className="w-full bg-charcoalBlack text-softSilver p-4 border-t border-slate700 max-h-80 overflow-y-auto" id="console-output">
           {loading && (
             <div className="text-center py-4">
               <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-tealBlue"></div>
@@ -295,8 +374,8 @@ const EditorFooter: React.FC<EditorFooterProps> = ({
           
           {error && (
             <div className="bg-red-900/50 border border-red-500 rounded-lg p-4 mb-4">
-              <p className="text-red-200 font-semibold mb-2">❌ Error:</p>
-              <p className="text-red-100 text-sm">{error}</p>
+              <p className="text-red-200 font-semibold mb-2">Error:</p>
+              <pre className="text-red-100 text-sm whitespace-pre-wrap">{error}</pre>
               {connectionStatus === 'failed' && (
                 <div className="mt-3 text-xs text-red-200">
                   <p>Troubleshooting steps:</p>
@@ -328,60 +407,46 @@ const EditorFooter: React.FC<EditorFooterProps> = ({
                       ? 'bg-green-600 text-green-100' 
                       : 'bg-red-600 text-red-100'
                   }`}>
-                    {testResult === 'passed' ? '✅ TEST PASSED' : '❌ TEST FAILED'}
+                    {testResult === 'passed' ? 'TEST PASSED' : 'TEST FAILED'}
                   </div>
                 )}
               </div>
 
               {/* Performance Metrics */}
-              {(result.time || result.memory) && (
-                <div className="flex space-x-6 text-sm text-gray-300 bg-gray-800 rounded-lg p-3">
-                  {result.time && (
-                    <div className="flex items-center space-x-1">
-                      <span>⏱️</span>
-                      <span>Time: {result.time}s</span>
-                    </div>
-                  )}
-                  {result.memory && (
-                    <div className="flex items-center space-x-1">
-                      <span>💾</span>
-                      <span>Memory: {result.memory} KB</span>
-                    </div>
-                  )}
-                </div>
-              )}
+              <div className="flex space-x-6 text-sm text-gray-300 bg-gray-800 rounded-lg p-3">
+                {executionStats && (
+                  <div className="flex items-center space-x-1">
+                    <span>⏱️</span>
+                    <span>Total: {executionStats.time}ms</span>
+                  </div>
+                )}
+                {result.time && (
+                  <div className="flex items-center space-x-1">
+                    <span>⚡</span>
+                    <span>CPU: {result.time}s</span>
+                  </div>
+                )}
+                {result.memory && (
+                  <div className="flex items-center space-x-1">
+                    <span>💾</span>
+                    <span>Memory: {result.memory} KB</span>
+                  </div>
+                )}
+                {user && (
+                  <div className="flex items-center space-x-1">
+                    <span>👤</span>
+                    <span>{user.displayName || user.email}</span>
+                  </div>
+                )}
+              </div>
               
               {/* Test Case Input */}
               {activeTestCase && (
                 <div className="bg-blue-900/30 border border-blue-500/50 rounded-lg p-3">
                   <p className="text-blue-300 font-semibold mb-2">📥 Test Input:</p>
-                  <div className="space-y-2">
-                    <div>
-                      <p className="text-xs text-blue-200">Original:</p>
-                      <pre className="text-blue-100 text-sm bg-blue-900/20 p-2 rounded whitespace-pre-wrap">
+                  <pre className="text-blue-100 text-sm bg-blue-900/20 p-2 rounded whitespace-pre-wrap">
 {activeTestCase.inputText}
-                      </pre>
-                    </div>
-                    
-                    {(() => {
-                      try {
-                        const processed = InputProcessor.processInput(activeTestCase, languageId);
-                        if (processed.stdin !== activeTestCase.inputText) {
-                          return (
-                            <div>
-                              <p className="text-xs text-yellow-200">Processed for C++:</p>
-                              <pre className="text-yellow-100 text-sm bg-yellow-900/20 p-2 rounded whitespace-pre-wrap">
-{processed.stdin}
-                              </pre>
-                            </div>
-                          );
-                        }
-                      } catch (e) {
-                        return null;
-                      }
-                      return null;
-                    })()}
-                  </div>
+                  </pre>
                 </div>
               )}
               
@@ -428,7 +493,7 @@ const EditorFooter: React.FC<EditorFooterProps> = ({
               {/* Success with no output */}
               {!result.stdout && !result.stderr && !result.compile_output && result.status?.id === 3 && (
                 <div className="bg-green-900/30 border border-green-500/50 rounded-lg p-3 text-center">
-                  <p className="text-green-300">✅ Code executed successfully with no output</p>
+                  <p className="text-green-300">Code executed successfully with no output</p>
                 </div>
               )}
             </div>
@@ -447,17 +512,17 @@ const EditorFooter: React.FC<EditorFooterProps> = ({
                 <p>
                   <span className="text-blue-400">Connection:</span> 
                   <span className={connectionStatus === 'connected' ? 'text-green-400' : connectionStatus === 'failed' ? 'text-red-400' : 'text-yellow-400'}>
-                    {connectionStatus === 'connected' ? ' Connected ✓' : connectionStatus === 'failed' ? ' Failed ✗' : ' Testing...'}
+                    {connectionStatus === 'connected' ? ' Connected' : connectionStatus === 'failed' ? ' Failed' : ' Testing...'}
                   </span>
                 </p>
                 {activeTestCase && (
                   <p className="text-green-400">
-                    ✓ Test case loaded - input will be automatically formatted
+                    Test case loaded - input will be automatically formatted
                   </p>
                 )}
                 {!activeTestCase && (
                   <p className="text-yellow-400">
-                    ⚠️ No test case selected - code will run without input
+                    No test case selected - code will run without input
                   </p>
                 )}
               </div>

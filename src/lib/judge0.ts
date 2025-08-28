@@ -27,296 +27,65 @@ export const LANGUAGE_IDS = {
   CPP: 54,
 } as const;
 
-// InputProcessor Class - COMPLETELY REWRITTEN
-export class InputProcessor {
+// Error tracking utility
+class ErrorTracker {
+  static log(error: Error, context: string) {
+    console.error(`[${context}]`, error);
+    
+    // Send to monitoring service in production
+    if (typeof window !== 'undefined' && process.env.NODE_ENV === 'production') {
+      fetch('/api/errors', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: error.message,
+          stack: error.stack,
+          context,
+          timestamp: new Date().toISOString(),
+          url: window.location.href
+        })
+      }).catch(() => {}); // Silent fail for error tracking
+    }
+  }
+}
+
+// Universal Input Processor - COMPLETELY REWRITTEN
+export class UniversalInputProcessor {
   static processInput(testCase: TestCase, languageId: number): ProcessedInput {
     if (languageId !== 54) {
       throw new Error('Only C++ (language ID 54) is supported');
     }
-    return this.processCppInput(testCase);
-  }
 
-  private static processCppInput(testCase: TestCase): ProcessedInput {
-    const inputText = testCase.inputText.trim();
-    const processedLines: string[] = [];
-
-    console.log('=== INPUT PROCESSING DEBUG ===');
-    console.log('Original input:', inputText);
-
-    try {
-      // Parse the input text which can be in formats like:
-      // "nums = [2,7,11,15]\ntarget = 9"
-      // "heights = [1,8,6,2,5,4,8,3,7]"
-      // "matrix = [[1,2,3],[4,5,6]]"
-      // "s = "hello""
-      
-      const lines = inputText.split(/\\n|\n/).map(line => line.trim()).filter(line => line.length > 0);
-      
-      for (const line of lines) {
-        console.log('Processing line:', line);
-        
-        if (line.includes('=')) {
-          // This is an assignment line
-          const processed = this.processAssignmentLine(line);
-          processedLines.push(...processed);
-        } else {
-          // Direct value line
-          processedLines.push(line);
-        }
-      }
-
-      const result = {
-        stdin: processedLines.join('\n'),
-        expectedOutput: testCase.outputText.trim()
-      };
-
-      console.log('=== PROCESSING RESULT ===');
-      console.log('Processed stdin:', result.stdin);
-      console.log('Expected output:', result.expectedOutput);
-      
-      return result;
-
-    } catch (error) {
-      console.error('Input processing error:', error);
-      // Fallback: return original input if processing fails
-      return {
-        stdin: inputText,
-        expectedOutput: testCase.outputText.trim()
-      };
-    }
-  }
-
-  private static processAssignmentLine(line: string): string[] {
-    const result: string[] = [];
-    
-    console.log('Processing assignment line:', line);
-
-    try {
-      // Handle multiple assignments: a = 1, b = 2
-      if (line.includes(',') && line.split(',').length > 1) {
-        const assignments = line.split(',').map(s => s.trim());
-        for (const assignment of assignments) {
-          result.push(...this.processSingleAssignment(assignment));
-        }
-        return result;
-      }
-
-      // Handle single assignment
-      return this.processSingleAssignment(line);
-
-    } catch (error) {
-      console.error('Error processing assignment line:', line, error);
-      return [];
-    }
-  }
-
-  private static processSingleAssignment(assignment: string): string[] {
-    const result: string[] = [];
-    const trimmed = assignment.trim();
-
-    console.log('Processing single assignment:', trimmed);
-
-    try {
-      // Extract variable name and value
-      const eqIndex = trimmed.indexOf('=');
-      if (eqIndex === -1) return [];
-
-      const varName = trimmed.substring(0, eqIndex).trim();
-      const value = trimmed.substring(eqIndex + 1).trim();
-
-      console.log('Variable:', varName, 'Value:', value);
-
-      // 1. Handle 2D arrays/matrices: matrix = [[1,2,3],[4,5,6],[7,8,9]]
-      const matrixMatch = value.match(/\[\[.*?\]\]/);
-      if (matrixMatch) {
-        console.log('Detected matrix:', matrixMatch[0]);
-        const matrixStr = matrixMatch[0];
-        
-        // Extract rows using a more robust approach
-        const rows: string[] = [];
-        let currentRow = '';
-        let bracketCount = 0;
-        let inRow = false;
-        
-        for (let i = 0; i < matrixStr.length; i++) {
-          const char = matrixStr[i];
-          
-          if (char === '[') {
-            bracketCount++;
-            if (bracketCount === 2) {
-              inRow = true;
-              currentRow = '';
-            }
-          } else if (char === ']') {
-            if (inRow && bracketCount === 2) {
-              rows.push(currentRow.replace(/,/g, ' ').trim());
-              currentRow = '';
-              inRow = false;
-            }
-            bracketCount--;
-          } else if (inRow) {
-            currentRow += char;
-          }
-        }
-        
-        if (rows.length > 0) {
-          // First line: rows columns
-          const cols = rows[0].split(/\s+/).length;
-          result.push(`${rows.length} ${cols}`);
-          // Then each row
-          result.push(...rows);
-        }
-        
-        console.log('Matrix processed to:', result);
-        return result;
-      }
-
-      // 2. Handle 1D arrays: nums = [2,7,11,15] or arr = [1, 2, 3, 4]
-      const arrayMatch = value.match(/\[([\d,\s.-]+)\]/);
-      if (arrayMatch) {
-        console.log('Detected array:', arrayMatch[0]);
-        const numbersStr = arrayMatch[1];
-        const numbers = numbersStr
-          .split(',')
-          .map(n => n.trim())
-          .filter(n => n.length > 0)
-          .join(' ');
-        result.push(numbers);
-        console.log('Array processed to:', numbers);
-        return result;
-      }
-
-      // 3. Handle strings: s = "hello world" or name = "test"
-      const stringMatch = value.match(/^"([^"]*)"$/);
-      if (stringMatch) {
-        console.log('Detected string:', stringMatch[1]);
-        result.push(stringMatch[1]);
-        return result;
-      }
-
-      // 4. Handle single numbers: target = 9, n = 5, x = -10
-      const numberMatch = value.match(/^(-?\d+(?:\.\d+)?)$/);
-      if (numberMatch) {
-        console.log('Detected number:', numberMatch[1]);
-        result.push(numberMatch[1]);
-        return result;
-      }
-
-      // 5. Handle booleans: flag = true
-      const boolMatch = value.match(/^(true|false)$/i);
-      if (boolMatch) {
-        console.log('Detected boolean:', boolMatch[1]);
-        result.push(boolMatch[1].toLowerCase() === 'true' ? '1' : '0');
-        return result;
-      }
-
-      console.warn('Could not parse assignment value:', value);
-      return [];
-
-    } catch (error) {
-      console.error('Error in processSingleAssignment:', error);
-      return [];
-    }
+    // Universal approach: pass raw input for C++ to handle
+    // This eliminates input processing bugs and lets C++ handle parsing
+    return {
+      stdin: testCase.inputText.trim(),
+      expectedOutput: testCase.outputText.trim()
+    };
   }
 
   static getCppTemplate(inputText: string): string {
-    const lines = inputText.split(/\\n|\n/)
-      .map(line => line.trim())
-      .filter(line => line.length > 0);
-
-    // Standard includes
-    const includes = [
-      '#include <iostream>',
-      '#include <vector>',
-      '#include <string>',
-      '#include <sstream>',
-      '#include <algorithm>',
-      '#include <unordered_map>',
-      '#include <unordered_set>',
-      '#include <map>',
-      '#include <set>',
-      '#include <queue>',
-      '#include <stack>',
-      '#include <limits>',
-      'using namespace std;'
-    ];
-
-    // Analyze input to determine what we need to read
-    const readingCode: string[] = [];
-    let hasArray = false;
-    let hasMatrix = false;
-    let hasString = false;
-    let hasNumbers = false;
-
-    for (const line of lines) {
-      if (line.match(/\w+\s*=\s*\[\[.*?\]\]/)) {
-        hasMatrix = true;
-      } else if (line.match(/\w+\s*=\s*\[[\d,\s.-]+\]/)) {
-        hasArray = true;
-      } else if (line.match(/\w+\s*=\s*".*?"/)) {
-        hasString = true;
-      } else if (line.match(/\w+\s*=\s*-?\d+/)) {
-        hasNumbers = true;
-      }
-    }
-
-    console.log('Template analysis:', { hasArray, hasMatrix, hasString, hasNumbers });
-
-    // Generate reading code based on detected patterns
-    if (hasMatrix) {
-      readingCode.push('    // Read matrix');
-      readingCode.push('    int rows, cols;');
-      readingCode.push('    cin >> rows >> cols;');
-      readingCode.push('    vector<vector<int>> matrix(rows, vector<int>(cols));');
-      readingCode.push('    for (int i = 0; i < rows; i++) {');
-      readingCode.push('        for (int j = 0; j < cols; j++) {');
-      readingCode.push('            cin >> matrix[i][j];');
-      readingCode.push('        }');
-      readingCode.push('    }');
-      readingCode.push('');
-    }
-
-    if (hasArray && !hasMatrix) {
-      readingCode.push('    // Read array from a single line');
-      readingCode.push('    string line;');
-      readingCode.push('    getline(cin, line);');
-      readingCode.push('    if (line.empty()) getline(cin, line);');
-      readingCode.push('    stringstream ss(line);');
-      readingCode.push('    vector<int> nums;');
-      readingCode.push('    int num;');
-      readingCode.push('    while (ss >> num) {');
-      readingCode.push('        nums.push_back(num);');
-      readingCode.push('    }');
-      readingCode.push('');
-    }
-
-    if (hasString) {
-      readingCode.push('    // Read string');
-      readingCode.push('    string s;');
-      readingCode.push('    getline(cin, s);');
-      readingCode.push('    if (s.empty()) getline(cin, s);');
-      readingCode.push('');
-    }
-
-    if (hasNumbers) {
-      readingCode.push('    // Read additional numbers');
-      readingCode.push('    int target;');
-      readingCode.push('    cin >> target;');
-      readingCode.push('');
-    }
-
-    // Default template if no specific patterns detected
-    if (!hasArray && !hasMatrix && !hasString && !hasNumbers) {
-      readingCode.push('    // Read your input here');
-      readingCode.push('    // Example: int n; cin >> n;');
-      readingCode.push('');
-    }
-
-    return `${includes.join('\n')}
+    // Universal C++ template that works with any input format
+    return `#include <iostream>
+#include <vector>
+#include <string>
+#include <sstream>
+#include <algorithm>
+#include <unordered_map>
+#include <unordered_set>
+#include <map>
+#include <set>
+#include <queue>
+#include <stack>
+#include <limits>
+using namespace std;
 
 int main() {
-${readingCode.join('\n')}    // Your solution here
-    cout << "Replace this with your output" << endl;
+    ios_base::sync_with_stdio(false);
+    cin.tie(nullptr);
+    
+    // Your solution implementation goes here
+    // Read input as needed for your specific problem
     
     return 0;
 }`;
@@ -328,30 +97,65 @@ ${readingCode.join('\n')}    // Your solution here
     }
     return this.getCppTemplate(inputText);
   }
-
-  static getEnhancedTemplate(languageId: number, inputText: string, problemHints?: string[]): string {
-    if (languageId !== 54) {
-      throw new Error('Only C++ (language ID 54) is supported');
-    }
-
-    const baseTemplate = this.getCppTemplate(inputText);
-
-    if (!problemHints || problemHints.length === 0) {
-      return baseTemplate;
-    }
-
-    const hintComments = problemHints.map(hint => `    // Hint: ${hint}`).join('\n');
-    return baseTemplate.replace('    // Your solution here', `${hintComments}\n    // Your solution here`);
-  }
 }
 
-// Utility Functions
+// Keep backward compatibility
+export const InputProcessor = UniversalInputProcessor;
+
+// Enhanced output validation with flexible comparison
+export function validateOutput(actual: string, expected: string): boolean {
+  if (!actual && !expected) return true;
+  if (!actual || !expected) return false;
+
+  // Normalize both outputs for comparison
+  const normalize = (str: string) => {
+    return str
+      .trim()
+      .replace(/\r\n/g, '\n')
+      .replace(/\r/g, '\n')
+      .replace(/\s+/g, ' ')
+      .split(/\s+/)
+      .map(s => {
+        // Handle numbers with consistent formatting
+        if (/^-?\d+\.?\d*$/.test(s)) {
+          const num = parseFloat(s);
+          return isNaN(num) ? s : num.toString();
+        }
+        return s.toLowerCase();
+      })
+      .join(' ');
+  };
+
+  const normalizedActual = normalize(actual);
+  const normalizedExpected = normalize(expected);
+  
+  return normalizedActual === normalizedExpected;
+}
+
+// Backward compatibility
 export function normalizeOutput(output: string): string {
   if (!output) return '';
   return output
     .replace(/\r\n/g, '\n')
     .replace(/\r/g, '\n')
     .trim();
+}
+
+// Input size validation
+const MAX_INPUT_SIZE = 1024 * 1024; // 1MB
+
+function validateInputSize(input: string) {
+  if (input.length > MAX_INPUT_SIZE) {
+    throw new Error('Input too large. Maximum 1MB allowed.');
+  }
+}
+
+// Unicode and special character handling
+function sanitizeInput(input: string): string {
+  return input.replace(/[^\x00-\x7F]/g, (char) => {
+    // Convert problematic Unicode to escape sequences if needed
+    return char.length === 1 ? char : `\\u${char.charCodeAt(0).toString(16)}`;
+  });
 }
 
 export function validateCode(code: string, languageId: number): string[] {
@@ -379,73 +183,117 @@ export function validateCode(code: string, languageId: number): string[] {
   return errors;
 }
 
-// Client-side API functions that call our Next.js API routes
+// Rate limiting
+const rateLimiter = new Map<string, number[]>();
+
+function checkRateLimit(userId: string): boolean {
+  const now = Date.now();
+  const submissions = rateLimiter.get(userId) || [];
+  
+  // Remove old submissions (> 1 minute)
+  const recent = submissions.filter(time => now - time < 60000);
+  
+  if (recent.length >= 10) return false; // Max 10 per minute
+  
+  recent.push(now);
+  rateLimiter.set(userId, recent);
+  return true;
+}
+
+// Performance tracking wrapper
+const trackPerformance = async (operation: string, fn: () => Promise<any>) => {
+  const start = performance.now();
+  try {
+    const result = await fn();
+    console.log(`${operation} took ${performance.now() - start}ms`);
+    return result;
+  } catch (error) {
+    console.error(`${operation} failed:`, error);
+    throw error;
+  }
+};
+
+// Client-side API functions with enhanced error handling
 export async function submitCode(
   sourceCode: string,
   languageId: number,
   stdin: string = '',
-  expectedOutput: string = ''
+  expectedOutput: string = '',
+  userId: string = 'guest'
 ): Promise<SubmissionResult> {
-  console.log('=== SUBMIT CODE DEBUG ===');
-  console.log('Source code length:', sourceCode.length);
-  console.log('Language ID:', languageId);
-  console.log('STDIN:', JSON.stringify(stdin));
-  console.log('Expected Output:', JSON.stringify(expectedOutput));
+  return trackPerformance('submitCode', async () => {
+    console.log('=== SUBMIT CODE DEBUG ===');
+    console.log('Source code length:', sourceCode.length);
+    console.log('Language ID:', languageId);
+    console.log('STDIN length:', stdin.length);
+    console.log('Expected Output length:', expectedOutput.length);
 
-  // Validate inputs
-  if (!sourceCode || !sourceCode.trim()) {
-    throw new Error('Source code cannot be empty');
-  }
+    // Rate limiting check
+    if (!checkRateLimit(userId)) {
+      throw new Error('Rate limit exceeded. Maximum 10 submissions per minute.');
+    }
 
-  if (languageId !== LANGUAGE_IDS.CPP) {
-    throw new Error('Only C++ (language ID 54) is supported');
-  }
+    // Validate inputs
+    if (!sourceCode || !sourceCode.trim()) {
+      throw new Error('Source code cannot be empty');
+    }
 
-  const cleanedSourceCode = sourceCode.trim();
+    if (languageId !== LANGUAGE_IDS.CPP) {
+      throw new Error('Only C++ (language ID 54) is supported');
+    }
 
-  try {
-    const requestBody = {
-      source_code: cleanedSourceCode,
-      language_id: languageId,
-      stdin: stdin || '',
-      expected_output: expectedOutput?.trim() || '',
-    };
+    // Validate input size
+    validateInputSize(sourceCode);
+    validateInputSize(stdin);
+    validateInputSize(expectedOutput);
 
-    console.log('Submitting request to API route:', requestBody);
+    // Sanitize inputs
+    const cleanedSourceCode = sanitizeInput(sourceCode.trim());
+    const cleanedStdin = sanitizeInput(stdin || '');
+    const cleanedExpectedOutput = sanitizeInput(expectedOutput?.trim() || '');
 
-    const response = await fetch('/api/judge0/submit', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(requestBody),
-    });
+    try {
+      const requestBody = {
+        source_code: cleanedSourceCode,
+        language_id: languageId,
+        stdin: cleanedStdin,
+        expected_output: cleanedExpectedOutput,
+      };
 
-    const data = await response.json();
-    console.log('API route response:', data);
+      console.log('Submitting request to API route:', requestBody);
 
-    if (!response.ok) {
-      console.error('API route error:', {
-        status: response.status,
-        statusText: response.statusText,
-        response: data
+      const response = await fetch('/api/judge0/submit', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody),
       });
-      throw new Error(data.error || `API request failed with status ${response.status}`);
-    }
 
-    if (!data.token) {
-      console.error('No token in response:', data);
-      throw new Error('No execution token received');
-    }
+      const data = await response.json();
+      console.log('API route response:', data);
 
-    return data;
-  } catch (error) {
-    console.error('Submit code error:', error);
-    if (error instanceof Error) {
-      throw error;
+      if (!response.ok) {
+        const error = new Error(data.error || `API request failed with status ${response.status}`);
+        ErrorTracker.log(error, 'submitCode');
+        throw error;
+      }
+
+      if (!data.token) {
+        const error = new Error('No execution token received');
+        ErrorTracker.log(error, 'submitCode');
+        throw error;
+      }
+
+      return data;
+    } catch (error) {
+      ErrorTracker.log(error as Error, 'submitCode');
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error(`Network error: ${String(error)}`);
     }
-    throw new Error(`Network error: ${String(error)}`);
-  }
+  });
 }
 
 export async function getSubmissionResult(token: string): Promise<SubmissionResult> {
@@ -464,18 +312,15 @@ export async function getSubmissionResult(token: string): Promise<SubmissionResu
     const data = await response.json();
 
     if (!response.ok) {
-      console.error('Get result error:', {
-        status: response.status,
-        statusText: response.statusText,
-        response: data
-      });
-      throw new Error(data.error || `Failed to get result with status ${response.status}`);
+      const error = new Error(data.error || `Failed to get result with status ${response.status}`);
+      ErrorTracker.log(error, 'getSubmissionResult');
+      throw error;
     }
 
     console.log('Get result response:', data);
     return data;
   } catch (error) {
-    console.error('Get submission result error:', error);
+    ErrorTracker.log(error as Error, 'getSubmissionResult');
     if (error instanceof Error) {
       throw error;
     }
@@ -483,9 +328,10 @@ export async function getSubmissionResult(token: string): Promise<SubmissionResu
   }
 }
 
-// Helper function to wait for submission result with proper polling
+// Enhanced retry logic with progressive backoff
 export async function waitForResult(token: string, maxAttempts: number = 30): Promise<SubmissionResult> {
   let attempts = 0;
+  const backoff = [1000, 1500, 2000, 3000, 5000]; // Progressive backoff
   
   console.log(`Starting to poll for result with token: ${token}`);
   
@@ -501,26 +347,29 @@ export async function waitForResult(token: string, maxAttempts: number = 30): Pr
         return result;
       }
       
-      // Wait before next poll (progressive backoff)
-      const delay = Math.min(1000 + (attempts * 500), 3000);
+      // Wait before next poll with progressive backoff
+      const delay = backoff[Math.min(attempts, backoff.length - 1)];
       console.log(`Waiting ${delay}ms before next attempt...`);
       await new Promise(resolve => setTimeout(resolve, delay));
       attempts++;
       
     } catch (error) {
       console.error(`Error on attempt ${attempts + 1}:`, error);
-      attempts++;
       
-      if (attempts >= maxAttempts) {
-        throw error;
+      if (attempts === maxAttempts - 1) {
+        ErrorTracker.log(error as Error, 'waitForResult');
+        throw new Error('Judge0 service unavailable. Please try again later.');
       }
       
       // Wait before retry on error
       await new Promise(resolve => setTimeout(resolve, 2000));
+      attempts++;
     }
   }
   
-  throw new Error(`Execution timeout after ${maxAttempts} attempts. Please try again.`);
+  const timeoutError = new Error('Execution timeout. The code took too long to execute.');
+  ErrorTracker.log(timeoutError, 'waitForResult');
+  throw timeoutError;
 }
 
 // Test the Judge0 connection through our API route
@@ -542,11 +391,13 @@ export async function testJudge0Connection(): Promise<boolean> {
       return true;
     } else {
       console.error('❌ Judge0 connection test failed:', data);
+      ErrorTracker.log(new Error(`Connection test failed: ${data.error}`), 'testJudge0Connection');
       return false;
     }
     
   } catch (error) {
     console.error('❌ Judge0 connection test error:', error);
+    ErrorTracker.log(error as Error, 'testJudge0Connection');
     return false;
   }
 }

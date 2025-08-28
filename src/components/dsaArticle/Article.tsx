@@ -62,15 +62,20 @@ const DynamicArticlePage: React.FC<DynamicArticlePageProps> = ({
     baseUrl: 'https://www.youtube.com/channel/YOUR_CHANNEL_ID'
   };
 
-  // Helper functions
-  const getGithubUrl = (path: string) => {
-    if (!path || path.trim() === '') return null;
-    return `${GITHUB_CONFIG.baseUrl}/tree/${GITHUB_CONFIG.branch}/${encodeURIComponent(path)}`;
+  // Helper functions with proper type checking
+  const getGithubUrl = (path?: string) => {
+    if (!path || typeof path !== 'string' || path.trim() === '') return null;
+    return `${GITHUB_CONFIG.baseUrl}/tree/${GITHUB_CONFIG.branch}/${encodeURIComponent(path.trim())}`;
   };
 
-  const getYoutubeUrl = (path: string) => {
-    if (!path || path.trim() === '') return null;
-    return `${YOUTUBE_CONFIG.baseUrl}/${path}`;
+  const getYoutubeUrl = (path?: string) => {
+    if (!path || typeof path !== 'string' || path.trim() === '') return null;
+    return `${YOUTUBE_CONFIG.baseUrl}/${path.trim()}`;
+  };
+
+  // Safe string check utility
+  const isValidString = (value: any): value is string => {
+    return typeof value === 'string' && value.trim() !== '';
   };
 
   const copyToClipboard = async (code: string, index: number) => {
@@ -96,12 +101,12 @@ const DynamicArticlePage: React.FC<DynamicArticlePageProps> = ({
     }
   };
 
-  // Enhanced GitHub Link Component
+  // Enhanced GitHub Link Component with better type safety
   const GitHubLink: React.FC<{ githubPath?: string; className?: string }> = ({ 
     githubPath, 
     className = "" 
   }) => {
-    const url = githubPath ? getGithubUrl(githubPath) : null;
+    const url = isValidString(githubPath) ? getGithubUrl(githubPath) : null;
     
     if (!url) {
       return (
@@ -122,7 +127,7 @@ const DynamicArticlePage: React.FC<DynamicArticlePageProps> = ({
         whileHover={{ scale: 1.05, y: -1 }}
         whileTap={{ scale: 0.95 }}
         className={`group inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-br from-slateBlack/80 to-charcoalBlack/60 backdrop-blur-sm border border-softSilver/10 hover:border-softSilver/30 text-softSilver/80 hover:text-softSilver transition-all duration-300 text-sm font-medium shadow-lg hover:shadow-xl ${className}`}
-        title={`View ${githubPath} on GitHub`}
+        title={`View ${githubPath || 'code'} on GitHub`}
       >
         <FiGithub className="w-4 h-4 group-hover:rotate-12 transition-transform duration-300" />
         <span>View Code</span>
@@ -131,12 +136,12 @@ const DynamicArticlePage: React.FC<DynamicArticlePageProps> = ({
     );
   };
 
-  // Enhanced YouTube Link Component
+  // Enhanced YouTube Link Component with better type safety
   const YouTubeLink: React.FC<{ youtubePath?: string; className?: string }> = ({ 
     youtubePath, 
     className = "" 
   }) => {
-    const url = youtubePath ? getYoutubeUrl(youtubePath) : null;
+    const url = isValidString(youtubePath) ? getYoutubeUrl(youtubePath) : null;
     
     if (!url) {
       return (
@@ -157,7 +162,7 @@ const DynamicArticlePage: React.FC<DynamicArticlePageProps> = ({
         whileHover={{ scale: 1.05, y: -1 }}
         whileTap={{ scale: 0.95 }}
         className={`group inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-br from-crimsonRed/20 to-softOrange/20 backdrop-blur-sm border border-crimsonRed/20 hover:border-crimsonRed/40 text-softSilver/80 hover:text-softSilver transition-all duration-300 text-sm font-medium shadow-lg hover:shadow-xl ${className}`}
-        title={`Watch ${youtubePath} on YouTube`}
+        title={`Watch ${youtubePath || 'video'} on YouTube`}
       >
         <FaYoutube className="w-4 h-4 group-hover:scale-110 transition-transform duration-300 text-crimsonRed" />
         <span>Watch Video</span>
@@ -185,7 +190,7 @@ const DynamicArticlePage: React.FC<DynamicArticlePageProps> = ({
         );
       
       case 'heading':
-        const HeadingTag = `h${item.level}` as keyof JSX.IntrinsicElements;
+        const HeadingTag = `h${item.level || 2}` as keyof JSX.IntrinsicElements;
         return (
           <motion.div
             key={index}
@@ -198,8 +203,8 @@ const DynamicArticlePage: React.FC<DynamicArticlePageProps> = ({
               HeadingTag,
               {
                 className: `font-heading font-bold text-goldenAmber mb-6 ${
-                  item.level === 2 ? 'text-4xl mt-16' : 
-                  item.level === 3 ? 'text-3xl mt-12' : 'text-2xl mt-10'
+                  (item.level || 2) === 2 ? 'text-4xl mt-16' : 
+                  (item.level || 2) === 3 ? 'text-3xl mt-12' : 'text-2xl mt-10'
                 }`
               },
               item.content
